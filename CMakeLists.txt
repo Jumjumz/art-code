@@ -13,19 +13,24 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-#TODO: add window, shader dependencies and others
+add_subdirectory(shaders)
 
 find_package(Vulkan REQUIRED)
-find_package(glm CONFIG REQUIRED)
+find_package(glm REQUIRED)
+find_package(glfw3 3.3 REQUIRED)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+add_dependencies(${PROJECT_NAME} Shaders)
+
 target_include_directories(${PROJECT_NAME} PRIVATE
-"${CMAKE_CURRENT_SOURCE_DIR}/src")
+{CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
 Vulkan::Vulkan
-glm::glm)
+glm::glm
+glfw
+)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_options(${PROJECT_NAME} PRIVATE
