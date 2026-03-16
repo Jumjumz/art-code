@@ -1,0 +1,27 @@
+#ifndef ART_CODE_HPP
+#define ART_CODE_HPP
+#define GLFW_INCLUDE_VULKAN
+
+#pragma once
+
+#include "vulkan/vulkan_context.hpp"
+#include "window/window.hpp"
+
+class ArtCode {
+  public:
+    ArtCode();
+
+    void run();
+
+  private:
+    uint32_t width = 1440;
+    uint32_t aspect = 16 / 9;
+
+    Window window{this->width, this->aspect};
+
+    VulkanContext ctx{this->window.app_window};
+
+    void cleanup() const;
+};
+
+#endif // !ART_CODE_HPP

@@ -13,7 +13,9 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+add_subdirectory(core)
 add_subdirectory(shaders)
+add_subdirectory(vulkan)
 
 find_package(Vulkan REQUIRED)
 find_package(glm REQUIRED)
@@ -24,7 +26,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 add_dependencies(${PROJECT_NAME} Shaders)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-{CMAKE_CURRENT_SOURCE_DIR})
+${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
 Vulkan::Vulkan
