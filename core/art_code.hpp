@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "vulkan/vulkan_context.hpp"
-#include "window/window.hpp"
+#include "vulkan_context.hpp"
+#include "window.hpp"
 
 class ArtCode {
   public:
@@ -20,6 +20,8 @@ class ArtCode {
     Window window{this->width, this->aspect};
 
     VulkanContext ctx{this->window.app_window};
+
+    void loop();
 
     void cleanup() const;
 };
