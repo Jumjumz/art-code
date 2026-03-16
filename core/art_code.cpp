@@ -9,7 +9,7 @@ void ArtCode::run() {
 
 void ArtCode::loop() {
     while (!glfwWindowShouldClose(this->window.app_window)) {
-        this->window.running = true;
+        glfwPollEvents();
     }
 };
 

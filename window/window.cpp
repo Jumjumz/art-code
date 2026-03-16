@@ -11,6 +11,10 @@ Window::Window(const uint32_t width, const uint32_t aspect)
     // make sure height is not negative
     this->height = (this->height < 1) ? 1 : this->height;
 
+    // commented and saved for future use
+    // GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    // const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+
     this->app_window =
         glfwCreateWindow(this->width, this->height, "Art Code", NULL, NULL);
 };

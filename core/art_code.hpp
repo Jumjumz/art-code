@@ -1,6 +1,5 @@
 #ifndef ART_CODE_HPP
 #define ART_CODE_HPP
-#define GLFW_INCLUDE_VULKAN
 
 #pragma once
 

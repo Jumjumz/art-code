@@ -5,8 +5,8 @@
 
 VulkanContext::VulkanContext(GLFWwindow *window) : window(window) {
     create_instance();
-    create_surface();
     pick_physical_device();
+    create_surface();
     create_logical_device();
 };
 
@@ -180,11 +180,13 @@ void VulkanContext::find_queue_families() {
         vk::Bool32 present =
             this->physical_device.getSurfaceSupportKHR(i, this->surface);
 
-        if (present)
+        if (present) {
             this->family_indices.present_family = i;
+        }
 
-        if (this->family_indices.is_complete())
+        if (this->family_indices.is_complete()) {
             break;
+        }
     }
 };
 
