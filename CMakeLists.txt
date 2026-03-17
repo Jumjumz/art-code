@@ -18,12 +18,12 @@ find_package(glm REQUIRED)
 
 add_subdirectory(core)
 add_subdirectory(shaders)
+add_subdirectory(ui)
 add_subdirectory(utils)
 add_subdirectory(vulkan)
 add_subdirectory(window)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-
 
 target_include_directories(${PROJECT_NAME} PRIVATE
 ${CMAKE_CURRENT_SOURCE_DIR})
@@ -32,6 +32,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 Vulkan::Vulkan
 glm::glm
 core
+ui
 utils
 vulkan
 window
