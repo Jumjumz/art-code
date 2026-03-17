@@ -2,7 +2,6 @@
 #include "vertex.hpp"
 #include <fstream>
 
-// Copy pasted from my prev project.. TODO:some of the config might need to change
 VulkanGraphics::VulkanGraphics(const vk::raii::PhysicalDevice &physical_device,
                                const vk::raii::Device &device,
                                const vk::Format &image_format,
@@ -20,17 +19,16 @@ VulkanGraphics::VulkanGraphics(const vk::raii::PhysicalDevice &physical_device,
 vk::raii::ShaderModule
 VulkanGraphics::create_shader_module(const std::vector<char> &code) const {
     vk::ShaderModuleCreateInfo shader_info{};
-    shader_info.codeSize = code.size() * sizeof(char);
+    shader_info.codeSize = code.size();
     shader_info.pCode = reinterpret_cast<const uint32_t *>(code.data());
 
-    vk::raii::ShaderModule shader_module{this->device, shader_info, nullptr};
+    vk::raii::ShaderModule vert_shader_module{this->device, shader_info, nullptr};
 
-    return shader_module;
+    return vert_shader_module;
 };
 
-std::vector<char> VulkanGraphics::read_file(const std::string &fileName) {
-    std::ifstream file(fileName, std::ios::ate | std::ios::binary);
-
+std::vector<char> VulkanGraphics::read_file(const std::string &file_name) {
+    std::ifstream file(file_name, std::ios::ate | std::ios::binary);
     if (!file.is_open())
         throw std::runtime_error("Failed to open file!");
 
@@ -56,23 +54,23 @@ void VulkanGraphics::create_descriptor_set_layout() {
 };
 
 void VulkanGraphics::create_graphics_pipeline() {
-    this->shader_module =
+    this->vert_shader_module =
+        create_shader_module(read_file("shaders/test.vert.spv"));
+    this->frag_shader_module =
         create_shader_module(read_file("shaders/test.frag.spv"));
 
-    // vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
-    // vert_shader_stage_info.stage = vk::ShaderStageFlagBits::eVertex;
-    // vert_shader_stage_info.module = this->shader_module;
-    // vert_shader_stage_info.pName = "test.vert";
+    vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
+    vert_shader_stage_info.stage = vk::ShaderStageFlagBits::eVertex;
+    vert_shader_stage_info.module = this->vert_shader_module;
+    vert_shader_stage_info.pName = "main";
 
     vk::PipelineShaderStageCreateInfo frag_shader_stage_info{};
     frag_shader_stage_info.stage = vk::ShaderStageFlagBits::eFragment;
-    frag_shader_stage_info.module = this->shader_module;
-    frag_shader_stage_info.pName = "test.frag";
+    frag_shader_stage_info.module = this->frag_shader_module;
+    frag_shader_stage_info.pName = "main";
 
-    // vk::PipelineShaderStageCreateInfo shader_stages[] = {vert_shader_stage_info,
-    //                                                    frag_shader_stage_info};
-
-    vk::PipelineShaderStageCreateInfo shader_stages[] = {frag_shader_stage_info};
+    vk::PipelineShaderStageCreateInfo shader_stages[] = {vert_shader_stage_info,
+                                                         frag_shader_stage_info};
 
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
     assembly_info.topology = vk::PrimitiveTopology::eLineList;
@@ -154,7 +152,7 @@ void VulkanGraphics::create_graphics_pipeline() {
     rendering_info.depthAttachmentFormat = this->depth_format;
 
     vk::GraphicsPipelineCreateInfo pipeline_info{};
-    pipeline_info.stageCount = 1;
+    pipeline_info.stageCount = 2;
     pipeline_info.pStages = shader_stages;
     pipeline_info.pNext = &rendering_info;
     pipeline_info.pVertexInputState = &vertex_info;

@@ -12,7 +12,8 @@ class VulkanGraphics {
                    const vk::Format &depth_format, const int &graphics_family);
 
     // shader module
-    vk::raii::ShaderModule shader_module = nullptr;
+    vk::raii::ShaderModule vert_shader_module = nullptr;
+    vk::raii::ShaderModule frag_shader_module = nullptr;
 
     // pipeline
     vk::raii::Pipeline graphics_pipeline = nullptr;
@@ -40,7 +41,7 @@ class VulkanGraphics {
 
     void create_command_pool();
 
-    static std::vector<char> read_file(const std::string &fileName);
+    static std::vector<char> read_file(const std::string &file_name);
 
     [[nodiscard]]
     vk::raii::ShaderModule
