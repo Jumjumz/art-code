@@ -7,10 +7,10 @@
 
 class Window {
   public:
-    Window(const uint32_t width, const uint32_t aspect);
+    Window(const uint32_t width, const float aspect);
 
     uint32_t width;
-    uint32_t aspect;
+    float aspect;
     bool running = true;
 
     GLFWwindow *app_window;

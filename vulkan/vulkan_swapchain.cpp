@@ -16,7 +16,6 @@ VulkanSwapchain::VulkanSwapchain(const vk::raii::SurfaceKHR &surface,
       present_family(present_family), image_count(image_count) {
     create_swapchain();
     create_image_views();
-    find_depth_format();
 };
 
 void VulkanSwapchain::create_swapchain() {
@@ -75,14 +74,6 @@ void VulkanSwapchain::create_image_views() {
 
     this->resources.extent = this->extent;
     this->resources.image_format = this->format.format;
-};
-
-void VulkanSwapchain::find_depth_format() {
-    this->depth_format =
-        supported_format({vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint,
-                          vk::Format::eD24UnormS8Uint},
-                         vk::ImageTiling::eOptimal,
-                         vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 };
 
 vk::Format

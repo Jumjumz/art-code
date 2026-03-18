@@ -7,5 +7,8 @@ target_include_directories(core
 )
 
 target_link_libraries(core
+PRIVATE utils
 PRIVATE vulkan
-PRIVATE window)
+PRIVATE window
+PRIVATE imgui
+)

@@ -8,8 +8,8 @@
 class VulkanGraphics {
   public:
     VulkanGraphics(const vk::raii::PhysicalDevice &physical_device,
-                   const vk::raii::Device &device, const vk::Format &image_format,
-                   const vk::Format &depth_format, const int &graphics_family);
+                   const vk::raii::Device &device,
+                   const vk::Format &image_format, const int &graphics_family);
 
     // shader module
     vk::raii::ShaderModule vert_shader_module = nullptr;
@@ -30,8 +30,6 @@ class VulkanGraphics {
     const vk::raii::Device &device;
 
     const vk::Format &image_format;
-
-    const vk::Format &depth_format;
 
     const int &graphics_family;
 

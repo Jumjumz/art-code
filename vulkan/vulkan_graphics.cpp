@@ -5,11 +5,9 @@
 VulkanGraphics::VulkanGraphics(const vk::raii::PhysicalDevice &physical_device,
                                const vk::raii::Device &device,
                                const vk::Format &image_format,
-                               const vk::Format &depth_format,
                                const int &graphics_family)
     : physical_device(physical_device), device(device),
-      image_format(image_format), depth_format(depth_format),
-      graphics_family(graphics_family) {
+      image_format(image_format), graphics_family(graphics_family) {
     create_descriptor_set_layout();
     create_graphics_pipeline();
     create_command_pool();
@@ -149,7 +147,6 @@ void VulkanGraphics::create_graphics_pipeline() {
     vk::PipelineRenderingCreateInfo rendering_info{};
     rendering_info.colorAttachmentCount = 1;
     rendering_info.pColorAttachmentFormats = &this->image_format;
-    rendering_info.depthAttachmentFormat = this->depth_format;
 
     vk::GraphicsPipelineCreateInfo pipeline_info{};
     pipeline_info.stageCount = 2;

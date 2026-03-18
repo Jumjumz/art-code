@@ -25,7 +25,7 @@ struct Vertex {
     };
 };
 
-// for viewing/displaying.
+// for viewing/displaying
 struct UniformBufferObject {
     glm::mat4 model;
     glm::mat4 view;

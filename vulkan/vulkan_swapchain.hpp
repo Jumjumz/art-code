@@ -26,8 +26,6 @@ class VulkanSwapchain {
         vk::Extent2D extent;
     } resources;
 
-    vk::Format depth_format;
-
     void create_swapchain();
 
     void create_image_views();
@@ -48,8 +46,6 @@ class VulkanSwapchain {
     const int present_family;
 
     const uint32_t image_count;
-
-    void find_depth_format();
 
     vk::Format supported_format(const std::vector<vk::Format> &candidates,
                                 const vk::ImageTiling tiling,

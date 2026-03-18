@@ -1,6 +1,6 @@
 #include "window.hpp"
 
-Window::Window(const uint32_t width, const uint32_t aspect)
+Window::Window(const uint32_t width, const float aspect)
     : width(width), aspect(aspect) {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
