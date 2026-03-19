@@ -1,5 +1,4 @@
 #include "vulkan_commands.hpp"
-#include <vulkan/vulkan_raii.hpp>
 
 VulkanCommands::VulkanCommands(const vk::raii::Device &device,
                                const std::vector<vk::Image> &images,
@@ -13,14 +12,24 @@ VulkanCommands::VulkanCommands(const vk::raii::Device &device,
 };
 
 void VulkanCommands::create_descriptor_pool() {
-    vk::DescriptorPoolSize pool_size(vk::DescriptorType::eUniformBuffer,
-                                     VulkanCommands::MAX_FRAMES_IN_FLIGHT);
+    std::vector<vk::DescriptorPoolSize> pool_sizes = {
+        {vk::DescriptorType::eSampler, 1000},
+        {vk::DescriptorType::eCombinedImageSampler, 1000},
+        {vk::DescriptorType::eSampledImage, 1000},
+        {vk::DescriptorType::eStorageImage, 1000},
+        {vk::DescriptorType::eUniformBuffer, 1000},
+        {vk::DescriptorType::eStorageBuffer, 1000},
+        {vk::DescriptorType::eUniformBufferDynamic, 1000},
+        {vk::DescriptorType::eInputAttachment, 1000},
+        {vk::DescriptorType::eUniformTexelBuffer, 1000},
+        {vk::DescriptorType::eStorageTexelBuffer, 1000}};
 
     vk::DescriptorPoolCreateInfo pool_info{};
-    pool_info.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-    pool_info.maxSets = VulkanCommands::MAX_FRAMES_IN_FLIGHT;
-    pool_info.poolSizeCount = 1;
-    pool_info.pPoolSizes = &pool_size;
+    pool_info.flags =
+        vk::DescriptorPoolCreateFlagBits::eAllowOverallocationPoolsNV;
+    pool_info.maxSets = 1000;
+    pool_info.poolSizeCount = pool_sizes.size();
+    pool_info.pPoolSizes = pool_sizes.data();
 
     this->descriptor_pool =
         vk::raii::DescriptorPool{this->device, pool_info, nullptr};

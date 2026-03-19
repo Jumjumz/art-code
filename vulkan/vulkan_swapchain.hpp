@@ -8,7 +8,6 @@
 class VulkanSwapchain {
   public:
     VulkanSwapchain(const vk::raii::SurfaceKHR &surface,
-                    const vk::raii::PhysicalDevice &physical_device,
                     const vk::raii::Device &device,
                     const vk::SurfaceCapabilitiesKHR &capabilities,
                     const vk::SurfaceFormatKHR &format,
@@ -33,8 +32,6 @@ class VulkanSwapchain {
   private:
     const vk::raii::SurfaceKHR &surface;
 
-    const vk::raii::PhysicalDevice &physical_device;
-
     const vk::raii::Device &device;
 
     const vk::SurfaceCapabilitiesKHR capabilities;
@@ -46,10 +43,6 @@ class VulkanSwapchain {
     const int present_family;
 
     const uint32_t image_count;
-
-    vk::Format supported_format(const std::vector<vk::Format> &candidates,
-                                const vk::ImageTiling tiling,
-                                const vk::FormatFeatureFlags features);
 };
 
 #endif // !VULKAN_SWAPCHAIN_HPP

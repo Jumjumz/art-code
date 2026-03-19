@@ -6,7 +6,7 @@
 ArtCode::ArtCode() {};
 
 void ArtCode::run() {
-    show_ui();
+    imgui_init();
     loop();
     cleanup();
 };
@@ -31,9 +31,17 @@ void ArtCode::loop() {
     this->ctx.device.waitIdle();
 };
 
-void ArtCode::show_ui() {
+void ArtCode::imgui_init() {
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForVulkan(this->window.app_window, true);
+
+    // convert raii to c vulkan
+    VkInstance instance = *this->ctx.instance;
+    VkPhysicalDevice physical_device = *this->ctx.physical_device;
+    VkDevice device = *this->ctx.device;
+    VkQueue graphics_queue = *this->ctx.graphics_queue;
+    VkDescriptorPool descriptor_pool = *this->commands.descriptor_pool;
+
     ImGui_ImplVulkan_InitInfo init_info{};
     init_info.UseDynamicRendering = true;
     init_info.PipelineInfoMain.PipelineRenderingCreateInfo.sType =
@@ -42,11 +50,11 @@ void ArtCode::show_ui() {
         1;
     init_info.PipelineInfoMain.PipelineRenderingCreateInfo.pColorAttachmentFormats =
         &this->format;
-    init_info.Instance = this->instance;
-    init_info.PhysicalDevice = this->physical_device;
-    init_info.Device = this->device;
-    init_info.Queue = this->graphics_queue;
-    init_info.DescriptorPool = this->descriptor_pool;
+    init_info.Instance = instance;
+    init_info.PhysicalDevice = physical_device;
+    init_info.Device = device;
+    init_info.Queue = graphics_queue;
+    init_info.DescriptorPool = descriptor_pool;
     init_info.MinImageCount = 2;
     init_info.ImageCount = this->ctx.config.image_count;
 
@@ -54,10 +62,15 @@ void ArtCode::show_ui() {
 };
 
 void ArtCode::draw_frame() {
-    this->commands.command_buffers[this->current_frame].reset();
+    auto fence_result = this->ctx.device.waitForFences(
+        *this->commands.in_flight_fences[this->current_frame], vk::True,
+        UINT64_MAX);
+
+    if (fence_result != vk::Result::eSuccess)
+        throw std::runtime_error("Failed to wait for fence!");
 
     auto [result, image_index] = this->swapchain.swapchain.acquireNextImage(
-        UINT16_MAX, this->commands.available_semaphores[this->current_frame],
+        UINT64_MAX, *this->commands.available_semaphores[this->current_frame],
         nullptr);
 
     if (result == vk::Result::eErrorOutOfDateKHR) {
@@ -66,11 +79,13 @@ void ArtCode::draw_frame() {
     } else if (result != vk::Result::eSuccess &&
                result != vk::Result::eSuboptimalKHR) {
         assert(result == vk::Result::eTimeout || result == vk::Result::eNotReady);
-        throw std::runtime_error("Failed to acquire swap chain image!");
+        throw std::runtime_error("Failed to acquire swapchain image!");
     }
 
     this->ctx.device.resetFences(
         *this->commands.in_flight_fences[this->current_frame]);
+
+    this->commands.command_buffers[this->current_frame].reset();
 
     record_command_buffer(image_index);
 
@@ -103,7 +118,7 @@ void ArtCode::draw_frame() {
     result = this->ctx.present_queue.presentKHR(present_info);
 
     if ((result == vk::Result::eSuboptimalKHR) ||
-        (result == vk::Result::eErrorOutOfDateKHR) || frame_buffer_resize) {
+        (result == vk::Result::eErrorOutOfDateKHR) || this->frame_buffer_resize) {
         this->frame_buffer_resize = false;
         recreate_swapchain();
     } else {
@@ -116,6 +131,8 @@ void ArtCode::draw_frame() {
 
 void ArtCode::record_command_buffer(uint32_t image_index) {
     auto &cmd = this->commands.command_buffers[this->current_frame];
+
+    VkCommandBuffer cmd_buffer = *cmd;
 
     cmd.begin({});
 
@@ -149,9 +166,7 @@ void ArtCode::record_command_buffer(uint32_t image_index) {
 
     cmd.beginRendering(rendering_info);
 
-    this->cmd_buffer = *cmd;
-
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), this->cmd_buffer,
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd_buffer,
                                     VK_NULL_HANDLE);
 
     cmd.endRendering();
@@ -195,8 +210,6 @@ void ArtCode::transition_image_layout(vk::Image image, vk::ImageLayout old_layou
 };
 
 void ArtCode::recreate_swapchain() {
-    this->ctx.device.waitIdle();
-
     clean_swapchain();
 
     this->swapchain.create_swapchain();
@@ -209,11 +222,13 @@ void ArtCode::clean_swapchain() {
 };
 
 void ArtCode::cleanup() {
-    clean_swapchain();
+    this->ctx.device.waitIdle();
 
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+
+    clean_swapchain();
 
     this->window.destroy_window();
 };

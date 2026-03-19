@@ -24,7 +24,6 @@ class ArtCode {
     VulkanContext ctx{this->window.app_window};
 
     VulkanSwapchain swapchain{this->ctx.surface,
-                              this->ctx.physical_device,
                               this->ctx.device,
                               this->ctx.config.capabilities,
                               this->ctx.config.chosen_format,
@@ -34,7 +33,7 @@ class ArtCode {
                               this->ctx.family_indices.present_family,
                               this->ctx.config.image_count};
 
-    VulkanGraphics pipeline{this->ctx.physical_device, this->ctx.device,
+    VulkanGraphics pipeline{this->ctx.device,
                             this->swapchain.resources.image_format,
                             this->ctx.family_indices.graphics_family};
 
@@ -42,16 +41,8 @@ class ArtCode {
                             this->pipeline.command_pool,
                             ArtCode::MAX_FRAMES_IN_FLIGHT};
 
-    // convert raii to c vulkan
-    VkInstance instance = *this->ctx.instance;
-    VkPhysicalDevice physical_device = *this->ctx.physical_device;
-    VkDevice device = *this->ctx.device;
-    VkQueue graphics_queue = *this->ctx.graphics_queue;
-    VkDescriptorPool descriptor_pool = *this->commands.descriptor_pool;
     VkFormat format =
         static_cast<VkFormat>(this->swapchain.resources.image_format);
-
-    VkCommandBuffer cmd_buffer;
 
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
     uint32_t current_frame = 0;
@@ -60,7 +51,7 @@ class ArtCode {
 
     void loop();
 
-    void show_ui();
+    void imgui_init();
 
     void draw_frame();
 

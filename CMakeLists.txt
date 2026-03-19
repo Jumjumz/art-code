@@ -19,6 +19,7 @@ find_package(glm REQUIRED)
 add_subdirectory(core)
 add_subdirectory(shaders)
 add_subdirectory(imgui)
+add_subdirectory(ui)
 add_subdirectory(utils)
 add_subdirectory(vulkan)
 add_subdirectory(window)
@@ -33,6 +34,7 @@ Vulkan::Vulkan
 glm::glm
 core
 imgui
+ui
 utils
 vulkan
 window

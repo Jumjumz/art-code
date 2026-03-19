@@ -2,12 +2,11 @@
 #include "vertex.hpp"
 #include <fstream>
 
-VulkanGraphics::VulkanGraphics(const vk::raii::PhysicalDevice &physical_device,
-                               const vk::raii::Device &device,
+VulkanGraphics::VulkanGraphics(const vk::raii::Device &device,
                                const vk::Format &image_format,
                                const int &graphics_family)
-    : physical_device(physical_device), device(device),
-      image_format(image_format), graphics_family(graphics_family) {
+    : device(device), image_format(image_format),
+      graphics_family(graphics_family) {
     create_descriptor_set_layout();
     create_graphics_pipeline();
     create_command_pool();

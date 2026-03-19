@@ -1,19 +1,15 @@
 #include "vulkan_swapchain.hpp"
 
-VulkanSwapchain::VulkanSwapchain(const vk::raii::SurfaceKHR &surface,
-                                 const vk::raii::PhysicalDevice &physical_device,
-                                 const vk::raii::Device &device,
-                                 const vk::SurfaceCapabilitiesKHR &capabilities,
-                                 const vk::SurfaceFormatKHR &format,
-                                 const vk::PresentModeKHR &present_mode,
-                                 const vk::Extent2D &extent,
-                                 const int &graphics_family,
-                                 const int &present_family,
-                                 const uint32_t &image_count)
-    : surface(surface), physical_device(physical_device), device(device),
-      capabilities(capabilities), format(format), present_mode(present_mode),
-      extent(extent), graphics_family(graphics_family),
-      present_family(present_family), image_count(image_count) {
+VulkanSwapchain::VulkanSwapchain(
+    const vk::raii::SurfaceKHR &surface, const vk::raii::Device &device,
+    const vk::SurfaceCapabilitiesKHR &capabilities,
+    const vk::SurfaceFormatKHR &format, const vk::PresentModeKHR &present_mode,
+    const vk::Extent2D &extent, const int &graphics_family,
+    const int &present_family, const uint32_t &image_count)
+    : surface(surface), device(device), capabilities(capabilities),
+      format(format), present_mode(present_mode), extent(extent),
+      graphics_family(graphics_family), present_family(present_family),
+      image_count(image_count) {
     create_swapchain();
     create_image_views();
 };
@@ -49,7 +45,8 @@ void VulkanSwapchain::create_swapchain() {
     swapchain_info.clipped = vk::True;
     swapchain_info.oldSwapchain = nullptr;
 
-    this->swapchain = vk::raii::SwapchainKHR{this->device, swapchain_info};
+    this->swapchain =
+        vk::raii::SwapchainKHR{this->device, swapchain_info, nullptr};
     this->resources.images = this->swapchain.getImages();
 };
 
@@ -74,24 +71,4 @@ void VulkanSwapchain::create_image_views() {
 
     this->resources.extent = this->extent;
     this->resources.image_format = this->format.format;
-};
-
-vk::Format
-VulkanSwapchain::supported_format(const std::vector<vk::Format> &candidates,
-                                  const vk::ImageTiling tiling,
-                                  const vk::FormatFeatureFlags features) {
-    for (const auto format : candidates) {
-        vk::FormatProperties props =
-            this->physical_device.getFormatProperties(format);
-
-        if (tiling == vk::ImageTiling::eLinear &&
-            (props.linearTilingFeatures & features) == features)
-            return format;
-
-        if (tiling == vk::ImageTiling::eOptimal &&
-            (props.optimalTilingFeatures & features) == features)
-            return format;
-    }
-
-    throw std::runtime_error("Failed to find supported format!");
 };

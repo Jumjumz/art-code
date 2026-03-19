@@ -7,8 +7,7 @@
 
 class VulkanGraphics {
   public:
-    VulkanGraphics(const vk::raii::PhysicalDevice &physical_device,
-                   const vk::raii::Device &device,
+    VulkanGraphics(const vk::raii::Device &device,
                    const vk::Format &image_format, const int &graphics_family);
 
     // shader module
@@ -25,8 +24,6 @@ class VulkanGraphics {
     vk::raii::CommandPool command_pool = nullptr;
 
   private:
-    const vk::raii::PhysicalDevice &physical_device;
-
     const vk::raii::Device &device;
 
     const vk::Format &image_format;
