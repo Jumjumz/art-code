@@ -43,6 +43,8 @@ class VulkanContext {
         uint32_t image_count;
     } config;
 
+    void create_extent();
+
   private:
     GLFWwindow *window;
 

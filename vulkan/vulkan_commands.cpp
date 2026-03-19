@@ -25,8 +25,7 @@ void VulkanCommands::create_descriptor_pool() {
         {vk::DescriptorType::eStorageTexelBuffer, 1000}};
 
     vk::DescriptorPoolCreateInfo pool_info{};
-    pool_info.flags =
-        vk::DescriptorPoolCreateFlagBits::eAllowOverallocationPoolsNV;
+    pool_info.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
     pool_info.maxSets = 1000;
     pool_info.poolSizeCount = pool_sizes.size();
     pool_info.pPoolSizes = pool_sizes.data();

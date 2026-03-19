@@ -10,18 +10,18 @@ VulkanSwapchain::VulkanSwapchain(
       format(format), present_mode(present_mode), extent(extent),
       graphics_family(graphics_family), present_family(present_family),
       image_count(image_count) {
-    create_swapchain();
+    create_swapchain(this->extent);
     create_image_views();
 };
 
-void VulkanSwapchain::create_swapchain() {
+void VulkanSwapchain::create_swapchain(const vk::Extent2D &extent) {
     vk::SwapchainCreateInfoKHR swapchain_info{};
     swapchain_info.flags = vk::SwapchainCreateFlagsKHR();
     swapchain_info.surface = this->surface;
     swapchain_info.minImageCount = this->image_count;
     swapchain_info.imageFormat = this->format.format;
     swapchain_info.imageColorSpace = this->format.colorSpace;
-    swapchain_info.imageExtent = this->extent;
+    swapchain_info.imageExtent = extent;
     swapchain_info.imageArrayLayers = 1;
     swapchain_info.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
 
@@ -43,10 +43,12 @@ void VulkanSwapchain::create_swapchain() {
     swapchain_info.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
     swapchain_info.presentMode = this->present_mode;
     swapchain_info.clipped = vk::True;
-    swapchain_info.oldSwapchain = nullptr;
+    swapchain_info.oldSwapchain = *this->swapchain;
 
     this->swapchain =
         vk::raii::SwapchainKHR{this->device, swapchain_info, nullptr};
+
+    this->resources.extent = extent;
     this->resources.images = this->swapchain.getImages();
 };
 
@@ -69,6 +71,5 @@ void VulkanSwapchain::create_image_views() {
                                                  nullptr);
     }
 
-    this->resources.extent = this->extent;
     this->resources.image_format = this->format.format;
 };

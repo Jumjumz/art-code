@@ -16,10 +16,7 @@ class ArtCode {
     void run();
 
   private:
-    uint32_t width = 1440;
-    float aspect = 16.0f / 9;
-
-    Window window{this->width, this->aspect};
+    Window window;
 
     VulkanContext ctx{this->window.app_window};
 

@@ -25,7 +25,7 @@ class VulkanSwapchain {
         vk::Extent2D extent;
     } resources;
 
-    void create_swapchain();
+    void create_swapchain(const vk::Extent2D &extent);
 
     void create_image_views();
 
@@ -34,15 +34,15 @@ class VulkanSwapchain {
 
     const vk::raii::Device &device;
 
-    const vk::SurfaceCapabilitiesKHR capabilities;
-    const vk::SurfaceFormatKHR format;
-    const vk::PresentModeKHR present_mode;
-    const vk::Extent2D extent;
+    const vk::SurfaceCapabilitiesKHR &capabilities;
+    const vk::SurfaceFormatKHR &format;
+    const vk::PresentModeKHR &present_mode;
+    const vk::Extent2D &extent;
 
-    const int graphics_family;
-    const int present_family;
+    const int &graphics_family;
+    const int &present_family;
 
-    const uint32_t image_count;
+    const uint32_t &image_count;
 };
 
 #endif // !VULKAN_SWAPCHAIN_HPP

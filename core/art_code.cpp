@@ -59,6 +59,15 @@ void ArtCode::imgui_init() {
     init_info.ImageCount = this->ctx.config.image_count;
 
     ImGui_ImplVulkan_Init(&init_info);
+
+    glfwSetWindowUserPointer(this->window.app_window, this);
+    glfwSetFramebufferSizeCallback(
+        this->window.app_window,
+        [](GLFWwindow *window, int width, int height) -> void {
+            auto app =
+                reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
+            app->frame_buffer_resize = true;
+        });
 };
 
 void ArtCode::draw_frame() {
@@ -166,6 +175,16 @@ void ArtCode::record_command_buffer(uint32_t image_index) {
 
     cmd.beginRendering(rendering_info);
 
+    cmd.setViewport(
+        0,
+        vk::Viewport{0.0f, 0.0f,
+                     static_cast<float>(this->swapchain.resources.extent.width),
+                     static_cast<float>(this->swapchain.resources.extent.height),
+                     0.0f, 1.0f});
+
+    cmd.setScissor(
+        0, vk::Rect2D{vk::Offset2D{0, 0}, this->swapchain.resources.extent});
+
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd_buffer,
                                     VK_NULL_HANDLE);
 
@@ -210,9 +229,14 @@ void ArtCode::transition_image_layout(vk::Image image, vk::ImageLayout old_layou
 };
 
 void ArtCode::recreate_swapchain() {
+    this->ctx.device.waitIdle();
+
     clean_swapchain();
 
-    this->swapchain.create_swapchain();
+    this->ctx.create_extent();
+
+    this->swapchain.create_swapchain(this->ctx.config.chosen_extent);
+
     this->swapchain.create_image_views();
 };
 

@@ -7,6 +7,7 @@ VulkanContext::VulkanContext(GLFWwindow *window) : window(window) {
     create_instance();
     pick_physical_device();
     create_surface();
+    create_extent();
     create_logical_device();
 };
 
@@ -110,7 +111,7 @@ void VulkanContext::pick_physical_device() {
 void VulkanContext::create_logical_device() {
     find_queue_families();
 
-    std::vector<vk::DeviceQueueCreateInfo> deviceQueueInfos;
+    std::vector<vk::DeviceQueueCreateInfo> device_queue_infos;
     std::set<int> unique_queue_families = {
         this->family_indices.graphics_family,
         this->family_indices.present_family,
@@ -118,12 +119,12 @@ void VulkanContext::create_logical_device() {
 
     float queuePriority = 0.5f;
     for (const int queue_family : unique_queue_families) {
-        vk::DeviceQueueCreateInfo deviceQueueInfo{};
-        deviceQueueInfo.queueFamilyIndex = queue_family;
-        deviceQueueInfo.queueCount = 1;
-        deviceQueueInfo.pQueuePriorities = &queuePriority;
+        vk::DeviceQueueCreateInfo device_queue_info{};
+        device_queue_info.queueFamilyIndex = queue_family;
+        device_queue_info.queueCount = 1;
+        device_queue_info.pQueuePriorities = &queuePriority;
 
-        deviceQueueInfos.push_back(deviceQueueInfo);
+        device_queue_infos.push_back(device_queue_info);
     }
 
     vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan13Features,
@@ -149,15 +150,15 @@ void VulkanContext::create_logical_device() {
     const std::vector<const char *> device_extensions = {
         vk::KHRSwapchainExtensionName, vk::EXTExtendedDynamicState3ExtensionName};
 
-    vk::DeviceCreateInfo deviceInfo{};
-    deviceInfo.pNext = &features;
-    deviceInfo.queueCreateInfoCount = 1;
-    deviceInfo.pQueueCreateInfos = deviceQueueInfos.data();
-    deviceInfo.enabledExtensionCount =
+    vk::DeviceCreateInfo device_info{};
+    device_info.pNext = &features;
+    device_info.queueCreateInfoCount = 1;
+    device_info.pQueueCreateInfos = device_queue_infos.data();
+    device_info.enabledExtensionCount =
         static_cast<uint32_t>(device_extensions.size());
-    deviceInfo.ppEnabledExtensionNames = device_extensions.data();
+    device_info.ppEnabledExtensionNames = device_extensions.data();
 
-    this->device = vk::raii::Device{this->physical_device, deviceInfo};
+    this->device = vk::raii::Device{this->physical_device, device_info};
 
     this->graphics_queue = vk::raii::Queue{
         this->device,
@@ -169,11 +170,11 @@ void VulkanContext::create_logical_device() {
 };
 
 void VulkanContext::find_queue_families() {
-    std::vector<vk::QueueFamilyProperties> familyProperties =
+    std::vector<vk::QueueFamilyProperties> family_properties =
         this->physical_device.getQueueFamilyProperties();
 
-    for (size_t i = 0; i < familyProperties.size(); i++) {
-        if (familyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics) {
+    for (size_t i = 0; i < family_properties.size(); i++) {
+        if (family_properties[i].queueFlags & vk::QueueFlagBits::eGraphics) {
             this->family_indices.graphics_family = i;
         }
 
@@ -213,6 +214,10 @@ void VulkanContext::create_surface() {
 
     this->config.chosen_present_mode =
         vk::PresentModeKHR::eFifo; // V-Sync capped at 60fps
+};
+
+void VulkanContext::create_extent() {
+    surface_config();
 
     // choose extent
     if (this->config.capabilities.currentExtent.width != UINT32_MAX) {

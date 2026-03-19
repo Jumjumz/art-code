@@ -1,22 +1,16 @@
 #include "window.hpp"
 
-Window::Window(const uint32_t width, const float aspect)
-    : width(width), aspect(aspect) {
+Window::Window() {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    // get height
-    this->height = uint32_t(width / aspect);
-
-    // make sure height is not negative
-    this->height = (this->height < 1) ? 1 : this->height;
-
-    // commented and saved for future use
-    // GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-    // const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
     this->app_window =
-        glfwCreateWindow(this->width, this->height, "Art Code", NULL, NULL);
+        glfwCreateWindow(mode->width, mode->height, "Art Code", NULL, NULL);
 };
 
 void Window::destroy_window() const {
