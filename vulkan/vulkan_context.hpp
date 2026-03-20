@@ -1,5 +1,3 @@
-#ifndef VULKAN_CONTEXT_HPP
-#define VULKAN_CONTEXT_HPP
 #define GLFW_INCLUDE_VULKAN
 
 #pragma once
@@ -60,5 +58,3 @@ class VulkanContext {
 
     void surface_config();
 };
-
-#endif // !VULKAN_CONTEXT_HPP

@@ -1,5 +1,4 @@
 #include "art_code.hpp"
-#include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 
@@ -19,9 +18,7 @@ void ArtCode::loop() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("Hello Art Code!");
-        ImGui::Text("Test From Art Code!");
-        ImGui::End();
+        this->navigation.main_menu_render();
 
         ImGui::Render();
 

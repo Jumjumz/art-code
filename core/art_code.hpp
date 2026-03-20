@@ -1,8 +1,6 @@
-#ifndef ART_CODE_HPP
-#define ART_CODE_HPP
-
 #pragma once
 
+#include "navigation.hpp"
 #include "vulkan_commands.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_graphics.hpp"
@@ -46,6 +44,8 @@ class ArtCode {
 
     bool frame_buffer_resize = false;
 
+    Navigation navigation;
+
     void loop();
 
     void imgui_init();
@@ -68,5 +68,3 @@ class ArtCode {
 
     void cleanup();
 };
-
-#endif // !ART_CODE_HPP

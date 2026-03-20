@@ -1,6 +1,3 @@
-#ifndef WINDOW_HPP
-#define WINDOW_HPP
-
 #pragma once
 
 #include <GLFW/glfw3.h>
@@ -17,5 +14,3 @@ class Window {
 
   private:
 };
-
-#endif // !WINDOW_HPP

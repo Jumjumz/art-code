@@ -1,6 +1,3 @@
-#ifndef RESOLUTION_HPP
-#define RESOLUTION_HPP
-
 #pragma once
 
 #include <cstdint>
@@ -44,5 +41,3 @@ struct WindowSize {
         }
     };
 };
-
-#endif // !RESOLUTION_HPP

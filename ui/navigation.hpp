@@ -1,9 +1,10 @@
-#ifndef NAVIGATION_HPP
-#define NAVIGATION_HPP
+#pragma once
 
 class Navigation {
   public:
+    Navigation();
+
+    void main_menu_render();
+
   private:
 };
-
-#endif // !NAVIGATION_HPP

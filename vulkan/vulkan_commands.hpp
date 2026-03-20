@@ -1,6 +1,3 @@
-#ifndef VULKAN_COMMANDS_HPP
-#define VULKAN_COMMANDS_HPP
-
 #pragma once
 
 #include <vulkan/vulkan_raii.hpp>
@@ -36,5 +33,3 @@ class VulkanCommands {
 
     void create_sync_objects();
 };
-
-#endif // !VULKAN_COMMANDS_HPP

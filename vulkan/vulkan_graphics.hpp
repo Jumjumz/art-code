@@ -1,6 +1,3 @@
-#ifndef VULKAN_GRAPHICS_HPP
-#define VULKAN_GRAPHICS_HPP
-
 #pragma once
 
 #include <vulkan/vulkan_raii.hpp>
@@ -42,5 +39,3 @@ class VulkanGraphics {
     vk::raii::ShaderModule
     create_shader_module(const std::vector<char> &code) const;
 };
-
-#endif // !VULKAN_GRAPHICS_HPP

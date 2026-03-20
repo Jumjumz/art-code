@@ -1,6 +1,3 @@
-#ifndef VULKAN_SWAPCHAIN_HPP
-#define VULKAN_SWAPCHAIN_HPP
-
 #pragma once
 
 #include <vulkan/vulkan_raii.hpp>
@@ -44,5 +41,3 @@ class VulkanSwapchain {
 
     const uint32_t &image_count;
 };
-
-#endif // !VULKAN_SWAPCHAIN_HPP

@@ -1,6 +1,3 @@
-#ifndef VERTEX_HPP
-#define VERTEX_HPP
-
 #pragma once
 
 #include <glm/glm.hpp>
@@ -31,5 +28,3 @@ struct UniformBufferObject {
     glm::mat4 view;
     glm::mat4 proj;
 };
-
-#endif // !VERTEX_HPP
