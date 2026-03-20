@@ -1,6 +1,7 @@
 #pragma once
 
 #include "navigation.hpp"
+#include "text_editor.hpp"
 #include "vulkan_commands.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_graphics.hpp"
@@ -44,7 +45,9 @@ class ArtCode {
 
     bool frame_buffer_resize = false;
 
+    // ui
     Navigation navigation;
+    TextEditor text_editor;
 
     void loop();
 

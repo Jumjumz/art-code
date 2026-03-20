@@ -2,6 +2,7 @@ add_library(imgui
   core/imgui.cpp
   core/imgui_draw.cpp
   core/imgui_tables.cpp
+  core/imgui_stdlib.cpp
   core/imgui_widgets.cpp
   backends/imgui_impl_glfw.cpp
   backends/imgui_impl_vulkan.cpp

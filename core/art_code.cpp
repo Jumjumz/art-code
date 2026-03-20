@@ -20,6 +20,8 @@ void ArtCode::loop() {
 
         this->navigation.main_menu_render();
 
+        this->text_editor.text_editor_render();
+
         ImGui::Render();
 
         draw_frame();
