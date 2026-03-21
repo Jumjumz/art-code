@@ -1,10 +1,12 @@
 #pragma once
 
-class TextEditor {
+#include "ui.hpp"
+
+class TextEditor : public UI {
   public:
     TextEditor();
 
-    void text_editor_render();
+    void render() override;
 
   private:
 };

@@ -4,7 +4,7 @@
 
 Navigation::Navigation() {};
 
-void Navigation::main_menu_render() {
+void Navigation::render() {
     if (ImGui::BeginMainMenuBar()) {
         for (const auto &menus : NavMainItems::MENUS) {
             if (ImGui::BeginMenu(menus.first.c_str())) {

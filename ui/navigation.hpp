@@ -1,10 +1,12 @@
 #pragma once
 
-class Navigation {
+#include "ui.hpp"
+
+class Navigation : public UI {
   public:
     Navigation();
 
-    void main_menu_render();
+    void render() override;
 
   private:
 };

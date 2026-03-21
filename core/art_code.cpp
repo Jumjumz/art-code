@@ -18,9 +18,9 @@ void ArtCode::loop() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        this->navigation.main_menu_render();
-
-        this->text_editor.text_editor_render();
+        for (const auto &ui : this->ui) {
+            ui->render();
+        }
 
         ImGui::Render();
 

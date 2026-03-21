@@ -5,15 +5,15 @@
 
 TextEditor::TextEditor() {};
 
-void TextEditor::text_editor_render() {
+void TextEditor::render() {
     auto *viewport = ImGui::GetMainViewport();
     auto work_size = viewport->WorkSize;
     auto work_pos = viewport->WorkPos;
 
-    auto width = work_size.x * 0.4f; // 40%
-    auto height = work_size.y;
-    auto pos_x = work_pos.x + (work_size.x * 0.6f); // position to the right
-    auto pos_y = work_pos.y;
+    float width = work_size.x * 0.4f; // 40%
+    float height = work_size.y;
+    float pos_x = work_pos.x + (work_size.x * 0.6f); // position to the right
+    float pos_y = work_pos.y;
     std::string data = ""; // test
 
     ImGui::SetNextWindowSize(ImVec2{width, height});
