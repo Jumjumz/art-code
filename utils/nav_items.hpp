@@ -1,12 +1,11 @@
 #pragma once
 
 #include <string>
-#include <utility>
+#include <tuple>
 #include <vector>
 
-using NavMenuItems =
-    const std::vector<std::pair<const std::string, const std::string>>;
-using NavMenu = std::pair<const std::string, NavMenuItems>;
+using NavMenuItems = const std::vector<std::tuple<std::string, std::string>>;
+using NavMenu = std::tuple<const std::string, NavMenuItems>;
 
 // All menu and menu items for main naviation
 struct NavMainItems {
