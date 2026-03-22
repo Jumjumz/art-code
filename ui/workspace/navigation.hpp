@@ -2,7 +2,7 @@
 
 #include "ui.hpp"
 
-class Navigation : public UI {
+class Navigation : public WorkSpace {
   public:
     Navigation();
 

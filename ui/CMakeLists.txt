@@ -1,6 +1,7 @@
 add_library(ui
-  navigation.cpp
-  text_editor.cpp
+  ui_manager.cpp
+  workspace/navigation.cpp
+  workspace/text_editor.cpp
 )
 
 target_include_directories(ui

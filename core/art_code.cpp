@@ -18,9 +18,8 @@ void ArtCode::loop() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        for (const auto &ui : this->ui) {
-            ui->render();
-        }
+        // render all ui components
+        this->ui_manager.render();
 
         ImGui::Render();
 

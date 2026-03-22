@@ -19,12 +19,15 @@ void TextEditor::render() {
     ImGui::SetNextWindowSize(ImVec2{width, height});
     ImGui::SetNextWindowPos(ImVec2{pos_x, pos_y});
 
-    // removes padding for begin component
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    // removes padding
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
     ImGui::Begin("##text-editor-begin", nullptr,
                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoTitleBar);
     ImGui::InputTextMultiline("##test-editor-main", &data, ImVec2{width, height});
     ImGui::End();
     ImGui::PopStyleVar();
+
+    // TODO::
+    //  create a text editor using Imgui::InputText
 };

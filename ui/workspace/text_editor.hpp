@@ -2,7 +2,7 @@
 
 #include "ui.hpp"
 
-class TextEditor : public UI {
+class TextEditor : public WorkSpace {
   public:
     TextEditor();
 

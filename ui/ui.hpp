@@ -1,8 +1,18 @@
 #pragma once
 
-class UI {
+class StartScreen {
   public:
-    virtual ~UI() = default;
+    virtual ~StartScreen() = default;
+
+    virtual void render() = 0;
+
+  protected:
+  private:
+};
+
+class WorkSpace {
+  public:
+    virtual ~WorkSpace() = default;
 
     virtual void render() = 0;
 
