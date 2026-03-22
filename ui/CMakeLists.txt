@@ -1,5 +1,6 @@
 add_library(ui
   ui_manager.cpp
+  workspace/canvas.cpp
   workspace/navigation.cpp
   workspace/text_editor.cpp
 )

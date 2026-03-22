@@ -212,8 +212,7 @@ void VulkanContext::create_surface() {
         }
     }
 
-    this->config.chosen_present_mode =
-        vk::PresentModeKHR::eFifo; // V-Sync capped at 60fps
+    this->config.chosen_present_mode = vk::PresentModeKHR::eFifo; // V-Sync
 };
 
 void VulkanContext::create_extent() {

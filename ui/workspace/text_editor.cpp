@@ -12,7 +12,7 @@ void TextEditor::render() {
 
     float width = work_size.x * 0.4f; // 40%
     float height = work_size.y;
-    float pos_x = work_pos.x + (work_size.x * 0.6f); // position to the right
+    float pos_x = work_size.x - width; // absolute position to the right
     float pos_y = work_pos.y;
     std::string data = ""; // test
 
@@ -28,6 +28,5 @@ void TextEditor::render() {
     ImGui::End();
     ImGui::PopStyleVar();
 
-    // TODO::
-    //  create a text editor using Imgui::InputText
+    // TODO:: create a text editor using Imgui::InputText
 };

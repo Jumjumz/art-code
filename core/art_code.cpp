@@ -12,7 +12,7 @@ void ArtCode::run() {
 
 void ArtCode::loop() {
     while (!glfwWindowShouldClose(this->window.app_window)) {
-        glfwPollEvents();
+        glfwWaitEvents();
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -25,8 +25,6 @@ void ArtCode::loop() {
 
         draw_frame();
     }
-
-    this->ctx.device.waitIdle();
 };
 
 void ArtCode::imgui_init() {
@@ -236,6 +234,11 @@ void ArtCode::recreate_swapchain() {
     this->swapchain.create_swapchain(this->ctx.config.chosen_extent);
 
     this->swapchain.create_image_views();
+
+    // render ui with the new size immidiately
+    ImGuiIO &io = ImGui::GetIO();
+    io.DisplaySize = ImVec2{float(this->swapchain.resources.extent.width),
+                            float(this->swapchain.resources.extent.height)};
 };
 
 void ArtCode::clean_swapchain() {

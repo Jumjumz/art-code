@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ui.hpp"
+#include "workspace/canvas.hpp"
 #include "workspace/navigation.hpp"
 #include "workspace/text_editor.hpp"
 #include <memory>
@@ -17,6 +18,7 @@ class UIManager {
     const std::vector<std::shared_ptr<WorkSpace>> main_ui = {
         std::make_shared<Navigation>(),
         std::make_shared<TextEditor>(),
+        std::make_shared<Canvas>(),
     };
 
     bool show_main_ui = false;
