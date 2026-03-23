@@ -11,7 +11,7 @@ VulkanSwapchain::VulkanSwapchain(
       graphics_family(graphics_family), present_family(present_family),
       image_count(image_count) {
     create_swapchain(this->extent);
-    create_image_views();
+    imgui_create_image_views();
 };
 
 void VulkanSwapchain::create_swapchain(const vk::Extent2D &extent) {
@@ -52,24 +52,23 @@ void VulkanSwapchain::create_swapchain(const vk::Extent2D &extent) {
     this->resources.images = this->swapchain.getImages();
 };
 
-void VulkanSwapchain::create_image_views() {
+void VulkanSwapchain::imgui_create_image_views() {
     this->resources.image_views.clear();
 
     for (auto const &image : this->resources.images) {
-        vk::ImageViewCreateInfo image_info{};
-        image_info.image = image;
-        image_info.format = this->format.format;
-        image_info.viewType = vk::ImageViewType::e2D;
-        image_info.components.r = vk::ComponentSwizzle::eIdentity;
-        image_info.components.g = vk::ComponentSwizzle::eIdentity;
-        image_info.components.b = vk::ComponentSwizzle::eIdentity;
-        image_info.components.a = vk::ComponentSwizzle::eIdentity;
-        image_info.subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0,
-                                       1};
+        vk::ImageViewCreateInfo image_view_info{};
+        image_view_info.image = image;
+        image_view_info.format = this->format.format;
+        image_view_info.viewType = vk::ImageViewType::e2D;
+        image_view_info.components.r = vk::ComponentSwizzle::eIdentity;
+        image_view_info.components.g = vk::ComponentSwizzle::eIdentity;
+        image_view_info.components.b = vk::ComponentSwizzle::eIdentity;
+        image_view_info.components.a = vk::ComponentSwizzle::eIdentity;
+        image_view_info.subresourceRange = {vk::ImageAspectFlagBits::eColor, 0,
+                                            1, 0, 1};
 
-        this->resources.image_views.emplace_back(this->device, image_info,
+        this->resources.image_views.emplace_back(this->device, image_view_info,
                                                  nullptr);
+        this->resources.image_format = this->format.format;
     }
-
-    this->resources.image_format = this->format.format;
 };

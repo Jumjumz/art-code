@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ui_manager.hpp"
+#include "vulkan_buffers.hpp"
 #include "vulkan_commands.hpp"
 #include "vulkan_context.hpp"
 #include "vulkan_graphics.hpp"
@@ -28,8 +29,9 @@ class ArtCode {
                               this->ctx.family_indices.present_family,
                               this->ctx.config.image_count};
 
-    VulkanGraphics pipeline{this->ctx.device,
-                            this->swapchain.resources.image_format};
+    VulkanBuffers vk_buffers{this->ctx.physical_device, this->ctx.device};
+
+    VulkanGraphics pipeline{this->ctx.device, this->vk_buffers.image_format};
 
     VulkanCommands commands{this->ctx.device, this->swapchain.resources.images,
                             this->ctx.family_indices.graphics_family,

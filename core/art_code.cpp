@@ -234,7 +234,7 @@ void ArtCode::recreate_swapchain() {
 
     this->swapchain.create_swapchain(this->ctx.config.chosen_extent);
 
-    this->swapchain.create_image_views();
+    this->swapchain.imgui_create_image_views();
 
     // render ui with the new size immidiately
     ImGuiIO &io = ImGui::GetIO();

@@ -24,7 +24,7 @@ class VulkanSwapchain {
 
     void create_swapchain(const vk::Extent2D &extent);
 
-    void create_image_views();
+    void imgui_create_image_views();
 
   private:
     const vk::raii::SurfaceKHR &surface;
