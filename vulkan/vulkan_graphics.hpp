@@ -5,7 +5,7 @@
 class VulkanGraphics {
   public:
     VulkanGraphics(const vk::raii::Device &device,
-                   const vk::Format &image_format, const int &graphics_family);
+                   const vk::Format &image_format);
 
     // shader module
     vk::raii::ShaderModule vert_shader_module = nullptr;
@@ -17,21 +17,14 @@ class VulkanGraphics {
 
     vk::raii::DescriptorSetLayout descriptor_set_layout = nullptr;
 
-    // command pool
-    vk::raii::CommandPool command_pool = nullptr;
-
   private:
     const vk::raii::Device &device;
 
     const vk::Format &image_format;
 
-    const int &graphics_family;
-
     void create_descriptor_set_layout();
 
     void create_graphics_pipeline();
-
-    void create_command_pool();
 
     static std::vector<char> read_file(const std::string &file_name);
 

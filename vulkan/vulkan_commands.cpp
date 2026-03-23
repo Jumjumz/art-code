@@ -2,16 +2,39 @@
 
 VulkanCommands::VulkanCommands(const vk::raii::Device &device,
                                const std::vector<vk::Image> &images,
-                               const vk::raii::CommandPool &command_pool,
+                               const int &graphics_family,
                                const int &MAX_FRAMES_IN_FLIGHT)
-    : device(device), images(images), command_pool(command_pool),
+    : device(device), images(images), graphics_family(graphics_family),
       MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT) {
-    create_descriptor_pool();
+    create_command_pool();
     create_command_buffers();
+    imgui_create_descriptor_pool();
     create_sync_objects();
 };
 
-void VulkanCommands::create_descriptor_pool() {
+void VulkanCommands::create_command_pool() {
+    vk::CommandPoolCreateInfo pool_info{};
+    pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+    pool_info.queueFamilyIndex = static_cast<uint32_t>(this->graphics_family);
+
+    this->command_pool = vk::raii::CommandPool{this->device, pool_info, nullptr};
+};
+
+void VulkanCommands::create_command_buffers() {
+    this->command_buffers.clear();
+
+    vk::CommandBufferAllocateInfo alloc_info{};
+    alloc_info.level = vk::CommandBufferLevel::ePrimary;
+    alloc_info.commandPool = this->command_pool;
+    alloc_info.commandBufferCount = VulkanCommands::MAX_FRAMES_IN_FLIGHT;
+
+    this->command_buffers = vk::raii::CommandBuffers{
+        this->device,
+        alloc_info,
+    };
+};
+
+void VulkanCommands::imgui_create_descriptor_pool() {
     std::vector<vk::DescriptorPoolSize> pool_sizes = {
         {vk::DescriptorType::eSampler, 1000},
         {vk::DescriptorType::eCombinedImageSampler, 1000},
@@ -30,22 +53,8 @@ void VulkanCommands::create_descriptor_pool() {
     pool_info.poolSizeCount = pool_sizes.size();
     pool_info.pPoolSizes = pool_sizes.data();
 
-    this->descriptor_pool =
+    this->imgui_descriptor_pool =
         vk::raii::DescriptorPool{this->device, pool_info, nullptr};
-};
-
-void VulkanCommands::create_command_buffers() {
-    this->command_buffers.clear();
-
-    vk::CommandBufferAllocateInfo alloc_info{};
-    alloc_info.level = vk::CommandBufferLevel::ePrimary;
-    alloc_info.commandPool = this->command_pool;
-    alloc_info.commandBufferCount = VulkanCommands::MAX_FRAMES_IN_FLIGHT;
-
-    this->command_buffers = vk::raii::CommandBuffers{
-        this->device,
-        alloc_info,
-    };
 };
 
 void VulkanCommands::create_sync_objects() {

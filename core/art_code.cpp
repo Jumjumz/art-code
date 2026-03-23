@@ -36,7 +36,8 @@ void ArtCode::imgui_init() {
     VkPhysicalDevice physical_device = *this->ctx.physical_device;
     VkDevice device = *this->ctx.device;
     VkQueue graphics_queue = *this->ctx.graphics_queue;
-    VkDescriptorPool descriptor_pool = *this->commands.descriptor_pool;
+    VkDescriptorPool imgui_descriptor_pool =
+        *this->commands.imgui_descriptor_pool;
 
     ImGui_ImplVulkan_InitInfo init_info{};
     init_info.UseDynamicRendering = true;
@@ -50,7 +51,7 @@ void ArtCode::imgui_init() {
     init_info.PhysicalDevice = physical_device;
     init_info.Device = device;
     init_info.Queue = graphics_queue;
-    init_info.DescriptorPool = descriptor_pool;
+    init_info.DescriptorPool = imgui_descriptor_pool;
     init_info.MinImageCount = 2;
     init_info.ImageCount = this->ctx.config.image_count;
 

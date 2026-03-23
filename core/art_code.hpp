@@ -29,11 +29,10 @@ class ArtCode {
                               this->ctx.config.image_count};
 
     VulkanGraphics pipeline{this->ctx.device,
-                            this->swapchain.resources.image_format,
-                            this->ctx.family_indices.graphics_family};
+                            this->swapchain.resources.image_format};
 
     VulkanCommands commands{this->ctx.device, this->swapchain.resources.images,
-                            this->pipeline.command_pool,
+                            this->ctx.family_indices.graphics_family,
                             ArtCode::MAX_FRAMES_IN_FLIGHT};
 
     VkFormat format =

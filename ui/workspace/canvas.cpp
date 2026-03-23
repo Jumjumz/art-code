@@ -17,6 +17,7 @@ void Canvas::render() {
     ImGui::Begin("##canvas-begin", nullptr,
                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoTitleBar);
+
     ImGui::End();
     ImGui::PopStyleVar();
 };

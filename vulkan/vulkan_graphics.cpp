@@ -3,13 +3,10 @@
 #include <fstream>
 
 VulkanGraphics::VulkanGraphics(const vk::raii::Device &device,
-                               const vk::Format &image_format,
-                               const int &graphics_family)
-    : device(device), image_format(image_format),
-      graphics_family(graphics_family) {
+                               const vk::Format &image_format)
+    : device(device), image_format(image_format) {
     create_descriptor_set_layout();
     create_graphics_pipeline();
-    create_command_pool();
 };
 
 [[nodiscard]]
@@ -166,12 +163,4 @@ void VulkanGraphics::create_graphics_pipeline() {
 
     this->graphics_pipeline =
         vk::raii::Pipeline{this->device, nullptr, pipeline_info, nullptr};
-};
-
-void VulkanGraphics::create_command_pool() {
-    vk::CommandPoolCreateInfo pool_info{};
-    pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-    pool_info.queueFamilyIndex = static_cast<uint32_t>(this->graphics_family);
-
-    this->command_pool = vk::raii::CommandPool{this->device, pool_info, nullptr};
 };
