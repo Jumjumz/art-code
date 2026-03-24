@@ -1,5 +1,4 @@
 #include "vulkan_graphics.hpp"
-#include "vertex.hpp"
 #include <fstream>
 
 VulkanGraphics::VulkanGraphics(const vk::raii::Device &device,
@@ -37,7 +36,7 @@ std::vector<char> VulkanGraphics::read_file(const std::string &file_name) {
 void VulkanGraphics::create_descriptor_set_layout() {
     vk::DescriptorSetLayoutBinding ubo_layout_binding(
         0, vk::DescriptorType::eUniformBuffer, 1,
-        vk::ShaderStageFlagBits::eVertex, nullptr);
+        vk::ShaderStageFlagBits::eFragment, nullptr);
 
     vk::DescriptorSetLayoutCreateInfo descriptor_info{};
     descriptor_info.bindingCount = 1;
@@ -67,7 +66,7 @@ void VulkanGraphics::create_graphics_pipeline() {
                                                          frag_shader_stage_info};
 
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
-    assembly_info.topology = vk::PrimitiveTopology::eLineList;
+    assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
 
     std::vector<vk::DynamicState> dynamic_states = {
         vk::DynamicState::eViewport,
@@ -79,15 +78,9 @@ void VulkanGraphics::create_graphics_pipeline() {
         static_cast<uint32_t>(dynamic_states.size());
     dynamic_state_info.pDynamicStates = dynamic_states.data();
 
-    auto binding_description = Vertex::get_binding_description();
-    auto attribute_description = Vertex::get_attribute_description();
-
     vk::PipelineVertexInputStateCreateInfo vertex_info{};
-    vertex_info.vertexBindingDescriptionCount = 1;
-    vertex_info.vertexAttributeDescriptionCount =
-        static_cast<uint32_t>(attribute_description.size());
-    vertex_info.pVertexBindingDescriptions = &binding_description;
-    vertex_info.pVertexAttributeDescriptions = attribute_description.data();
+    vertex_info.vertexBindingDescriptionCount = 0;
+    vertex_info.vertexAttributeDescriptionCount = 0;
 
     vk::PipelineViewportStateCreateInfo viewport_state_info{};
     viewport_state_info.pViewports = nullptr; // use dynamic viewport state
@@ -97,12 +90,8 @@ void VulkanGraphics::create_graphics_pipeline() {
 
     vk::PipelineRasterizationStateCreateInfo rasterization_state_info{};
     rasterization_state_info.depthClampEnable = vk::False;
-    rasterization_state_info.rasterizerDiscardEnable = vk::False;
     rasterization_state_info.polygonMode = vk::PolygonMode::eFill;
-    rasterization_state_info.cullMode = vk::CullModeFlagBits::eBack;
-    rasterization_state_info.frontFace = vk::FrontFace::eCounterClockwise;
-    rasterization_state_info.depthBiasEnable = vk::False;
-    rasterization_state_info.depthBiasSlopeFactor = 1.0f;
+    rasterization_state_info.cullMode = vk::CullModeFlagBits::eNone;
     rasterization_state_info.lineWidth = 1.0f;
 
     vk::PipelineMultisampleStateCreateInfo multismapling_state_info{};
@@ -110,9 +99,8 @@ void VulkanGraphics::create_graphics_pipeline() {
     multismapling_state_info.sampleShadingEnable = vk::False;
 
     vk::PipelineDepthStencilStateCreateInfo stencil_state_info{};
-    stencil_state_info.depthTestEnable = vk::True;
-    stencil_state_info.depthWriteEnable = vk::True;
-    stencil_state_info.depthCompareOp = vk::CompareOp::eLess;
+    stencil_state_info.depthTestEnable = vk::False;
+    stencil_state_info.depthWriteEnable = vk::False;
     stencil_state_info.depthBoundsTestEnable = vk::False;
     stencil_state_info.stencilTestEnable = vk::False;
 
@@ -121,17 +109,11 @@ void VulkanGraphics::create_graphics_pipeline() {
     color_attachment.colorWriteMask =
         vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
         vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    color_attachment.srcColorBlendFactor = vk::BlendFactor::eSrc1Alpha;
-    color_attachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrc1Alpha;
-    color_attachment.colorBlendOp = vk::BlendOp::eAdd;
-    color_attachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
-    color_attachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
-    color_attachment.alphaBlendOp = vk::BlendOp::eAdd;
 
-    vk::PipelineColorBlendStateCreateInfo color_blend_info{};
-    color_blend_info.logicOp = vk::LogicOp::eCopy;
-    color_blend_info.attachmentCount = 1;
-    color_blend_info.pAttachments = &color_attachment;
+    vk::PipelineColorBlendStateCreateInfo blend_info{};
+    blend_info.logicOp = vk::LogicOp::eCopy;
+    blend_info.attachmentCount = 1;
+    blend_info.pAttachments = &color_attachment;
 
     vk::PipelineLayoutCreateInfo layout_info{};
     layout_info.setLayoutCount = 1;
@@ -153,7 +135,7 @@ void VulkanGraphics::create_graphics_pipeline() {
     pipeline_info.pViewportState = &viewport_state_info;
     pipeline_info.pRasterizationState = &rasterization_state_info;
     pipeline_info.pMultisampleState = &multismapling_state_info;
-    pipeline_info.pColorBlendState = &color_blend_info;
+    pipeline_info.pColorBlendState = &blend_info;
     pipeline_info.pDynamicState = &dynamic_state_info;
     pipeline_info.pDepthStencilState = &stencil_state_info;
     pipeline_info.layout = this->layout;

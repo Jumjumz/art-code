@@ -15,6 +15,8 @@ class ArtCode {
     void run();
 
   private:
+    static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
     Window window;
 
     VulkanContext ctx{this->window.app_window};
@@ -33,14 +35,16 @@ class ArtCode {
 
     VulkanGraphics pipeline{this->ctx.device, this->vk_buffers.image_format};
 
-    VulkanCommands commands{this->ctx.device, this->swapchain.resources.images,
+    VulkanCommands commands{this->ctx.device,
+                            this->vk_buffers.canvas_uniform_buffer,
+                            this->pipeline.descriptor_set_layout,
+                            this->swapchain.resources.images,
                             this->ctx.family_indices.graphics_family,
                             ArtCode::MAX_FRAMES_IN_FLIGHT};
 
     VkFormat format =
         static_cast<VkFormat>(this->swapchain.resources.image_format);
 
-    static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
     uint32_t current_frame = 0;
 
     bool frame_buffer_resize = false;
@@ -51,7 +55,11 @@ class ArtCode {
 
     void imgui_init();
 
+    void canvas_setup();
+
     void draw_frame();
+
+    void update_canvas();
 
     void recreate_swapchain();
 
