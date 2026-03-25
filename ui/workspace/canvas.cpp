@@ -1,5 +1,6 @@
 #include "canvas.hpp"
 #include "imgui.h"
+#include "vk_types.hpp"
 
 Canvas::Canvas() {
 
@@ -17,6 +18,11 @@ void Canvas::render() {
     ImGui::Begin("##canvas-begin", nullptr,
                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoTitleBar);
+    ImVec2 size = ImGui::GetContentRegionAvail();
+
+    if (CanvasUtils::canvas_texture != VK_NULL_HANDLE) {
+        ImGui::Image((ImTextureID)CanvasUtils::canvas_texture, size);
+    }
 
     ImGui::End();
     ImGui::PopStyleVar();

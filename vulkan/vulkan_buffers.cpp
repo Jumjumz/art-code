@@ -7,6 +7,7 @@ VulkanBuffers::VulkanBuffers(const vk::raii::PhysicalDevice &physical_device,
     canvas_create_image(500, 500);
     canvas_create_image_views();
     canvas_create_buffer();
+    canvas_create_sampler();
 };
 
 void VulkanBuffers::canvas_create_image(const uint32_t &width,
@@ -86,6 +87,16 @@ void VulkanBuffers::canvas_create_buffer() {
     this->canvas_uniform_buffer_mapped =
         this->canvas_uniform_buffer_memory.mapMemory(
             0, sizeof(UniformBufferObject));
+};
+
+void VulkanBuffers::canvas_create_sampler() {
+    vk::SamplerCreateInfo sampler_info{};
+    sampler_info.magFilter = vk::Filter::eLinear;
+    sampler_info.minFilter = vk::Filter::eLinear;
+    sampler_info.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+    sampler_info.addressModeV = vk::SamplerAddressMode::eClampToEdge;
+
+    this->canvas_sampler = vk::raii::Sampler{this->device, sampler_info, nullptr};
 };
 
 uint32_t VulkanBuffers::find_memory_type(uint32_t type_filter,

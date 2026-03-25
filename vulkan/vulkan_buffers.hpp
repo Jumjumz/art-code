@@ -17,6 +17,8 @@ class VulkanBuffers {
 
     vk::raii::DeviceMemory canvas_uniform_buffer_memory = nullptr;
 
+    vk::raii::Sampler canvas_sampler = nullptr;
+
     void *canvas_uniform_buffer_mapped = nullptr;
 
     vk::Format image_format;
@@ -34,6 +36,8 @@ class VulkanBuffers {
     void canvas_create_image_memory();
 
     void canvas_create_buffer();
+
+    void canvas_create_sampler();
 
     uint32_t find_memory_type(uint32_t type_filter,
                               vk::MemoryPropertyFlags properties);

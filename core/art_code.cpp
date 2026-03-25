@@ -19,6 +19,9 @@ void ArtCode::loop() {
     while (!glfwWindowShouldClose(this->window.app_window)) {
         glfwWaitEvents();
 
+        // update canvas and texture first
+        update_canvas();
+
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -27,8 +30,6 @@ void ArtCode::loop() {
         this->ui_manager.render();
 
         ImGui::Render();
-
-        update_canvas();
 
         draw_frame();
     }
@@ -78,6 +79,10 @@ void ArtCode::imgui_init() {
     init_info.ImageCount = this->ctx.config.image_count;
 
     ImGui_ImplVulkan_Init(&init_info);
+    // descriptor set
+    CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
+        *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     glfwSetWindowUserPointer(this->window.app_window, this);
     glfwSetFramebufferSizeCallback(
@@ -219,7 +224,7 @@ void ArtCode::record_command_buffer(uint32_t image_index) {
 
     transition_image_layout(this->vk_buffers.images,
                             vk::ImageLayout::eColorAttachmentOptimal,
-                            vk::ImageLayout::ePresentSrcKHR,
+                            vk::ImageLayout::eShaderReadOnlyOptimal,
                             vk::AccessFlagBits2::eColorAttachmentWrite, {},
                             vk::PipelineStageFlagBits2::eColorAttachmentOutput,
                             vk::PipelineStageFlagBits2::eBottomOfPipe,
@@ -351,6 +356,11 @@ void ArtCode::update_canvas() {
 
             this->vk_buffers.canvas_create_image(width, height);
             this->vk_buffers.canvas_create_image_views();
+
+            // run again after removal descriptor set
+            CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
+                *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
     }
 };
