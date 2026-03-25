@@ -2,7 +2,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
-#include "vertex.hpp"
+#include "vk_types.hpp"
 
 #include <cstring>
 #include <glm/gtc/matrix_transform.hpp>

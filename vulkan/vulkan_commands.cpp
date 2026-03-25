@@ -1,5 +1,5 @@
 #include "vulkan_commands.hpp"
-#include "vertex.hpp"
+#include "vk_types.hpp"
 
 VulkanCommands::VulkanCommands(
     const vk::raii::Device &device, const vk::raii::Buffer &canvas_uniform_buffer,

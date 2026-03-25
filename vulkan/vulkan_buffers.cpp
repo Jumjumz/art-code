@@ -1,5 +1,5 @@
 #include "vulkan_buffers.hpp"
-#include "vertex.hpp"
+#include "vk_types.hpp"
 
 VulkanBuffers::VulkanBuffers(const vk::raii::PhysicalDevice &physical_device,
                              const vk::raii::Device &device)
