@@ -8,6 +8,10 @@
 #include "vulkan_swapchain.hpp"
 #include "window.hpp"
 
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
 class ArtCode {
   public:
     ArtCode();
@@ -45,11 +49,28 @@ class ArtCode {
     VkFormat format =
         static_cast<VkFormat>(this->swapchain.resources.image_format);
 
+    vk::Result draw_result;
+
+    uint32_t image_index;
+
     uint32_t current_frame = 0;
 
     bool frame_buffer_resize = false;
 
+    const vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    const vk::Offset2D offset = {0, 0};
+
     UIManager ui_manager;
+
+    // multi  threading
+    std::mutex canvas_mutex;
+    std::condition_variable canvas_cv;
+    std::atomic<bool> running = true;
+
+    bool canvas_ready = false;
+
+    std::thread canvas_thread;
 
     void loop();
 
@@ -59,6 +80,10 @@ class ArtCode {
 
     void draw_frame();
 
+    void reset_buffers();
+
+    void submit_buffers(const std::vector<vk::CommandBuffer> &command_buffers);
+
     void update_canvas();
 
     void recreate_swapchain();
@@ -66,6 +91,10 @@ class ArtCode {
     void clean_swapchain();
 
     void record_command_buffer(uint32_t image_index);
+
+    void record_canvas_command();
+
+    void record_imgui_command();
 
     void transition_image_layout(vk::Image image, vk::ImageLayout old_layout,
                                  vk::ImageLayout new_layout,

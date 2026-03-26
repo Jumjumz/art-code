@@ -11,9 +11,11 @@ VulkanCommands::VulkanCommands(
       images(images), graphics_family(graphics_family),
       MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT) {
     imgui_create_command_pool();
-    create_command_buffer();
+    imgui_create_command_buffer();
     imgui_create_descriptor_pool();
     create_sync_objects();
+    canvas_create_command_pool();
+    canvas_create_command_buffer();
     canvas_create_descriptor_pool();
     canvas_create_descriptor_set();
 };
@@ -27,7 +29,7 @@ void VulkanCommands::imgui_create_command_pool() {
         vk::raii::CommandPool{this->device, pool_info, nullptr};
 };
 
-void VulkanCommands::create_command_buffer() {
+void VulkanCommands::imgui_create_command_buffer() {
     this->imgui_command_buffers.clear();
 
     vk::CommandBufferAllocateInfo alloc_info{};
@@ -84,6 +86,27 @@ void VulkanCommands::create_sync_objects() {
     }
 };
 
+void VulkanCommands::canvas_create_command_pool() {
+    vk::CommandPoolCreateInfo pool_info{};
+    pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+    pool_info.queueFamilyIndex = static_cast<uint32_t>(this->graphics_family);
+
+    this->canvas_command_pool =
+        vk::raii::CommandPool{this->device, pool_info, nullptr};
+};
+
+void VulkanCommands::canvas_create_command_buffer() {
+    vk::CommandBufferAllocateInfo alloc_info{};
+    alloc_info.level = vk::CommandBufferLevel::ePrimary;
+    alloc_info.commandPool = this->canvas_command_pool;
+    alloc_info.commandBufferCount = VulkanCommands::MAX_FRAMES_IN_FLIGHT;
+
+    this->canvas_command_buffers = vk::raii::CommandBuffers{
+        this->device,
+        alloc_info,
+    };
+};
+
 void VulkanCommands::canvas_create_descriptor_pool() {
     vk::DescriptorPoolSize poolSize(vk::DescriptorType::eUniformBuffer,
                                     VulkanCommands::MAX_FRAMES_IN_FLIGHT);
@@ -100,7 +123,8 @@ void VulkanCommands::canvas_create_descriptor_pool() {
 
 void VulkanCommands::canvas_create_descriptor_set() {
     std::vector<vk::DescriptorSetLayout> layouts(
-        this->MAX_FRAMES_IN_FLIGHT, *this->canvas_descriptor_set_layout);
+        VulkanCommands::MAX_FRAMES_IN_FLIGHT,
+        *this->canvas_descriptor_set_layout);
 
     vk::DescriptorSetAllocateInfo set_alloc_info{};
     set_alloc_info.descriptorPool = *this->canvas_descriptor_pool;

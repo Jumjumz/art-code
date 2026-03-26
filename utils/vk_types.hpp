@@ -10,7 +10,7 @@ struct UniformBufferObject {
     glm::mat4 proj;
 };
 
-// static variables
 struct CanvasUtils {
+    // use in art code and canvas class
     inline static VkDescriptorSet canvas_texture = VK_NULL_HANDLE;
 };

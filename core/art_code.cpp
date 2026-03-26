@@ -16,6 +16,27 @@ void ArtCode::run() {
 };
 
 void ArtCode::loop() {
+    this->canvas_thread = std::thread([this]() -> void {
+        while (this->running) {
+            std::unique_lock<std::mutex> lock{this->canvas_mutex};
+            this->canvas_cv.wait(
+                lock, [this]() -> bool { return !this->canvas_ready; });
+            lock.unlock();
+
+            if (!this->running)
+                break;
+
+            record_canvas_command();
+
+            // signal imgui, canvas is finish
+            {
+                std::lock_guard<std::mutex> lock{this->canvas_mutex};
+                this->canvas_ready = true;
+            }
+            this->canvas_cv.notify_one();
+        }
+    });
+
     while (!glfwWindowShouldClose(this->window.app_window)) {
         glfwWaitEvents();
 
@@ -31,12 +52,36 @@ void ArtCode::loop() {
 
         ImGui::Render();
 
-        draw_frame();
+        reset_buffers();
+
+        // signal canvas to start recording
+        {
+            std::lock_guard<std::mutex> lock{this->canvas_mutex};
+            this->canvas_ready = false;
+        }
+        this->canvas_cv.notify_one();
+
+        record_imgui_command();
+
+        // wait for canvas thread to finish
+        std::unique_lock<std::mutex> lock{this->canvas_mutex};
+        this->canvas_cv.wait(lock,
+                             [this]() -> bool { return this->canvas_ready; });
+        this->canvas_ready = false;
+        lock.unlock();
+
+        const std::vector<vk::CommandBuffer> buffers = {
+            this->commands.canvas_command_buffers[this->current_frame],
+            this->commands.imgui_command_buffers[this->current_frame]};
+
+        submit_buffers(buffers);
     }
+
+    this->canvas_thread.join();
 };
 
 void ArtCode::canvas_setup() {
-    // model, view and camera perspective
+    // model and camera perspective
     UniformBufferObject ubo{
         .model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)),
         .view = glm::lookAt(glm::vec3{0.0f, 0.0f, 0.0f},
@@ -79,7 +124,8 @@ void ArtCode::imgui_init() {
     init_info.ImageCount = this->ctx.config.image_count;
 
     ImGui_ImplVulkan_Init(&init_info);
-    // descriptor set
+
+    // init descriptor set
     CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
         *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -92,6 +138,81 @@ void ArtCode::imgui_init() {
                 reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
             app->frame_buffer_resize = true;
         });
+};
+
+void ArtCode::reset_buffers() {
+    auto fence_result = this->ctx.device.waitForFences(
+        *this->commands.in_flight_fences[this->current_frame], vk::True,
+        UINT64_MAX);
+
+    if (fence_result != vk::Result::eSuccess)
+        throw std::runtime_error("Failed to wait for fence!");
+
+    auto [result, image_index] = this->swapchain.swapchain.acquireNextImage(
+        UINT64_MAX, *this->commands.available_semaphores[this->current_frame],
+        nullptr);
+
+    if (result == vk::Result::eErrorOutOfDateKHR) {
+        recreate_swapchain();
+        return;
+    } else if (result != vk::Result::eSuccess &&
+               result != vk::Result::eSuboptimalKHR) {
+        assert(result == vk::Result::eTimeout || result == vk::Result::eNotReady);
+        throw std::runtime_error("Failed to acquire swapchain image!");
+    }
+
+    // pass image and result
+    this->draw_result = result;
+    this->image_index = image_index;
+
+    this->ctx.device.resetFences(
+        *this->commands.in_flight_fences[this->current_frame]);
+
+    // resets all command buffers
+    this->commands.canvas_command_buffers[this->current_frame].reset();
+    this->commands.imgui_command_buffers[this->current_frame].reset();
+};
+
+void ArtCode::submit_buffers(const std::vector<vk::CommandBuffer> &command_buffers) {
+    vk::PipelineStageFlags destination_stage_mask(
+        vk::PipelineStageFlagBits::eColorAttachmentOutput);
+
+    // submit imgui command buffer
+    vk::SubmitInfo imgui_submit_info{};
+    imgui_submit_info.waitSemaphoreCount = 1,
+    imgui_submit_info.pWaitSemaphores =
+        &*this->commands.available_semaphores[this->current_frame];
+    imgui_submit_info.pWaitDstStageMask = &destination_stage_mask;
+    imgui_submit_info.commandBufferCount = 2;
+    imgui_submit_info.pCommandBuffers = command_buffers.data();
+    imgui_submit_info.signalSemaphoreCount = 1;
+    imgui_submit_info.pSignalSemaphores =
+        &*this->commands.finished_semaphores[this->current_frame];
+
+    this->ctx.graphics_queue.submit(
+        imgui_submit_info, *this->commands.in_flight_fences[this->current_frame]);
+
+    vk::PresentInfoKHR present_info{};
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores =
+        &*this->commands.finished_semaphores[this->current_frame];
+    present_info.swapchainCount = 1;
+    present_info.pSwapchains = &*this->swapchain.swapchain;
+    present_info.pImageIndices = &image_index;
+
+    this->draw_result = this->ctx.present_queue.presentKHR(present_info);
+
+    if ((this->draw_result == vk::Result::eSuboptimalKHR) ||
+        (this->draw_result == vk::Result::eErrorOutOfDateKHR) ||
+        this->frame_buffer_resize) {
+        this->frame_buffer_resize = false;
+        recreate_swapchain();
+    } else {
+        assert(this->draw_result == vk::Result::eSuccess);
+    }
+
+    this->current_frame =
+        (this->current_frame + 1) % ArtCode::MAX_FRAMES_IN_FLIGHT;
 };
 
 void ArtCode::draw_frame() {
@@ -115,32 +236,50 @@ void ArtCode::draw_frame() {
         throw std::runtime_error("Failed to acquire swapchain image!");
     }
 
+    // pass image index
+    this->image_index = image_index;
+
     this->ctx.device.resetFences(
         *this->commands.in_flight_fences[this->current_frame]);
 
+    // resets all command buffers
+    this->commands.canvas_command_buffers[this->current_frame].reset();
     this->commands.imgui_command_buffers[this->current_frame].reset();
 
     canvas_setup();
 
-    record_command_buffer(image_index);
-
     vk::PipelineStageFlags destination_stage_mask(
         vk::PipelineStageFlagBits::eColorAttachmentOutput);
 
-    vk::SubmitInfo submit_info{};
-    submit_info.waitSemaphoreCount = 1,
-    submit_info.pWaitSemaphores =
+    // submit canvas command buffer
+    vk::SubmitInfo canvas_submit_info{};
+    canvas_submit_info.waitSemaphoreCount = 1,
+    canvas_submit_info.pWaitSemaphores =
         &*this->commands.available_semaphores[this->current_frame];
-    submit_info.pWaitDstStageMask = &destination_stage_mask;
-    submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers =
+    canvas_submit_info.pWaitDstStageMask = &destination_stage_mask;
+    canvas_submit_info.commandBufferCount = 1;
+    canvas_submit_info.pCommandBuffers =
+        &*this->commands.canvas_command_buffers[this->current_frame];
+    canvas_submit_info.signalSemaphoreCount = 1;
+    canvas_submit_info.pSignalSemaphores =
+        &*this->commands.finished_semaphores[this->current_frame];
+
+    // submit imgui command buffer
+    vk::SubmitInfo imgui_submit_info{};
+    imgui_submit_info.waitSemaphoreCount = 1,
+    imgui_submit_info.pWaitSemaphores =
+        &*this->commands.available_semaphores[this->current_frame];
+    imgui_submit_info.pWaitDstStageMask = &destination_stage_mask;
+    imgui_submit_info.commandBufferCount = 1;
+    imgui_submit_info.pCommandBuffers =
         &*this->commands.imgui_command_buffers[this->current_frame];
-    submit_info.signalSemaphoreCount = 1;
-    submit_info.pSignalSemaphores =
+    imgui_submit_info.signalSemaphoreCount = 1;
+    imgui_submit_info.pSignalSemaphores =
         &*this->commands.finished_semaphores[this->current_frame];
 
     this->ctx.graphics_queue.submit(
-        submit_info, *this->commands.in_flight_fences[this->current_frame]);
+        {imgui_submit_info, canvas_submit_info},
+        *this->commands.in_flight_fences[this->current_frame]);
 
     vk::PresentInfoKHR present_info{};
     present_info.waitSemaphoreCount = 1;
@@ -164,12 +303,138 @@ void ArtCode::draw_frame() {
         (this->current_frame + 1) % ArtCode::MAX_FRAMES_IN_FLIGHT;
 };
 
+void ArtCode::record_canvas_command() {
+    auto &cmd = this->commands.canvas_command_buffers[this->current_frame];
+
+    // render
+    cmd.begin({});
+
+    transition_image_layout(this->vk_buffers.images, vk::ImageLayout::eUndefined,
+                            vk::ImageLayout::eColorAttachmentOptimal, {},
+                            vk::AccessFlagBits2::eColorAttachmentWrite,
+                            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                            vk::ImageAspectFlagBits::eColor);
+
+    // prepare to render canvas
+    vk::RenderingAttachmentInfo canvas_attachement_info{};
+    canvas_attachement_info.imageView = this->vk_buffers.image_views;
+    canvas_attachement_info.imageLayout =
+        vk::ImageLayout::eColorAttachmentOptimal;
+    canvas_attachement_info.loadOp = vk::AttachmentLoadOp::eClear;
+    canvas_attachement_info.storeOp = vk::AttachmentStoreOp::eStore;
+    canvas_attachement_info.clearValue = this->clear_color;
+
+    vk::RenderingInfo canvas_rendering_info{};
+    canvas_rendering_info.renderArea.offset = this->offset;
+    canvas_rendering_info.renderArea.extent = vk::Extent2D{
+        this->vk_buffers.extent.width, this->vk_buffers.extent.height};
+    canvas_rendering_info.layerCount = 1;
+    canvas_rendering_info.colorAttachmentCount = 1;
+    canvas_rendering_info.pColorAttachments = &canvas_attachement_info;
+
+    // render canvas
+    cmd.beginRendering(canvas_rendering_info);
+
+    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                     this->pipeline.graphics_pipeline);
+
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                           this->pipeline.layout, 0,
+                           *this->commands.canvas_descriptor_set[0], nullptr);
+
+    cmd.setViewport(
+        0, vk::Viewport{
+               0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),
+               static_cast<float>(this->vk_buffers.extent.height), 0.0f, 1.0f});
+
+    cmd.setScissor(0, vk::Rect2D{vk::Offset2D{0, 0},
+                                 vk::Extent2D{this->vk_buffers.extent.width,
+                                              this->vk_buffers.extent.height}});
+
+    cmd.draw(3, 1, 0, 0);
+
+    cmd.endRendering();
+
+    transition_image_layout(this->vk_buffers.images,
+                            vk::ImageLayout::eColorAttachmentOptimal,
+                            vk::ImageLayout::eShaderReadOnlyOptimal,
+                            vk::AccessFlagBits2::eColorAttachmentWrite, {},
+                            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                            vk::PipelineStageFlagBits2::eBottomOfPipe,
+                            vk::ImageAspectFlagBits::eColor);
+
+    cmd.end();
+};
+
+void ArtCode::record_imgui_command() {
+    auto &cmd = this->commands.imgui_command_buffers[this->current_frame];
+
+    VkCommandBuffer cmd_buffer = *cmd;
+
+    // render
+    cmd.begin({});
+
+    // render imgui ui components to swapchain
+    transition_image_layout(this->swapchain.resources.images[this->image_index],
+                            vk::ImageLayout::eUndefined,
+                            vk::ImageLayout::eColorAttachmentOptimal, {},
+                            vk::AccessFlagBits2::eColorAttachmentWrite,
+                            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                            vk::ImageAspectFlagBits::eColor);
+
+    // prepare to render imgui
+    vk::RenderingAttachmentInfo imgui_attachement_info{};
+    imgui_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+    imgui_attachement_info.loadOp = vk::AttachmentLoadOp::eClear;
+    imgui_attachement_info.storeOp = vk::AttachmentStoreOp::eStore;
+    imgui_attachement_info.clearValue = this->clear_color;
+    imgui_attachement_info.imageView =
+        this->swapchain.resources.image_views[this->image_index];
+
+    vk::RenderingInfo imgui_rendering_info{};
+    imgui_rendering_info.renderArea.offset = this->offset;
+    imgui_rendering_info.renderArea.extent = this->swapchain.resources.extent;
+    imgui_rendering_info.layerCount = 1;
+    imgui_rendering_info.colorAttachmentCount = 1;
+    imgui_rendering_info.pColorAttachments = &imgui_attachement_info;
+
+    // render imgui
+    cmd.beginRendering(imgui_rendering_info);
+
+    cmd.setViewport(
+        0,
+        vk::Viewport{0.0f, 0.0f,
+                     static_cast<float>(this->swapchain.resources.extent.width),
+                     static_cast<float>(this->swapchain.resources.extent.height),
+                     0.0f, 1.0f});
+
+    cmd.setScissor(
+        0, vk::Rect2D{vk::Offset2D{0, 0}, this->swapchain.resources.extent});
+
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd_buffer,
+                                    VK_NULL_HANDLE);
+
+    cmd.endRendering();
+
+    transition_image_layout(this->swapchain.resources.images[this->image_index],
+                            vk::ImageLayout::eColorAttachmentOptimal,
+                            vk::ImageLayout::ePresentSrcKHR,
+                            vk::AccessFlagBits2::eColorAttachmentWrite, {},
+                            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                            vk::PipelineStageFlagBits2::eBottomOfPipe,
+                            vk::ImageAspectFlagBits::eColor);
+
+    cmd.end();
+};
+
 void ArtCode::record_command_buffer(uint32_t image_index) {
     auto &cmd = this->commands.imgui_command_buffers[this->current_frame];
 
     VkCommandBuffer cmd_buffer = *cmd;
 
-    // render canvas
+    // render
     cmd.begin({});
 
     transition_image_layout(this->vk_buffers.images, vk::ImageLayout::eUndefined,
@@ -184,6 +449,7 @@ void ArtCode::record_command_buffer(uint32_t image_index) {
 
     vk::Offset2D offset = {0, 0};
 
+    // prepare to render canvas
     vk::RenderingAttachmentInfo canvas_attachement_info{};
     canvas_attachement_info.imageView = this->vk_buffers.image_views;
     canvas_attachement_info.imageLayout =
@@ -200,6 +466,7 @@ void ArtCode::record_command_buffer(uint32_t image_index) {
     canvas_rendering_info.colorAttachmentCount = 1;
     canvas_rendering_info.pColorAttachments = &canvas_attachement_info;
 
+    // render canvas
     cmd.beginRendering(canvas_rendering_info);
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
@@ -239,6 +506,7 @@ void ArtCode::record_command_buffer(uint32_t image_index) {
                             vk::PipelineStageFlagBits2::eColorAttachmentOutput,
                             vk::ImageAspectFlagBits::eColor);
 
+    // prepare to render imgui
     vk::RenderingAttachmentInfo imgui_attachement_info{};
     imgui_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
     imgui_attachement_info.loadOp = vk::AttachmentLoadOp::eClear;
@@ -254,6 +522,7 @@ void ArtCode::record_command_buffer(uint32_t image_index) {
     imgui_rendering_info.colorAttachmentCount = 1;
     imgui_rendering_info.pColorAttachments = &imgui_attachement_info;
 
+    // render imgui
     cmd.beginRendering(imgui_rendering_info);
 
     cmd.setViewport(
@@ -321,6 +590,8 @@ void ArtCode::recreate_swapchain() {
 
     this->swapchain.imgui_create_image_views();
 
+    update_canvas();
+
     // render ui with the new size immidiately <- this doesnt work
     ImGuiIO &io = ImGui::GetIO();
     io.DisplaySize = ImVec2{float(this->swapchain.resources.extent.width),
@@ -332,20 +603,9 @@ void ArtCode::clean_swapchain() {
     this->swapchain.swapchain = nullptr;
 };
 
-void ArtCode::cleanup() {
-    this->ctx.device.waitIdle();
-
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    clean_swapchain();
-
-    this->window.destroy_window();
-};
-
 void ArtCode::update_canvas() {
     auto canvas = ImGui::FindWindowByName("##canvas-begin");
+
     if (canvas) {
         auto width = static_cast<uint32_t>(canvas->Size.x);
         auto height = static_cast<uint32_t>(canvas->Size.y);
@@ -357,10 +617,34 @@ void ArtCode::update_canvas() {
             this->vk_buffers.canvas_create_image(width, height);
             this->vk_buffers.canvas_create_image_views();
 
-            // run again after removal descriptor set
+            // remove the old texture at canvas resize
+            ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
+
+            // run again after removal
             CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
                 *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
     }
+};
+
+void ArtCode::cleanup() {
+    // stop the canvas worker thread
+    {
+        std::lock_guard<std::mutex> lock{this->canvas_mutex};
+        this->running = false;
+        this->canvas_ready = false;
+    }
+    this->canvas_cv.notify_one();
+    canvas_thread.join();
+
+    this->ctx.device.waitIdle();
+
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    clean_swapchain();
+
+    this->window.destroy_window();
 };

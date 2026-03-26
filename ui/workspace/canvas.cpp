@@ -2,9 +2,7 @@
 #include "imgui.h"
 #include "vk_types.hpp"
 
-Canvas::Canvas() {
-
-};
+Canvas::Canvas() {};
 
 void Canvas::render() {
     auto *viewport = ImGui::GetMainViewport();

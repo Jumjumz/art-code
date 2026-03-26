@@ -21,6 +21,8 @@ class VulkanCommands {
     vk::raii::DescriptorPool imgui_descriptor_pool = nullptr;
 
     // canvas
+    std::vector<vk::raii::CommandBuffer> canvas_command_buffers;
+
     vk::raii::CommandPool canvas_command_pool = nullptr;
 
     vk::raii::DescriptorPool canvas_descriptor_pool = nullptr;
@@ -42,11 +44,15 @@ class VulkanCommands {
 
     void imgui_create_command_pool();
 
-    void create_command_buffer();
+    void imgui_create_command_buffer();
 
     void imgui_create_descriptor_pool();
 
     void create_sync_objects();
+
+    void canvas_create_command_pool();
+
+    void canvas_create_command_buffer();
 
     void canvas_create_descriptor_pool();
 
