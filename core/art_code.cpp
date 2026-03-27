@@ -27,6 +27,8 @@ void ArtCode::loop() {
             if (!this->running)
                 break;
 
+            canvas_setup();
+
             record_canvas_command();
 
             // records canvas and runs parallel with the main thread
@@ -85,7 +87,7 @@ void ArtCode::loop() {
         this->running = false;
         this->canvas_ready = false;
     }
-    this->canvas_cv.notify_all();
+    this->canvas_cv.notify_one();
     this->canvas_thread.join();
 };
 

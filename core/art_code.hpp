@@ -68,7 +68,7 @@ class ArtCode {
     std::condition_variable canvas_cv;
     std::atomic<bool> running = true;
 
-    bool canvas_ready = false;
+    std::atomic<bool> canvas_ready = false;
 
     std::thread canvas_thread;
 
