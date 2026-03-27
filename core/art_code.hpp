@@ -78,8 +78,6 @@ class ArtCode {
 
     void canvas_setup();
 
-    void draw_frame();
-
     void reset_buffers();
 
     void submit_buffers(const std::vector<vk::CommandBuffer> &command_buffers);
@@ -88,21 +86,21 @@ class ArtCode {
 
     void recreate_swapchain();
 
-    void clean_swapchain();
-
-    void record_command_buffer(uint32_t image_index);
-
     void record_canvas_command();
 
     void record_imgui_command();
 
-    void transition_image_layout(vk::Image image, vk::ImageLayout old_layout,
-                                 vk::ImageLayout new_layout,
-                                 vk::AccessFlags2 src_access_mask,
-                                 vk::AccessFlags2 dst_accessmask,
-                                 vk::PipelineStageFlags2 src_stage_mask,
-                                 vk::PipelineStageFlags2 dst_stage_mask,
-                                 vk::ImageAspectFlags image_aspect_flags);
+    void transition_image_layout(const vk::CommandBuffer &cmd_buffer,
+                                 const vk::Image &image,
+                                 const vk::ImageLayout &old_layout,
+                                 const vk::ImageLayout &new_layout,
+                                 const vk::AccessFlags2 &src_access_mask,
+                                 const vk::AccessFlags2 &dst_accessmask,
+                                 const vk::PipelineStageFlags2 &src_stage_mask,
+                                 const vk::PipelineStageFlags2 &dst_stage_mask,
+                                 const vk::ImageAspectFlags &image_aspect_flags);
+
+    void clean_swapchain();
 
     void cleanup();
 };
