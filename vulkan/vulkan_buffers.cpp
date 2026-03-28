@@ -63,13 +63,14 @@ void VulkanBuffers::canvas_create_image_views() {
 
 void VulkanBuffers::canvas_create_buffer() {
     vk::BufferCreateInfo buffer_info{};
-    buffer_info.size = sizeof(UniformBufferObject);
+    buffer_info.size = sizeof(ArtboardBuffer);
     buffer_info.usage = vk::BufferUsageFlagBits::eUniformBuffer;
     buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
     this->canvas_uniform_buffer =
         vk::raii::Buffer{this->device, buffer_info, nullptr};
 
+    // allocate memory to the uniform buffer
     vk::MemoryRequirements mem_requirements =
         this->canvas_uniform_buffer.getMemoryRequirements();
 
@@ -85,8 +86,7 @@ void VulkanBuffers::canvas_create_buffer() {
 
     this->canvas_uniform_buffer.bindMemory(this->canvas_uniform_buffer_memory, 0);
     this->canvas_uniform_buffer_mapped =
-        this->canvas_uniform_buffer_memory.mapMemory(
-            0, sizeof(UniformBufferObject));
+        this->canvas_uniform_buffer_memory.mapMemory(0, sizeof(ArtboardBuffer));
 };
 
 void VulkanBuffers::canvas_create_sampler() {

@@ -36,7 +36,8 @@ std::vector<char> VulkanGraphics::read_file(const std::string &file_name) {
 void VulkanGraphics::create_descriptor_set_layout() {
     vk::DescriptorSetLayoutBinding ubo_layout_binding(
         0, vk::DescriptorType::eUniformBuffer, 1,
-        vk::ShaderStageFlagBits::eFragment, nullptr);
+        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+        nullptr);
 
     vk::DescriptorSetLayoutCreateInfo descriptor_info{};
     descriptor_info.bindingCount = 1;
@@ -66,7 +67,7 @@ void VulkanGraphics::create_graphics_pipeline() {
                                                          frag_shader_stage_info};
 
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
-    assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
+    assembly_info.topology = vk::PrimitiveTopology::eLineStrip;
 
     std::vector<vk::DynamicState> dynamic_states = {
         vk::DynamicState::eViewport,

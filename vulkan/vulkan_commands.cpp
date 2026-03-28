@@ -138,7 +138,7 @@ void VulkanCommands::canvas_create_descriptor_set() {
     vk::DescriptorBufferInfo buffer_info{};
     buffer_info.buffer = *this->canvas_uniform_buffer;
     buffer_info.offset = 0;
-    buffer_info.range = sizeof(UniformBufferObject);
+    buffer_info.range = sizeof(ArtboardBuffer);
 
     vk::WriteDescriptorSet write_desc_set{};
     write_desc_set.dstSet = this->canvas_descriptor_set[0];

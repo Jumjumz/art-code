@@ -5,7 +5,8 @@
 #include "vk_types.hpp"
 
 #include <cstring>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
 
 ArtCode::ArtCode() {};
 
@@ -92,18 +93,18 @@ void ArtCode::loop() {
 };
 
 void ArtCode::canvas_setup() {
-    // model and camera perspective
-    UniformBufferObject ubo{
-        .model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)),
-        .view = glm::lookAt(glm::vec3{0.0f, 0.0f, 0.0f},
-                            glm::vec3(0.0f, 0.0f, 0.0f),
-                            glm::vec3(0.0f, 1.0f, 0.0f)),
-        .proj = glm::perspective(glm::radians(45.0f), this->window.aspect_ratio,
-                                 0.1f, 10.0f)};
+    const float width = 1920;
+    const float height = 1080;
 
-    ubo.proj[1][1] *= -1;
+    ArtboardBuffer a_ubo{
+        .proj = glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
+                           (float)this->vk_buffers.extent.height, 0.0f, -1.0f,
+                           0.0f),
+        .view = glm::translate(glm::mat4(1.0f),
+                               glm::vec3(width / 2, height / 2, 0.0f)),
+        .reso = {width, height}};
 
-    memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &ubo, sizeof(ubo));
+    memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
 };
 
 void ArtCode::imgui_init() {
@@ -276,7 +277,7 @@ void ArtCode::record_canvas_command() {
                                  vk::Extent2D{this->vk_buffers.extent.width,
                                               this->vk_buffers.extent.height}});
 
-    cmd.draw(3, 1, 0, 0);
+    cmd.draw(5, 1, 0, 0);
 
     cmd.endRendering();
 
