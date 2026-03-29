@@ -38,11 +38,19 @@ void ArtCode::loop() {
                 this->canvas_ready = true;
             }
             this->canvas_cv.notify_one();
+
+            // scroll
+            glfwSetScrollCallback(
+                this->window.app_window,
+                [](GLFWwindow *window, double x, double y) -> void {
+                    CanvasUtils::zoom += y * 0.25;
+                    CanvasUtils::zoom = glm::clamp(CanvasUtils::zoom, 0.1f, 10.f);
+                });
         }
     });
 
     while (!glfwWindowShouldClose(this->window.app_window)) {
-        glfwWaitEvents();
+        glfwPollEvents();
 
         // update canvas and texture first
         update_canvas();
@@ -93,15 +101,36 @@ void ArtCode::loop() {
 };
 
 void ArtCode::canvas_setup() {
-    const float width = 1920;
-    const float height = 1080;
+    const float width = 800;
+    const float height = 400;
+
+    // get canvas center
+    const float center_x = this->vk_buffers.extent.width / 2.0f;
+    const float center_y = this->vk_buffers.extent.height / 2.0f;
+
+    // identity matrix
+    glm::mat4 view = glm::mat4(1.0f);
+
+    // transalte to center
+    view = glm::translate(view, glm::vec3(center_x, center_y, 0.0f));
+
+    // scale to center
+    view =
+        glm::scale(view, glm::vec3(CanvasUtils::zoom, CanvasUtils::zoom, 1.0f));
+
+    // tanslate back
+    view = glm::translate(view, glm::vec3(-center_x, -center_y, 0.0f));
+
+    // center the artboard
+    view = glm::translate(
+        view, glm::vec3((this->vk_buffers.extent.width - width) / 2,
+                        (this->vk_buffers.extent.height - height) / 2, 0.0f));
 
     ArtboardBuffer a_ubo{
         .proj = glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
                            (float)this->vk_buffers.extent.height, 0.0f, -1.0f,
                            0.0f),
-        .view = glm::translate(glm::mat4(1.0f),
-                               glm::vec3(width / 2, height / 2, 0.0f)),
+        .view = view,
         .reso = {width, height}};
 
     memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));

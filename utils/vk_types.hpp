@@ -22,5 +22,5 @@ struct ArtboardBuffer {
 struct CanvasUtils {
     // use in art code and canvas class
     inline static VkDescriptorSet canvas_texture = VK_NULL_HANDLE;
-    inline static glm::vec3 camera = {0, 0, 0};
+    inline static float zoom = 1;
 };

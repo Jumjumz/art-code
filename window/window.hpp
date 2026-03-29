@@ -8,8 +8,6 @@ class Window {
 
     bool running = true;
 
-    float aspect_ratio;
-
     GLFWwindow *app_window;
 
     void destroy_window() const;
