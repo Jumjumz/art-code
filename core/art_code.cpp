@@ -98,12 +98,12 @@ void ArtCode::canvas_setup() {
     const float width = 800;
     const float height = 400;
 
+    // identity matrix
+    glm::mat4 view = glm::mat4(1.0f);
+
     // get canvas center
     const float center_x = this->vk_buffers.extent.width / 2.0f;
     const float center_y = this->vk_buffers.extent.height / 2.0f;
-
-    // identity matrix
-    glm::mat4 view = glm::mat4(1.0f);
 
     // translate to center
     view = glm::translate(view, glm::vec3(center_x, center_y, 0.0f));
@@ -114,6 +114,10 @@ void ArtCode::canvas_setup() {
 
     // tanslate back
     view = glm::translate(view, glm::vec3(-center_x, -center_y, 0.0f));
+
+    // translate to the panning position
+    view = glm::translate(
+        view, glm::vec3(CanvasUtils::panning.x, CanvasUtils::panning.y, 0.0f));
 
     ArtboardBuffer a_ubo{
         .proj = glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
@@ -149,6 +153,11 @@ void ArtCode::canvas_input_events() {
                                    app->ctrl_pressed = true;
                                if (action == GLFW_RELEASE)
                                    app->ctrl_pressed = false;
+                           } else if (key == GLFW_KEY_SPACE) {
+                               if (action == GLFW_PRESS)
+                                   app->spacebar_pressed = true;
+                               if (action == GLFW_RELEASE)
+                                   app->spacebar_pressed = false;
                            }
                        });
 
@@ -164,6 +173,50 @@ void ArtCode::canvas_input_events() {
                                       glm::clamp(CanvasUtils::zoom, 0.1f, 5.0f);
                               }
                           });
+
+    // panning
+    glfwSetMouseButtonCallback(
+        this->window.app_window,
+        [](GLFWwindow *window, int button, int action, int mods) -> void {
+            auto app =
+                reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
+
+            if (button == GLFW_MOUSE_BUTTON_LEFT) {
+                if (action == GLFW_PRESS)
+                    app->left_click_pressed = true;
+                if (action == GLFW_RELEASE)
+                    app->left_click_pressed = false;
+            }
+        });
+
+    // calculate mouse movement
+    glfwSetCursorPosCallback(
+        this->window.app_window,
+        [](GLFWwindow *window, double xpos, double ypos) -> void {
+            auto app =
+                reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
+            auto dx = static_cast<float>(xpos) - CanvasUtils::mouse_last_pos.x;
+            auto dy = static_cast<float>(ypos) - CanvasUtils::mouse_last_pos.y;
+
+            // update last position
+            CanvasUtils::mouse_last_pos.x = xpos;
+            CanvasUtils::mouse_last_pos.y = ypos;
+
+            // check if space bar and mouse left click is pressed
+            if (app->spacebar_pressed && app->left_click_pressed) {
+                CanvasUtils::panning.x += dx * 1.0f;
+                CanvasUtils::panning.y += -dy * 1.0f;
+
+                const float extra_sapce = 100.0f;
+                auto width = static_cast<float>(app->vk_buffers.extent.width);
+                auto height = static_cast<float>(app->vk_buffers.extent.height);
+
+                CanvasUtils::panning = glm::clamp(
+                    CanvasUtils::panning,
+                    glm::vec2(-width + extra_sapce, -height + extra_sapce),
+                    glm::vec2(width + extra_sapce, height + extra_sapce));
+            }
+        });
 };
 
 void ArtCode::imgui_init() {
@@ -481,7 +534,7 @@ void ArtCode::update_canvas() {
             // remove the old texture at canvas resize
             ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
 
-            // run again after removal
+            // run again after texture removal
             CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
                 *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

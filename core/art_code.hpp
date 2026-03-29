@@ -75,6 +75,7 @@ class ArtCode {
     // key inputs
     bool ctrl_pressed;
     bool spacebar_pressed;
+    bool left_click_pressed;
 
     void loop();
 
