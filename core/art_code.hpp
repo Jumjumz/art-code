@@ -72,6 +72,10 @@ class ArtCode {
 
     std::thread canvas_thread;
 
+    // key inputs
+    bool ctrl_pressed;
+    bool spacebar_pressed;
+
     void loop();
 
     void imgui_init();
@@ -83,6 +87,8 @@ class ArtCode {
     void submit_buffers(const std::vector<vk::CommandBuffer> &command_buffers);
 
     void update_canvas();
+
+    void canvas_input_events();
 
     void recreate_swapchain();
 

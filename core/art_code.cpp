@@ -39,18 +39,12 @@ void ArtCode::loop() {
             }
             this->canvas_cv.notify_one();
 
-            // scroll
-            glfwSetScrollCallback(
-                this->window.app_window,
-                [](GLFWwindow *window, double x, double y) -> void {
-                    CanvasUtils::zoom += y * 0.25;
-                    CanvasUtils::zoom = glm::clamp(CanvasUtils::zoom, 0.1f, 10.f);
-                });
+            canvas_input_events();
         }
     });
 
     while (!glfwWindowShouldClose(this->window.app_window)) {
-        glfwPollEvents();
+        glfwWaitEvents();
 
         // update canvas and texture first
         update_canvas();
@@ -111,7 +105,7 @@ void ArtCode::canvas_setup() {
     // identity matrix
     glm::mat4 view = glm::mat4(1.0f);
 
-    // transalte to center
+    // translate to center
     view = glm::translate(view, glm::vec3(center_x, center_y, 0.0f));
 
     // scale to center
@@ -121,19 +115,55 @@ void ArtCode::canvas_setup() {
     // tanslate back
     view = glm::translate(view, glm::vec3(-center_x, -center_y, 0.0f));
 
-    // center the artboard
-    view = glm::translate(
-        view, glm::vec3((this->vk_buffers.extent.width - width) / 2,
-                        (this->vk_buffers.extent.height - height) / 2, 0.0f));
-
     ArtboardBuffer a_ubo{
         .proj = glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
                            (float)this->vk_buffers.extent.height, 0.0f, -1.0f,
                            0.0f),
         .view = view,
+        .model = glm::translate(
+            glm::mat4(1.0f),
+            glm::vec3((this->vk_buffers.extent.width - width) / 2,
+                      (this->vk_buffers.extent.height - height) / 2, 0.0f)),
         .reso = {width, height}};
 
     memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
+};
+
+void ArtCode::canvas_input_events() {
+    // when mouse pointer hover at canvas viewport set artboar to 0.5
+    glfwSetCursorEnterCallback(this->window.app_window,
+                               [](GLFWwindow *window, int entered) -> void {
+                                   if (entered)
+                                       CanvasUtils::zoom = 0.5;
+                               });
+
+    // detect if a key is pressed down or release
+    glfwSetKeyCallback(this->window.app_window,
+                       [](GLFWwindow *window, int key, int scancode, int action,
+                          int mods) -> void {
+                           auto app = reinterpret_cast<ArtCode *>(
+                               glfwGetWindowUserPointer(window));
+
+                           if (key == GLFW_KEY_LEFT_CONTROL) {
+                               if (action == GLFW_PRESS)
+                                   app->ctrl_pressed = true;
+                               if (action == GLFW_RELEASE)
+                                   app->ctrl_pressed = false;
+                           }
+                       });
+
+    // scroll
+    glfwSetScrollCallback(this->window.app_window,
+                          [](GLFWwindow *window, double x, double y) -> void {
+                              auto app = reinterpret_cast<ArtCode *>(
+                                  glfwGetWindowUserPointer(window));
+
+                              if (app->ctrl_pressed) {
+                                  CanvasUtils::zoom += y * 0.10;
+                                  CanvasUtils::zoom =
+                                      glm::clamp(CanvasUtils::zoom, 0.1f, 5.0f);
+                              }
+                          });
 };
 
 void ArtCode::imgui_init() {
