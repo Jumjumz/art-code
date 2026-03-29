@@ -134,13 +134,6 @@ void ArtCode::canvas_setup() {
 };
 
 void ArtCode::canvas_input_events() {
-    // when mouse pointer hover at canvas viewport set artboar to 0.5
-    glfwSetCursorEnterCallback(this->window.app_window,
-                               [](GLFWwindow *window, int entered) -> void {
-                                   if (entered)
-                                       CanvasUtils::zoom = 0.5;
-                               });
-
     // detect if a key is pressed down or release
     glfwSetKeyCallback(this->window.app_window,
                        [](GLFWwindow *window, int key, int scancode, int action,
@@ -199,22 +192,23 @@ void ArtCode::canvas_input_events() {
             auto dy = static_cast<float>(ypos) - CanvasUtils::mouse_last_pos.y;
 
             // update last position
-            CanvasUtils::mouse_last_pos.x = xpos;
-            CanvasUtils::mouse_last_pos.y = ypos;
+            CanvasUtils::mouse_last_pos.x = static_cast<float>(xpos);
+            CanvasUtils::mouse_last_pos.y = static_cast<float>(ypos);
 
             // check if space bar and mouse left click is pressed
             if (app->spacebar_pressed && app->left_click_pressed) {
                 CanvasUtils::panning.x += dx * 1.0f;
                 CanvasUtils::panning.y += -dy * 1.0f;
 
-                const float extra_sapce = 100.0f;
+                // add extra space in both ends of width and height
+                constexpr float EXTRA_SPACE = 50.0f;
                 auto width = static_cast<float>(app->vk_buffers.extent.width);
                 auto height = static_cast<float>(app->vk_buffers.extent.height);
 
                 CanvasUtils::panning = glm::clamp(
                     CanvasUtils::panning,
-                    glm::vec2(-width + extra_sapce, -height + extra_sapce),
-                    glm::vec2(width + extra_sapce, height + extra_sapce));
+                    glm::vec2(-width + EXTRA_SPACE, -height + EXTRA_SPACE),
+                    glm::vec2(width + EXTRA_SPACE, height + EXTRA_SPACE));
             }
         });
 };
