@@ -133,6 +133,7 @@ void ArtCode::canvas_setup() {
     memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
 };
 
+// TODO: REFACTOR this up.. this doesnt need to be in this class
 void ArtCode::canvas_input_events() {
     // detect if a key is pressed down or release
     glfwSetKeyCallback(this->window.app_window,
@@ -383,7 +384,7 @@ void ArtCode::record_canvas_command() {
                                  vk::Extent2D{this->vk_buffers.extent.width,
                                               this->vk_buffers.extent.height}});
 
-    cmd.draw(5, 1, 0, 0);
+    cmd.draw(4, 1, 0, 0);
 
     cmd.endRendering();
 

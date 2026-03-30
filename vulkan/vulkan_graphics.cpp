@@ -67,7 +67,7 @@ void VulkanGraphics::create_graphics_pipeline() {
                                                          frag_shader_stage_info};
 
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
-    assembly_info.topology = vk::PrimitiveTopology::eLineStrip;
+    assembly_info.topology = vk::PrimitiveTopology::eTriangleStrip;
 
     std::vector<vk::DynamicState> dynamic_states = {
         vk::DynamicState::eViewport,

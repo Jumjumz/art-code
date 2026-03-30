@@ -11,6 +11,7 @@ struct ArtboardBuffer {
     glm::vec2 reso;
 };
 
+// TODO: create a canvas class specifically design for its own resources to avoid using global variables
 struct CanvasUtils {
     // zoom variable
     inline static float zoom = 1;
