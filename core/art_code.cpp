@@ -156,17 +156,17 @@ void ArtCode::canvas_input_events() {
                        });
 
     // scroll
-    glfwSetScrollCallback(this->window.app_window,
-                          [](GLFWwindow *window, double x, double y) -> void {
-                              auto app = reinterpret_cast<ArtCode *>(
-                                  glfwGetWindowUserPointer(window));
+    glfwSetScrollCallback(
+        this->window.app_window,
+        [](GLFWwindow *window, double x, double y) -> void {
+            auto app =
+                reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
 
-                              if (app->ctrl_pressed) {
-                                  CanvasUtils::zoom += y * 0.10;
-                                  CanvasUtils::zoom =
-                                      glm::clamp(CanvasUtils::zoom, 0.1f, 5.0f);
-                              }
-                          });
+            if (app->ctrl_pressed) {
+                CanvasUtils::zoom += y * 0.10;
+                CanvasUtils::zoom = glm::clamp(CanvasUtils::zoom, 0.1f, 10.0f);
+            }
+        });
 
     // panning
     glfwSetMouseButtonCallback(
