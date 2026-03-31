@@ -11,8 +11,8 @@
 ArtCode::ArtCode() {};
 
 void ArtCode::run() {
-    canvas_input_events(); // set the canvas events first
-    imgui_init();          // imgui events will be set after canvas
+    canvas_events(); // set the canvas events first
+    imgui_init();    // imgui events will be set after canvas
     loop();
     cleanup();
 };
@@ -133,7 +133,7 @@ void ArtCode::canvas_setup() {
 };
 
 // TODO: REFACTOR this up.. this doesnt need to be in this class
-void ArtCode::canvas_input_events() {
+void ArtCode::canvas_events() {
     // calculate mouse movement
     glfwSetCursorPosCallback(
         this->window.app_window,
