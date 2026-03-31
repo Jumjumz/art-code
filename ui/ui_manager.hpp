@@ -17,7 +17,7 @@ class UIManager {
     // TODO: add vector for start screen components
     const std::vector<std::shared_ptr<WorkSpace>> main_ui = {
         std::make_shared<Navigation>(),
-        std::make_shared<TextEditor>(),
+        std::make_shared<TextEditorWrapper>(),
         std::make_shared<Canvas>(),
     };
 

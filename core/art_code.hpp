@@ -73,9 +73,10 @@ class ArtCode {
     std::thread canvas_thread;
 
     // key inputs
-    bool ctrl_pressed;
-    bool spacebar_pressed;
-    bool left_click_pressed;
+    bool mouse_in_canvas = false;
+    bool ctrl_pressed = false;
+    bool spacebar_pressed = false;
+    bool left_click_pressed = false;
 
     void loop();
 

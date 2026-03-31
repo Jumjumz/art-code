@@ -1,12 +1,14 @@
 #pragma once
 
+#include "TextEditor.h"
 #include "ui.hpp"
 
-class TextEditor : public WorkSpace {
+class TextEditorWrapper : public WorkSpace {
   public:
-    TextEditor();
+    TextEditorWrapper();
 
     void render() override;
 
   private:
+    TextEditor editor;
 };

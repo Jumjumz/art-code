@@ -11,7 +11,8 @@
 ArtCode::ArtCode() {};
 
 void ArtCode::run() {
-    imgui_init();
+    canvas_input_events(); // set the canvas events first
+    imgui_init();          // imgui events will be set after canvas
     loop();
     cleanup();
 };
@@ -38,8 +39,6 @@ void ArtCode::loop() {
                 this->canvas_ready = true;
             }
             this->canvas_cv.notify_one();
-
-            canvas_input_events();
         }
     });
 
@@ -135,6 +134,42 @@ void ArtCode::canvas_setup() {
 
 // TODO: REFACTOR this up.. this doesnt need to be in this class
 void ArtCode::canvas_input_events() {
+    // calculate mouse movement
+    glfwSetCursorPosCallback(
+        this->window.app_window,
+        [](GLFWwindow *window, double xpos, double ypos) -> void {
+            auto app =
+                reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
+            auto dx = static_cast<float>(xpos) - CanvasUtils::mouse_last_pos.x;
+            auto dy = static_cast<float>(ypos) - CanvasUtils::mouse_last_pos.y;
+
+            // update last position
+            CanvasUtils::mouse_last_pos.x = static_cast<float>(xpos);
+            CanvasUtils::mouse_last_pos.y = static_cast<float>(ypos);
+
+            if (CanvasUtils::mouse_last_pos.x < app->vk_buffers.extent.width) {
+                app->mouse_in_canvas = true;
+                // check if space bar and mouse left click is pressed
+                if (app->spacebar_pressed && app->left_click_pressed) {
+                    CanvasUtils::panning.x += dx * 1.0f;
+                    CanvasUtils::panning.y += -dy * 1.0f;
+
+                    // add extra space in both ends of width and height
+                    constexpr float EXTRA_SPACE = 50.0f;
+                    auto width = static_cast<float>(app->vk_buffers.extent.width);
+                    auto height =
+                        static_cast<float>(app->vk_buffers.extent.height);
+
+                    CanvasUtils::panning = glm::clamp(
+                        CanvasUtils::panning,
+                        glm::vec2(-width + EXTRA_SPACE, -height + EXTRA_SPACE),
+                        glm::vec2(width + EXTRA_SPACE, height + EXTRA_SPACE));
+                }
+            } else {
+                app->mouse_in_canvas = false;
+            }
+        });
+
     // detect if a key is pressed down or release
     glfwSetKeyCallback(this->window.app_window,
                        [](GLFWwindow *window, int key, int scancode, int action,
@@ -142,16 +177,18 @@ void ArtCode::canvas_input_events() {
                            auto app = reinterpret_cast<ArtCode *>(
                                glfwGetWindowUserPointer(window));
 
-                           if (key == GLFW_KEY_LEFT_CONTROL) {
-                               if (action == GLFW_PRESS)
-                                   app->ctrl_pressed = true;
-                               if (action == GLFW_RELEASE)
-                                   app->ctrl_pressed = false;
-                           } else if (key == GLFW_KEY_SPACE) {
-                               if (action == GLFW_PRESS)
-                                   app->spacebar_pressed = true;
-                               if (action == GLFW_RELEASE)
-                                   app->spacebar_pressed = false;
+                           if (app->mouse_in_canvas) {
+                               if (key == GLFW_KEY_LEFT_CONTROL) {
+                                   if (action == GLFW_PRESS)
+                                       app->ctrl_pressed = true;
+                                   if (action == GLFW_RELEASE)
+                                       app->ctrl_pressed = false;
+                               } else if (key == GLFW_KEY_SPACE) {
+                                   if (action == GLFW_PRESS)
+                                       app->spacebar_pressed = true;
+                                   if (action == GLFW_RELEASE)
+                                       app->spacebar_pressed = false;
+                               }
                            }
                        });
 
@@ -168,7 +205,7 @@ void ArtCode::canvas_input_events() {
             }
         });
 
-    // panning
+    // pannin
     glfwSetMouseButtonCallback(
         this->window.app_window,
         [](GLFWwindow *window, int button, int action, int mods) -> void {
@@ -180,36 +217,6 @@ void ArtCode::canvas_input_events() {
                     app->left_click_pressed = true;
                 if (action == GLFW_RELEASE)
                     app->left_click_pressed = false;
-            }
-        });
-
-    // calculate mouse movement
-    glfwSetCursorPosCallback(
-        this->window.app_window,
-        [](GLFWwindow *window, double xpos, double ypos) -> void {
-            auto app =
-                reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
-            auto dx = static_cast<float>(xpos) - CanvasUtils::mouse_last_pos.x;
-            auto dy = static_cast<float>(ypos) - CanvasUtils::mouse_last_pos.y;
-
-            // update last position
-            CanvasUtils::mouse_last_pos.x = static_cast<float>(xpos);
-            CanvasUtils::mouse_last_pos.y = static_cast<float>(ypos);
-
-            // check if space bar and mouse left click is pressed
-            if (app->spacebar_pressed && app->left_click_pressed) {
-                CanvasUtils::panning.x += dx * 1.0f;
-                CanvasUtils::panning.y += -dy * 1.0f;
-
-                // add extra space in both ends of width and height
-                constexpr float EXTRA_SPACE = 50.0f;
-                auto width = static_cast<float>(app->vk_buffers.extent.width);
-                auto height = static_cast<float>(app->vk_buffers.extent.height);
-
-                CanvasUtils::panning = glm::clamp(
-                    CanvasUtils::panning,
-                    glm::vec2(-width + EXTRA_SPACE, -height + EXTRA_SPACE),
-                    glm::vec2(width + EXTRA_SPACE, height + EXTRA_SPACE));
             }
         });
 };

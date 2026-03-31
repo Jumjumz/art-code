@@ -4,6 +4,7 @@ add_library(imgui
   core/imgui_tables.cpp
   core/imgui_stdlib.cpp
   core/imgui_widgets.cpp
+  core/TextEditor.cpp
   backends/imgui_impl_glfw.cpp
   backends/imgui_impl_vulkan.cpp
 )

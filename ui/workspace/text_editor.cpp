@@ -1,20 +1,21 @@
 #include "text_editor.hpp"
-#include "imgui.h"
-#include "imgui_stdlib.h"
-#include <string>
 
-TextEditor::TextEditor() {};
+TextEditorWrapper::TextEditorWrapper() {
+    // setup text editor
+    this->editor.SetLanguageDefinition(
+        TextEditor::LanguageDefinition::CPlusPlus());
+    this->editor.SetText("// Write code below...");
+};
 
-void TextEditor::render() {
+void TextEditorWrapper::render() {
     auto *viewport = ImGui::GetMainViewport();
     auto work_size = viewport->WorkSize;
     auto work_pos = viewport->WorkPos;
 
-    float width = work_size.x * 0.4f; // 40%
-    float height = work_size.y;
-    float pos_x = work_size.x - width; // absolute position to the right
-    float pos_y = work_pos.y;
-    std::string data = ""; // test
+    const float width = work_size.x * 0.4f; // 40%
+    const float height = work_size.y;
+    const float pos_x = work_size.x - width; // absolute position to the right
+    const float pos_y = work_pos.y;
 
     ImGui::SetNextWindowSize(ImVec2{width, height});
     ImGui::SetNextWindowPos(ImVec2{pos_x, pos_y});
@@ -23,10 +24,9 @@ void TextEditor::render() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
     ImGui::Begin("##text-editor-begin", nullptr,
                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-                     ImGuiWindowFlags_NoTitleBar);
-    ImGui::InputTextMultiline("##test-editor-main", &data, ImVec2{width, height});
+                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar |
+                     ImGuiWindowFlags_NoScrollWithMouse);
+    this->editor.Render("ArtCode code");
     ImGui::End();
     ImGui::PopStyleVar();
-
-    // TODO:: create a text editor using Imgui::InputText
 };
