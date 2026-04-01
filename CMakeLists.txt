@@ -16,6 +16,13 @@ endif()
 find_package(Vulkan REQUIRED)
 find_package(glm REQUIRED)
 
+add_custom_target(assets ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_SOURCE_DIR}/assets/fonts
+  ${CMAKE_BINARY_DIR}/assets/fonts
+  COMMENT "Copying fonts to build dir..."
+)
+
 add_subdirectory(core)
 add_subdirectory(shaders)
 add_subdirectory(imgui)
@@ -40,6 +47,7 @@ vulkan
 window
 )
 
+add_dependencies(${PROJECT_NAME} assets)
 add_dependencies(${PROJECT_NAME} Shaders)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

@@ -4,7 +4,14 @@ TextEditorWrapper::TextEditorWrapper() {
     // setup text editor
     this->editor.SetLanguageDefinition(
         TextEditor::LanguageDefinition::CPlusPlus());
-    this->editor.SetText("// Write code below...");
+    const std::vector<std::string> lines = {"#include <stdio.h>",
+                                            "",
+                                            "int main() {",
+                                            "\tstd::cout << \"Hello World!\";",
+                                            "",
+                                            "\treturn 0;",
+                                            "}"};
+    this->editor.SetTextLines(lines);
 };
 
 void TextEditorWrapper::render() {
@@ -17,6 +24,11 @@ void TextEditorWrapper::render() {
     const float pos_x = work_size.x - width; // absolute position to the right
     const float pos_y = work_pos.y;
 
+    // load fonts
+    ImGuiIO &io = ImGui::GetIO();
+    auto font = io.Fonts->AddFontFromFileTTF(
+        "assets/fonts/CascadiaMonoNFItalic.ttf", 24.0f);
+
     ImGui::SetNextWindowSize(ImVec2{width, height});
     ImGui::SetNextWindowPos(ImVec2{pos_x, pos_y});
 
@@ -26,7 +38,9 @@ void TextEditorWrapper::render() {
                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar |
                      ImGuiWindowFlags_NoScrollWithMouse);
-    this->editor.Render("ArtCode code");
+    ImGui::PushFont(font);
+    this->editor.Render("##artcode");
+    ImGui::PopFont();
     ImGui::End();
     ImGui::PopStyleVar();
 };
