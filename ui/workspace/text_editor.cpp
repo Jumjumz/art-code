@@ -5,6 +5,7 @@ TextEditorWrapper::TextEditorWrapper() {
     this->editor.SetLanguageDefinition(
         TextEditor::LanguageDefinition::CPlusPlus());
     const std::vector<std::string> lines = {"#include <stdio.h>",
+                                            "#include <artcode.h>",
                                             "",
                                             "int main() {",
                                             "\tstd::cout << \"Hello World!\";",
@@ -15,32 +16,17 @@ TextEditorWrapper::TextEditorWrapper() {
 };
 
 void TextEditorWrapper::render() {
-    auto *viewport = ImGui::GetMainViewport();
-    auto work_size = viewport->WorkSize;
-    auto work_pos = viewport->WorkPos;
-
-    const float width = work_size.x * 0.4f; // 40%
-    const float height = work_size.y;
-    const float pos_x = work_size.x - width; // absolute position to the right
-    const float pos_y = work_pos.y;
-
     // load fonts
     ImGuiIO &io = ImGui::GetIO();
     auto font = io.Fonts->AddFontFromFileTTF(
-        "assets/fonts/CascadiaMonoNFItalic.ttf", 24.0f);
+        "assets/fonts/CascadiaMonoNFItalic.ttf", 22.0f);
 
-    ImGui::SetNextWindowSize(ImVec2{width, height});
-    ImGui::SetNextWindowPos(ImVec2{pos_x, pos_y});
+    auto palette = TextEditor::GetDarkPalette();
+    palette[(int)TextEditor::PaletteIndex::Background] = 0xFF1D1D1D;
 
-    // removes padding
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
-    ImGui::Begin("##text-editor-begin", nullptr,
-                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar |
-                     ImGuiWindowFlags_NoScrollWithMouse);
     ImGui::PushFont(font);
+    this->editor.SetPalette(palette);
     this->editor.Render("##artcode");
     ImGui::PopFont();
-    ImGui::End();
     ImGui::PopStyleVar();
 };

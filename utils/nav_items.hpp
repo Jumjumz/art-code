@@ -15,3 +15,8 @@ struct NavMainItems {
         {"Window", {{"Panel", "Ctrl+p"}}},
         {"Help", {{"Documentation", "Ctrl+dd"}, {"About", ""}, {"Version", ""}}}};
 };
+
+struct NavBuildItems {
+    static inline const NavMenuItems PANEL = {
+        {"Debug", "Ctrl+d"}, {"Build", "Ctrl+b"}, {"Run", "Ctrl+r"}};
+};
