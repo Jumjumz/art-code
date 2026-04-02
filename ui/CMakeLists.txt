@@ -1,10 +1,10 @@
 add_library(ui
+  main_nav.cpp
   ui_manager.cpp
   workspace/build_panel.cpp
   workspace/canvas.cpp
   workspace/console.cpp
   workspace/development.cpp
-  workspace/navigation.cpp
   workspace/text_editor.cpp
 )
 

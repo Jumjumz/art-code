@@ -36,7 +36,7 @@ float circle(vec2 p, float r) {
 
 void main() {
   const vec2 center = vec2(ubo.reso.x / 2, ubo.reso.y / 2);
-  const float circle = circle(artboard_pos - center, 100.0f);
+  const float circle = circle(artboard_pos - center, 60.0f);
   const float star = star(artboard_pos - center, 200.0f);
 
   // cicle defines the position, 100.0f is the size of the circle

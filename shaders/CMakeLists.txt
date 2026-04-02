@@ -18,4 +18,4 @@ foreach(SHADER ${SHADER_SOURCES})
   list(APPEND SPV_SHADERS ${OUTPUT_SPV})
 endforeach()
 
-add_custom_target(Shaders ALL DEPENDS ${SPV_SHADERS})
+add_custom_target(shaders ALL DEPENDS ${SPV_SHADERS})

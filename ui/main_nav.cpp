@@ -1,10 +1,12 @@
-#include "navigation.hpp"
+#include "main_nav.hpp"
 #include "imgui.h"
 #include "nav_items.hpp"
 
-Navigation::Navigation() {};
+MainNavigation::MainNavigation() {
 
-void Navigation::render() {
+};
+
+void MainNavigation::render() const {
     if (ImGui::BeginMainMenuBar()) {
         for (const auto &[menus, items] : NavMainItems::MENUS) {
             if (ImGui::BeginMenu(menus.c_str())) {
