@@ -7,8 +7,13 @@ BuildPanel::BuildPanel() {
 };
 
 void BuildPanel::render() {
+    auto panel_size = ImGui::GetContentRegionAvail();
+    float width = 100.0f;
+    float height = 20.0f;
+
     for (const auto &[action, shortcut] : NavBuildItems::PANEL) {
-        ImGui::Button(action.c_str());
+        ImGui::SetCursorPosY((panel_size.y - height) / 2.0f);
+        ImGui::Button(action.c_str(), ImVec2{width, height});
         ImGui::SameLine();
     }
 };
