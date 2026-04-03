@@ -6,9 +6,9 @@ Development::Development() {
 };
 
 void Development::render() {
-    auto *viewport = ImGui::GetMainViewport();
-    auto work_size = viewport->WorkSize;
-    auto work_pos = viewport->WorkPos;
+    const auto *viewport = ImGui::GetMainViewport();
+    const auto work_size = viewport->WorkSize;
+    const auto work_pos = viewport->WorkPos;
 
     const float width = work_size.x * 0.4f; // 40%
     const float height = work_size.y;

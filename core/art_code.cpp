@@ -1,4 +1,5 @@
 #include "art_code.hpp"
+#include "artboard_sizes.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
@@ -94,8 +95,8 @@ void ArtCode::loop() {
 };
 
 void ArtCode::canvas_setup() {
-    const float width = 800;
-    const float height = 400;
+    const auto width = ArtboardSize::width;
+    const auto height = ArtboardSize::height;
 
     // identity matrix
     glm::mat4 view = glm::mat4(1.0f);

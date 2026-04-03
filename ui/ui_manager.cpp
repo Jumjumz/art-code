@@ -1,16 +1,22 @@
 #include "ui_manager.hpp"
+#include "artboard_sizes.hpp"
 
 UIManager::UIManager() {};
 
 void UIManager::render() {
-    // TODO:: add a welcome UI like PS that displays the type size of artboard a user can do
-
     // render main navigation panel
     this->main_nav.render();
 
-    // TODO: add condition to render workspace or start menu
+    if (ArtboardSize::ppi != 0)
+        this->show_main_ui = true;
 
-    for (const auto &workspace : this->workspace_ui) {
-        workspace->render();
+    if (!this->show_main_ui) {
+        for (const auto &start_screen : this->start_ui) {
+            start_screen->render();
+        }
+    } else {
+        for (const auto &workspace : this->workspace_ui) {
+            workspace->render();
+        }
     }
 };

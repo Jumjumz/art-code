@@ -1,6 +1,8 @@
 add_library(ui
   main_nav.cpp
   ui_manager.cpp
+  start_screen/artboard_settings.cpp
+  start_screen/template_gallery.cpp
   workspace/build_panel.cpp
   workspace/canvas.cpp
   workspace/console.cpp

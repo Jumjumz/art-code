@@ -5,9 +5,9 @@
 Canvas::Canvas() {};
 
 void Canvas::render() {
-    auto *viewport = ImGui::GetMainViewport();
-    auto work_size = viewport->WorkSize;
-    auto work_pos = viewport->WorkPos;
+    const auto *viewport = ImGui::GetMainViewport();
+    const auto work_size = viewport->WorkSize;
+    const auto work_pos = viewport->WorkPos;
 
     ImGui::SetNextWindowSize(ImVec2{work_size.x * 0.6f, work_size.y});
     ImGui::SetNextWindowPos(ImVec2{work_pos.x, work_pos.y});

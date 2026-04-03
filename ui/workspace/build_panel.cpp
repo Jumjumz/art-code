@@ -7,9 +7,9 @@ BuildPanel::BuildPanel() {
 };
 
 void BuildPanel::render() {
-    auto panel_size = ImGui::GetContentRegionAvail();
-    float width = 100.0f;
-    float height = 20.0f;
+    const auto panel_size = ImGui::GetContentRegionAvail();
+    const float width = 100.0f;
+    const float height = 20.0f;
 
     for (const auto &[action, shortcut] : NavBuildItems::PANEL) {
         ImGui::SetCursorPosY((panel_size.y - height) / 2.0f);

@@ -6,8 +6,6 @@ class Window {
   public:
     Window();
 
-    bool running = true;
-
     GLFWwindow *app_window;
 
     void destroy_window() const;
