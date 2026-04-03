@@ -18,7 +18,7 @@ class UIManager {
   private:
     MainNavigation main_nav;
 
-    const std::vector<std::shared_ptr<StartScreen>> start_ui = {
+    std::vector<std::shared_ptr<StartScreen>> start_ui = {
         std::make_shared<TemplateGallery>(),
         std::make_shared<ArtboardSettings>()};
 
