@@ -1,4 +1,5 @@
 #include "artboard_settings.hpp"
+#include "artboard_sizes.hpp"
 #include "imgui.h"
 
 ArtboardSettings::ArtboardSettings() {
@@ -18,15 +19,24 @@ void ArtboardSettings::render() {
     ImGui::SetNextWindowSize(ImVec2{width, height});
     ImGui::SetNextWindowPos(ImVec2{pos_x, pos_y});
 
+    static float ab_width = 1920.0f;
+    static float ab_height = 1080.0f;
+
     // removes padding
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{20, 20});
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{20.0f, 20.0f});
 
     ImGui::Begin("##artboard-settings", nullptr,
                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar |
                      ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::Text("Arboard Settings");
+    ImGui::DragFloat("Width", &ab_width, 1.0f, 10.0f, 5000.0f, "%.0f");
+    ImGui::DragFloat("Height", &ab_height, 1.0f, 10.0f, 5000.0f, "%.0f");
 
-    ImGui::Text("artboard settings");
+    if (ImGui::Button("Create")) {
+        ArtboardTemplateSize::artboard_custom_size(ab_width, ab_height, 72.0f);
+    }
+
     ImGui::End();
     ImGui::PopStyleVar();
 };

@@ -21,10 +21,10 @@ void TemplateGallery::render() {
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar |
                      ImGuiWindowFlags_NoScrollWithMouse);
 
-    ImGui::Text("template gallery");
+    ImGui::Text("Template Gallery");
     for (const auto &[text, val] : ArtboardTemplates::TEMPLATES) {
         if (ImGui::Button(text.c_str())) {
-            AbSizeTemplates::artboard_set_size(val);
+            ArtboardTemplateSize::artboard_set_size(val);
             // artboard(val);
         }
         ImGui::SameLine();

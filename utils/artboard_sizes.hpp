@@ -9,7 +9,7 @@ enum class TemplateSizes { WEB_COMMON, WEB_LARGE, WEB_MEDIUM, WEB_MINIMUM };
 
 using Templates = std::tuple<const std::string, const TemplateSizes>;
 
-struct AbSizeTemplates {
+struct ArtboardTemplateSize {
   private:
     static inline glm::vec3 artboard_size;
     static inline bool show = false;
@@ -18,7 +18,7 @@ struct AbSizeTemplates {
     static inline bool artboard_show() { return show; };
 
     static inline glm::vec3 artboard_get_size() {
-        return AbSizeTemplates::artboard_size;
+        return ArtboardTemplateSize::artboard_size;
     };
 
     static inline void artboard_set_size(const TemplateSizes &temp) {
@@ -49,6 +49,13 @@ struct AbSizeTemplates {
             break;
         }
     };
+
+    static inline void artboard_custom_size(const float &width,
+                                            const float &height,
+                                            const float &ppi) {
+        artboard_size = {width, height, ppi};
+        show = true;
+    }
 };
 
 struct ArtboardSize {

@@ -95,7 +95,7 @@ void ArtCode::loop() {
 };
 
 void ArtCode::canvas_setup() {
-    const auto artboard_size = AbSizeTemplates::artboard_get_size();
+    const auto artboard_size = ArtboardTemplateSize::artboard_get_size();
     const auto width = artboard_size.x;
     const auto height = artboard_size.y;
 
