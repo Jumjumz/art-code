@@ -7,7 +7,7 @@ void UIManager::render() {
     // render main navigation panel
     this->main_nav.render();
 
-    if (AbSizeTemplates::artboard_show()) {
+    if (ArtboardTemplateSize::artboard_show()) {
         this->show_main_ui = true;
         // free start ui shrd ptr vector 3
         this->start_ui.clear();
