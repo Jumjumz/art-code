@@ -95,8 +95,9 @@ void ArtCode::loop() {
 };
 
 void ArtCode::canvas_setup() {
-    const auto width = ArtboardSize::width;
-    const auto height = ArtboardSize::height;
+    const auto artboard_size = AbSizeTemplates::artboard_get_size();
+    const auto width = artboard_size.x;
+    const auto height = artboard_size.y;
 
     // identity matrix
     glm::mat4 view = glm::mat4(1.0f);

@@ -2,6 +2,7 @@
 
 #include "artboard_sizes.hpp"
 #include "ui.hpp"
+#include <glm/fwd.hpp>
 
 class TemplateGallery : public StartScreen {
   public:
@@ -10,5 +11,5 @@ class TemplateGallery : public StartScreen {
     void render() override;
 
   private:
-    void web_template_size(const TemplateSizes &temp);
+    void artboard(const TemplateSizes &temp);
 };

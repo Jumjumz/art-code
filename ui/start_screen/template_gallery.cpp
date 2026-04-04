@@ -24,7 +24,8 @@ void TemplateGallery::render() {
     ImGui::Text("template gallery");
     for (const auto &[text, val] : ArtboardTemplates::TEMPLATES) {
         if (ImGui::Button(text.c_str())) {
-            web_template_size(val);
+            AbSizeTemplates::artboard_set_size(val);
+            // artboard(val);
         }
         ImGui::SameLine();
     }
@@ -33,7 +34,7 @@ void TemplateGallery::render() {
     ImGui::PopStyleVar();
 };
 
-void TemplateGallery::web_template_size(const TemplateSizes &temp) {
+void TemplateGallery::artboard(const TemplateSizes &temp) {
     switch (temp) {
     case TemplateSizes::WEB_COMMON: {
         ArtboardSize::width = 1366.0f;
@@ -65,4 +66,4 @@ void TemplateGallery::web_template_size(const TemplateSizes &temp) {
         ArtboardSize::ppi = 72.0f;
         break;
     }
-}
+};
