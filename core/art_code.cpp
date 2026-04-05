@@ -1,5 +1,4 @@
 #include "art_code.hpp"
-#include "artboard_sizes.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
@@ -95,7 +94,7 @@ void ArtCode::loop() {
 };
 
 void ArtCode::canvas_setup() {
-    const auto artboard_size = ArtboardTemplateSize::artboard_get_size();
+    const auto artboard_size = this->ui_manager.artboard_size;
     const auto width = artboard_size.x;
     const auto height = artboard_size.y;
 
@@ -134,20 +133,20 @@ void ArtCode::canvas_setup() {
     memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
 };
 
-// TODO: REFACTOR this up.. this doesnt need to be in this class
+// TODO: REFACTOR: this doesnt need to be in this class
 void ArtCode::canvas_events() {
     // calculate mouse movement
     glfwSetCursorPosCallback(
         this->window.app_window,
-        [](GLFWwindow *window, double xpos, double ypos) -> void {
+        [](GLFWwindow *window, double x_pos, double y_pos) -> void {
             auto app =
                 reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
-            auto dx = static_cast<float>(xpos) - CanvasUtils::mouse_last_pos.x;
-            auto dy = static_cast<float>(ypos) - CanvasUtils::mouse_last_pos.y;
+            auto dx = static_cast<float>(x_pos) - CanvasUtils::mouse_last_pos.x;
+            auto dy = static_cast<float>(y_pos) - CanvasUtils::mouse_last_pos.y;
 
             // update last position
-            CanvasUtils::mouse_last_pos.x = static_cast<float>(xpos);
-            CanvasUtils::mouse_last_pos.y = static_cast<float>(ypos);
+            CanvasUtils::mouse_last_pos.x = static_cast<float>(x_pos);
+            CanvasUtils::mouse_last_pos.y = static_cast<float>(y_pos);
 
             if (CanvasUtils::mouse_last_pos.x < app->vk_buffers.extent.width) {
                 app->mouse_in_canvas = true;

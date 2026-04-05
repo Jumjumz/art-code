@@ -1,8 +1,6 @@
 #pragma once
 
-#include "artboard_sizes.hpp"
 #include "ui.hpp"
-#include <glm/fwd.hpp>
 
 class TemplateGallery : public StartScreen {
   public:
@@ -11,5 +9,9 @@ class TemplateGallery : public StartScreen {
     void render() override;
 
   private:
-    void artboard(const TemplateSizes &temp);
+    void set_artboard_template(const TemplateSizes &temp) override;
+
+    glm::vec3 get_artboard_size() const override;
+
+    bool dimensions_acquired() const override;
 };

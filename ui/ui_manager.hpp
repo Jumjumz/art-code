@@ -15,8 +15,10 @@ class UIManager {
 
     void render();
 
+    glm::vec3 artboard_size;
+
   private:
-    MainNavigation main_nav;
+    const MainNavigation main_nav;
 
     std::vector<std::shared_ptr<StartScreen>> start_ui = {
         std::make_shared<TemplateGallery>(),

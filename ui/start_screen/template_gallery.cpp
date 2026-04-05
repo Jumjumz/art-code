@@ -24,8 +24,7 @@ void TemplateGallery::render() {
     ImGui::Text("Template Gallery");
     for (const auto &[text, val] : ArtboardTemplates::TEMPLATES) {
         if (ImGui::Button(text.c_str())) {
-            ArtboardTemplateSize::artboard_set_size(val);
-            // artboard(val);
+            set_artboard_template(val);
         }
         ImGui::SameLine();
     }
@@ -34,36 +33,39 @@ void TemplateGallery::render() {
     ImGui::PopStyleVar();
 };
 
-void TemplateGallery::artboard(const TemplateSizes &temp) {
+void TemplateGallery::set_artboard_template(const TemplateSizes &temp) {
     switch (temp) {
     case TemplateSizes::WEB_COMMON: {
-        ArtboardSize::width = 1366.0f;
-        ArtboardSize::height = 768.0f;
-        ArtboardSize::ppi = 72.0f;
+        TemplateGallery::artboard_size = {1366.0f, 768.0f, 72.0f};
+        TemplateGallery::has_dimensions = true;
         break;
     }
     case TemplateSizes::WEB_LARGE: {
-        ArtboardSize::width = 1920.0f;
-        ArtboardSize::height = 1080.0f;
-        ArtboardSize::ppi = 72.0f;
+        TemplateGallery::artboard_size = {1920.0f, 1080.0f, 72.0f};
+        TemplateGallery::has_dimensions = true;
         break;
     }
     case TemplateSizes::WEB_MEDIUM: {
-        ArtboardSize::width = 1440.0f;
-        ArtboardSize::height = 900.0f;
-        ArtboardSize::ppi = 72.0f;
+        TemplateGallery::artboard_size = {1440.0f, 900.0f, 72.0f};
+        TemplateGallery::has_dimensions = true;
         break;
     }
     case TemplateSizes::WEB_MINIMUM: {
-        ArtboardSize::width = 1024.0f;
-        ArtboardSize::height = 768.0f;
-        ArtboardSize::ppi = 72.0f;
+        TemplateGallery::artboard_size = {1024.0f, 768.0f, 72.0f};
+        TemplateGallery::has_dimensions = true;
         break;
     }
     default:
-        ArtboardSize::width = 800.0f;
-        ArtboardSize::height = 400.0f;
-        ArtboardSize::ppi = 72.0f;
+        TemplateGallery::artboard_size = {800.0f, 400.0f, 72.0f};
+        TemplateGallery::has_dimensions = true;
         break;
     }
 };
+
+glm::vec3 TemplateGallery::get_artboard_size() const {
+    return TemplateGallery::artboard_size;
+}
+
+bool TemplateGallery::dimensions_acquired() const {
+    return TemplateGallery::has_dimensions;
+}
