@@ -1,16 +1,14 @@
 #include "console.hpp"
-#include "imgui.h"
 
-Console::Console() {
-
-};
+Console::Console() {};
 
 void Console::render() {
-    ImGuiIO &io = ImGui::GetIO();
-    const auto font =
-        io.Fonts->AddFontFromFileTTF("assets/fonts/MapleMono-Italic.ttf", 18.0f);
-
-    ImGui::PushFont(font);
+    if (this->font == nullptr) {
+        ImGuiIO &io = ImGui::GetIO();
+        this->font = io.Fonts->AddFontFromFileTTF(
+            "assets/fonts/MapleMono-Italic.ttf", 18.0f);
+    }
+    ImGui::PushFont(this->font);
     ImGui::Text("Hello World!");
     ImGui::PopFont();
 };
