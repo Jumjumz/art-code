@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui.hpp"
+#include "work_space.hpp"
 
 class Canvas : public WorkSpace {
   public:

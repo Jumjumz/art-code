@@ -1,9 +1,10 @@
 #pragma once
 
 #include "main_nav.hpp"
+#include "start_screen.hpp"
 #include "start_screen/artboard_settings.hpp"
 #include "start_screen/template_gallery.hpp"
-#include "ui.hpp"
+#include "work_space.hpp"
 #include "workspace/canvas.hpp"
 #include "workspace/development.hpp"
 #include <memory>

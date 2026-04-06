@@ -9,14 +9,14 @@ ArtboardSettings::ArtboardSettings() {
 };
 
 void ArtboardSettings::render() {
-    const auto *viewport = ImGui::GetMainViewport();
-    const auto work_size = viewport->WorkSize;
-    const auto work_pos = viewport->WorkPos;
+    this->viewport = ImGui::GetMainViewport();
+    this->work_size = this->viewport->WorkSize;
+    this->work_pos = this->viewport->WorkPos;
 
-    const float width = work_size.x * 0.3f;
-    const float height = work_size.y;
-    const float pos_x = work_size.x - width;
-    const float pos_y = work_pos.y;
+    const float width = this->work_size.x * 0.3f;
+    const float height = this->work_size.y;
+    const float pos_x = this->work_size.x - width;
+    const float pos_y = this->work_pos.y;
 
     ImGui::SetNextWindowSize(ImVec2{width, height});
     ImGui::SetNextWindowPos(ImVec2{pos_x, pos_y});
@@ -46,8 +46,7 @@ void ArtboardSettings::render() {
     this->file_dialog.Display();
 
     if (this->file_dialog.HasSelected()) {
-        ArtboardSettings::build.get_project_directory(
-            this->file_dialog.GetSelected());
+        this->build.get_project_directory(this->file_dialog.GetSelected());
         this->file_dialog.ClearSelected();
 
         // set_artboard_custom(glm::vec3{ab_width, ab_height, 72.0f});
@@ -55,14 +54,14 @@ void ArtboardSettings::render() {
 };
 
 void ArtboardSettings::set_artboard_custom(const glm::vec3 &dimensions) {
-    ArtboardSettings::artboard_size = dimensions;
-    ArtboardSettings::has_dimensions = true;
+    this->artboard_size = dimensions;
+    this->has_dimensions = true;
 };
 
 glm::vec3 ArtboardSettings::get_artboard_size() const {
-    return ArtboardSettings::artboard_size;
+    return this->artboard_size;
 }
 
 bool ArtboardSettings::dimensions_acquired() const {
-    return ArtboardSettings::has_dimensions;
+    return this->has_dimensions;
 };

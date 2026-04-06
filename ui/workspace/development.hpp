@@ -3,7 +3,7 @@
 #include "build_panel.hpp"
 #include "console.hpp"
 #include "text_editor.hpp"
-#include "ui.hpp"
+#include "work_space.hpp"
 
 class Development : public WorkSpace {
   public:

@@ -2,7 +2,9 @@
 
 #include "artboard_sizes.hpp"
 #include "build.hpp"
+#include "imgui.h"
 #include <glm/glm.hpp>
+#include <imfilebrowser.h>
 
 class StartScreen {
   public:
@@ -15,10 +17,16 @@ class StartScreen {
     virtual bool dimensions_acquired() const { return this->has_dimensions; };
 
   protected:
-    Build build;
+    ImGuiViewport *viewport = nullptr;
+    ImVec2 work_size = ImVec2{0.0f, 0.0f};
+    ImVec2 work_pos = ImVec2{0.0f, 0.0f};
 
     glm::vec3 artboard_size = {0.0f, 0.0f, 0.0f};
     bool has_dimensions = false;
+
+    Build build;
+
+    ImGui::FileBrowser file_dialog;
 
     virtual void set_artboard_template(const TemplateSizes &temp) {
         switch (temp) {
@@ -33,15 +41,5 @@ class StartScreen {
         this->has_dimensions = false;
     };
 
-  private:
-};
-
-class WorkSpace {
-  public:
-    virtual ~WorkSpace() = default;
-
-    virtual void render() = 0;
-
-  protected:
   private:
 };

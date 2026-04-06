@@ -1,8 +1,6 @@
 #pragma once
 
-#include "imgui.h"
-#include "ui.hpp"
-#include <imfilebrowser.h>
+#include "start_screen.hpp"
 
 class ArtboardSettings : public StartScreen {
   public:
@@ -16,6 +14,4 @@ class ArtboardSettings : public StartScreen {
     glm::vec3 get_artboard_size() const override;
 
     bool dimensions_acquired() const override;
-
-    ImGui::FileBrowser file_dialog;
 };
