@@ -46,4 +46,5 @@ void Development::render() {
     ImGui::EndChild();
 
     ImGui::End();
+    ImGui::PopStyleVar();
 };

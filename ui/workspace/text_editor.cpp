@@ -17,16 +17,17 @@ TextEditorWrapper::TextEditorWrapper() {
 
 void TextEditorWrapper::render() {
     // load fonts
-    ImGuiIO &io = ImGui::GetIO();
-    auto font = io.Fonts->AddFontFromFileTTF(
-        "assets/fonts/CascadiaMonoNFItalic.ttf", 22.0f);
+    if (this->font == nullptr) {
+        ImGuiIO &io = ImGui::GetIO();
+        this->font = io.Fonts->AddFontFromFileTTF(
+            "assets/fonts/CascadiaMonoNFItalic.ttf", 22.0f);
 
-    auto palette = TextEditor::GetDarkPalette();
-    palette[(int)TextEditor::PaletteIndex::Background] = 0xFF1D1D1D;
+        auto palette = TextEditor::GetDarkPalette();
+        palette[(int)TextEditor::PaletteIndex::Background] = 0xFF1D1D1D;
 
-    ImGui::PushFont(font);
-    this->editor.SetPalette(palette);
+        this->editor.SetPalette(palette);
+    }
+    ImGui::PushFont(this->font);
     this->editor.Render("##artcode");
     ImGui::PopFont();
-    ImGui::PopStyleVar();
 };

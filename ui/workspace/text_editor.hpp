@@ -10,4 +10,6 @@ class TextEditorWrapper {
 
   private:
     TextEditor editor;
+
+    ImFont *font = nullptr;
 };

@@ -206,7 +206,7 @@ void ArtCode::canvas_events() {
             }
         });
 
-    // pannin
+    // panning
     glfwSetMouseButtonCallback(
         this->window.app_window,
         [](GLFWwindow *window, int button, int action, int mods) -> void {
@@ -508,11 +508,6 @@ void ArtCode::recreate_swapchain() {
     this->swapchain.create_swapchain(this->ctx.config.chosen_extent);
 
     this->swapchain.imgui_create_image_views();
-
-    // render ui with the new size immidiately <- this doesnt work
-    ImGuiIO &io = ImGui::GetIO();
-    io.DisplaySize = ImVec2{float(this->swapchain.resources.extent.width),
-                            float(this->swapchain.resources.extent.height)};
 };
 
 void ArtCode::clean_swapchain() {

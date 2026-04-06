@@ -41,6 +41,7 @@ void VulkanBuffers::canvas_create_image_memory() {
 
     this->canvas_image_memory =
         vk::raii::DeviceMemory{this->device, alloc_info, nullptr};
+    // destroy old memory
     this->images.bindMemory(this->canvas_image_memory, 0);
 };
 
