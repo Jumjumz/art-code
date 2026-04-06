@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SOURCES
-src/main.cpp
+  src/main.cpp
 )
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -19,6 +19,7 @@ find_package(glm REQUIRED)
 add_subdirectory(assets)
 add_subdirectory(core)
 add_subdirectory(shaders)
+add_subdirectory(solution)
 add_subdirectory(imgui)
 add_subdirectory(ui)
 add_subdirectory(utils)
@@ -31,14 +32,15 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-Vulkan::Vulkan
-glm::glm
-core
-imgui
-ui
-utils
-vulkan
-window
+  Vulkan::Vulkan
+  glm::glm
+  core
+  imgui
+  solution
+  ui
+  utils
+  vulkan
+  window
 )
 
 add_dependencies(${PROJECT_NAME} assets)

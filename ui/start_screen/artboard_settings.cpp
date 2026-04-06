@@ -1,8 +1,11 @@
 #include "artboard_settings.hpp"
-#include "imgui.h"
 
 ArtboardSettings::ArtboardSettings() {
+    ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
+                            ImGuiFileBrowserFlags_CreateNewDir);
 
+    this->file_dialog = file;
+    this->file_dialog.SetTitle("Create Project");
 };
 
 void ArtboardSettings::render() {
@@ -34,11 +37,21 @@ void ArtboardSettings::render() {
     ImGui::DragFloat("Height", &ab_height, 1.0f, 10.0f, 5000.0f, "%.0f");
 
     if (ImGui::Button("Create")) {
-        set_artboard_custom(glm::vec3{ab_width, ab_height, 72.0f});
+        this->file_dialog.Open();
     }
-
     ImGui::End();
     ImGui::PopStyleVar();
+
+    // display file modal browser
+    this->file_dialog.Display();
+
+    if (this->file_dialog.HasSelected()) {
+        ArtboardSettings::build.get_project_directory(
+            this->file_dialog.GetSelected());
+        this->file_dialog.ClearSelected();
+
+        // set_artboard_custom(glm::vec3{ab_width, ab_height, 72.0f});
+    }
 };
 
 void ArtboardSettings::set_artboard_custom(const glm::vec3 &dimensions) {
@@ -52,4 +65,4 @@ glm::vec3 ArtboardSettings::get_artboard_size() const {
 
 bool ArtboardSettings::dimensions_acquired() const {
     return ArtboardSettings::has_dimensions;
-}
+};

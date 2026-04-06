@@ -17,4 +17,5 @@ target_include_directories(ui
 target_link_libraries(ui
   PRIVATE imgui
   PRIVATE utils
+  PUBLIC solution
 )

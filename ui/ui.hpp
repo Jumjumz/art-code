@@ -1,6 +1,7 @@
 #pragma once
 
 #include "artboard_sizes.hpp"
+#include "build.hpp"
 #include <glm/glm.hpp>
 
 class StartScreen {
@@ -14,6 +15,8 @@ class StartScreen {
     virtual bool dimensions_acquired() const { return this->has_dimensions; };
 
   protected:
+    Build build;
+
     glm::vec3 artboard_size = {0.0f, 0.0f, 0.0f};
     bool has_dimensions = false;
 
