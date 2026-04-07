@@ -1,16 +1,15 @@
 #pragma once
 
 #include <filesystem>
-#include <string>
 
 class Build {
   public:
     Build();
 
-    void get_project_directory(std::filesystem::path dir);
+    void get_project_directory(const std::filesystem::path &dir);
 
   private:
-    std::string project_directory;
+    std::filesystem::path project_directory;
 
-    void create_solution_file();
+    void create_content_directory();
 };
