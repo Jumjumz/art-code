@@ -35,7 +35,7 @@ void VulkanCommands::imgui_create_command_buffer() {
     vk::CommandBufferAllocateInfo alloc_info{};
     alloc_info.level = vk::CommandBufferLevel::ePrimary;
     alloc_info.commandPool = this->imgui_command_pool;
-    alloc_info.commandBufferCount = VulkanCommands::MAX_FRAMES_IN_FLIGHT;
+    alloc_info.commandBufferCount = this->MAX_FRAMES_IN_FLIGHT;
 
     this->imgui_command_buffers = vk::raii::CommandBuffers{
         this->device,
@@ -75,7 +75,7 @@ void VulkanCommands::create_sync_objects() {
                                                vk::SemaphoreCreateInfo());
     }
 
-    for (size_t i = 0; i < (size_t)VulkanCommands::MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < (size_t)this->MAX_FRAMES_IN_FLIGHT; i++) {
         this->available_semaphores.emplace_back(this->device,
                                                 vk::SemaphoreCreateInfo());
 
@@ -99,7 +99,7 @@ void VulkanCommands::canvas_create_command_buffer() {
     vk::CommandBufferAllocateInfo alloc_info{};
     alloc_info.level = vk::CommandBufferLevel::ePrimary;
     alloc_info.commandPool = this->canvas_command_pool;
-    alloc_info.commandBufferCount = VulkanCommands::MAX_FRAMES_IN_FLIGHT;
+    alloc_info.commandBufferCount = this->MAX_FRAMES_IN_FLIGHT;
 
     this->canvas_command_buffers = vk::raii::CommandBuffers{
         this->device,
@@ -109,11 +109,11 @@ void VulkanCommands::canvas_create_command_buffer() {
 
 void VulkanCommands::canvas_create_descriptor_pool() {
     vk::DescriptorPoolSize poolSize(vk::DescriptorType::eUniformBuffer,
-                                    VulkanCommands::MAX_FRAMES_IN_FLIGHT);
+                                    this->MAX_FRAMES_IN_FLIGHT);
 
     vk::DescriptorPoolCreateInfo poolInfo{};
     poolInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-    poolInfo.maxSets = VulkanCommands::MAX_FRAMES_IN_FLIGHT;
+    poolInfo.maxSets = this->MAX_FRAMES_IN_FLIGHT;
     poolInfo.poolSizeCount = 1;
     poolInfo.pPoolSizes = &poolSize;
 
@@ -123,8 +123,7 @@ void VulkanCommands::canvas_create_descriptor_pool() {
 
 void VulkanCommands::canvas_create_descriptor_set() {
     std::vector<vk::DescriptorSetLayout> layouts(
-        VulkanCommands::MAX_FRAMES_IN_FLIGHT,
-        *this->canvas_descriptor_set_layout);
+        this->MAX_FRAMES_IN_FLIGHT, *this->canvas_descriptor_set_layout);
 
     vk::DescriptorSetAllocateInfo set_alloc_info{};
     set_alloc_info.descriptorPool = *this->canvas_descriptor_pool;

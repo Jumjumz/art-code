@@ -1,6 +1,5 @@
 #pragma once
 
-#include "artboard_sizes.hpp"
 #include "start_screen.hpp"
 
 class TemplateGallery : public StartScreen {

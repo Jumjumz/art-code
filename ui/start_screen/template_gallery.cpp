@@ -1,12 +1,11 @@
 #include "template_gallery.hpp"
-#include "artboard_sizes.hpp"
 
 TemplateGallery::TemplateGallery() {
     ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
                             ImGuiFileBrowserFlags_CreateNewDir);
 
     this->file_dialog = file;
-    this->file_dialog.SetTitle("Create Project");
+    this->file_dialog.SetTitle("Create Custom Project");
 };
 
 void TemplateGallery::render() {

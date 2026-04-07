@@ -11,4 +11,6 @@ class Build {
 
   private:
     std::string project_directory;
+
+    void create_solution_file();
 };

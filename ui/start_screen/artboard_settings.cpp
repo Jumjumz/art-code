@@ -5,7 +5,7 @@ ArtboardSettings::ArtboardSettings() {
                             ImGuiFileBrowserFlags_CreateNewDir);
 
     this->file_dialog = file;
-    this->file_dialog.SetTitle("Create Project");
+    this->file_dialog.SetTitle("Create Template Project");
 };
 
 void ArtboardSettings::render() {
