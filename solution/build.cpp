@@ -21,35 +21,43 @@ void Build::create_project_content() {
         this->project_directory / "components"};
     const auto file_name =
         this->project_directory.filename().string() + this->sln_ext;
+    const auto solution_path = this->project_directory / file_name;
 
-    if (!std::filesystem::exists(file_name)) {
+    // create sub directories
+    if (!std::filesystem::exists(solution_path)) {
         // create solution file
         {
             std::vector<std::filesystem::path> project_content = {
-                file_name, this->project_directory / "main.cpp"};
+                solution_path, this->project_directory / "main.cpp"};
 
             for (const auto &content : project_content) {
                 const std::ofstream file(content);
             }
         }
 
-        // create sub directories
         for (const auto &directory : content_directories) {
-            if (directory == this->project_directory / "shaders") {
-                const std::ofstream shader_file(directory / "test.frag");
-            }
-
-            if (directory == this->project_directory / "components") {
-                std::vector<std::filesystem::path> comp_files = {
-                    directory / "comp.hpp", directory / "comp.cpp"};
-                for (const auto &comp : comp_files) {
-                    const std::ofstream file(comp);
+            if (std::filesystem::create_directories(directory)) {
+                if (directory == this->project_directory / "shaders") {
+                    const std::ofstream shader_file(directory / "test.frag");
                 }
+
+                if (directory == this->project_directory / "components") {
+                    std::vector<std::filesystem::path> comp_files = {
+                        directory / "comp.hpp", directory / "comp.cpp"};
+                    for (const auto &comp : comp_files) {
+                        const std::ofstream file(comp);
+                    }
+                }
+
+                std::cerr << directory << ": directory created" << std::endl;
+            } else {
+                std::cerr << directory << ": directory already exist"
+                          << std::endl;
+                break;
             }
-            std::cerr << directory << ": directory created" << std::endl;
         }
     } else {
-        std::cerr << "Project solution already exists: " << file_name
+        std::cerr << solution_path << " project solution already exist"
                   << std::endl;
     }
 };
