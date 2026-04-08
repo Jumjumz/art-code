@@ -11,5 +11,5 @@ class Build {
   private:
     std::filesystem::path project_directory;
 
-    void create_content_directory();
+    void create_project_content();
 };
