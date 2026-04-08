@@ -19,10 +19,22 @@ void Build::create_project_content() {
     const std::vector<std::filesystem::path> content_directories = {
         this->project_directory / "shaders",
         this->project_directory / "components"};
+    const auto file_name =
+        this->project_directory.filename().string() + this->sln_ext;
 
-    // create sub directories
-    for (const auto &directory : content_directories) {
-        if (std::filesystem::create_directories(directory)) {
+    if (!std::filesystem::exists(file_name)) {
+        // create solution file
+        {
+            std::vector<std::filesystem::path> project_content = {
+                file_name, this->project_directory / "main.cpp"};
+
+            for (const auto &content : project_content) {
+                const std::ofstream file(content);
+            }
+        }
+
+        // create sub directories
+        for (const auto &directory : content_directories) {
             if (directory == this->project_directory / "shaders") {
                 const std::ofstream shader_file(directory / "test.frag");
             }
@@ -35,21 +47,9 @@ void Build::create_project_content() {
                 }
             }
             std::cerr << directory << ": directory created" << std::endl;
-        } else {
-            std::cerr << directory << ": already exist" << std::endl;
         }
-    }
-    // create solution file
-    {
-        const auto file_name =
-            this->project_directory.filename().string() + ".rcd";
-
-        std::vector<std::filesystem::path> project_content = {
-            this->project_directory / file_name,
-            this->project_directory / "main.cpp"};
-
-        for (const auto &content : project_content) {
-            const std::ofstream file(content);
-        }
+    } else {
+        std::cerr << "Project solution already exists: " << file_name
+                  << std::endl;
     }
 };

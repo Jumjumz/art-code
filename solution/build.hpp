@@ -11,5 +11,7 @@ class Build {
   private:
     std::filesystem::path project_directory;
 
+    static constexpr std::string sln_ext = ".rcd";
+
     void create_project_content();
 };
