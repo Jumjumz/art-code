@@ -27,7 +27,7 @@ class StartScreen {
 
     Build build;
 
-    const char *home = getenv("HOME");
+    const char *home = getenv("HOME"); // set home directory
 
     ImGui::FileBrowser file_dialog;
 
