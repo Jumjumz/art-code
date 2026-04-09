@@ -2,7 +2,8 @@
 
 ArtboardSettings::ArtboardSettings() {
     ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
-                            ImGuiFileBrowserFlags_CreateNewDir);
+                                ImGuiFileBrowserFlags_CreateNewDir,
+                            this->home);
 
     this->file_dialog = file;
     this->file_dialog.SetTitle("Create Template Project");
@@ -49,7 +50,7 @@ void ArtboardSettings::render() {
         this->build.get_project_directory(this->file_dialog.GetSelected());
         this->file_dialog.ClearSelected();
 
-        // set_artboard_custom(glm::vec3{ab_width, ab_height, 72.0f});
+        set_artboard_custom(glm::vec3{ab_width, ab_height, 72.0f});
     }
 };
 
