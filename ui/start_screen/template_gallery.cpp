@@ -2,7 +2,8 @@
 
 TemplateGallery::TemplateGallery() {
     ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
-                            ImGuiFileBrowserFlags_CreateNewDir);
+                                ImGuiFileBrowserFlags_CreateNewDir,
+                            this->home);
 
     this->file_dialog = file;
     this->file_dialog.SetTitle("Create Custom Project");
@@ -44,7 +45,7 @@ void TemplateGallery::render() {
         this->build.get_project_directory(this->file_dialog.GetSelected());
         this->file_dialog.ClearSelected();
 
-        // set_artboard_template(this->templates);
+        set_artboard_template(this->templates);
     }
 };
 

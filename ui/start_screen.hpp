@@ -3,6 +3,7 @@
 #include "artboard_sizes.hpp"
 #include "build.hpp"
 #include "imgui.h"
+#include <cstdlib>
 #include <glm/glm.hpp>
 #include <imfilebrowser.h>
 
@@ -25,6 +26,8 @@ class StartScreen {
     bool has_dimensions = false;
 
     Build build;
+
+    const char *home = getenv("HOME");
 
     ImGui::FileBrowser file_dialog;
 
