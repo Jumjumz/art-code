@@ -47,7 +47,7 @@ void ArtboardSettings::render() {
     this->file_dialog.Display();
 
     if (this->file_dialog.HasSelected()) {
-        this->build.get_project_directory(this->file_dialog.GetSelected());
+        this->build.set_project_directory(this->file_dialog.GetSelected());
         this->file_dialog.ClearSelected();
 
         set_artboard_custom(glm::vec3{ab_width, ab_height, 72.0f});

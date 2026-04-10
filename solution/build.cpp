@@ -9,11 +9,18 @@
 Build::Build() {};
 
 // TODO: add a build system for artcode
-void Build::get_project_directory(const std::filesystem::path &dir) {
+void Build::set_project_directory(const std::filesystem::path &dir) {
     this->project_directory = dir;
 
     create_project_content();
 };
+
+// TODO: instead of return this->project_directory.. read the .rcd file which contains the project dir
+std::filesystem::path Build::get_project_directory() const {
+    return this->project_directory;
+};
+
+// TODO: add functions that will read and write the .rcd file
 
 void Build::create_project_content() {
     const std::vector<std::filesystem::path> content_directories = {
