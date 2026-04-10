@@ -42,10 +42,14 @@ void TemplateGallery::render() {
     this->file_dialog.Display();
 
     if (this->file_dialog.HasSelected()) {
-        this->build.set_project_directory(this->file_dialog.GetSelected());
-        this->file_dialog.ClearSelected();
+        if (this->build.set_project_directory(this->file_dialog.GetSelected())) {
+            this->file_dialog.ClearSelected();
 
-        set_artboard_template(this->templates);
+            set_artboard_template(this->templates);
+        } else {
+            this->file_dialog.ClearSelected();
+            this->file_dialog.Close();
+        }
     }
 };
 

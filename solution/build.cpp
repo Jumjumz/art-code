@@ -1,5 +1,7 @@
 #include "build.hpp"
 
+#include "json.hpp"
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -8,21 +10,51 @@
 
 Build::Build() {};
 
-// TODO: add a build system for artcode
-void Build::set_project_directory(const std::filesystem::path &dir) {
+bool Build::set_project_directory(const std::filesystem::path &dir) {
     this->project_directory = dir;
 
-    create_project_content();
+    return create_project_content();
 };
 
 // TODO: instead of return this->project_directory.. read the .rcd file which contains the project dir
 std::filesystem::path Build::get_project_directory() const {
-    return this->project_directory;
+    // read file
+    std::ifstream read(this->config_dir);
+    const auto js = nlohmann::json::parse(read);
+    // FIXME: this is not the correct return
+    return js["project_directory"][1].get<std::filesystem::path>();
 };
 
-// TODO: add functions that will read and write the .rcd file
+void Build::write_solution_file(const std::filesystem::path &solution_file) {
+    // init json
+    nlohmann::json js = {{"project_path", solution_file.parent_path()},
+                         {"file_name", solution_file.filename()}};
 
-void Build::create_project_content() {
+    // write
+    std::ofstream write(solution_file);
+    write << js.dump(4); // indent 4 spaces
+};
+
+void Build::create_config_dir() {
+    std::filesystem::create_directory(this->config_dir.parent_path());
+
+    nlohmann::json js;
+    if (std::filesystem::exists(this->config_dir)) {
+        // read project.json and parse
+        std::ifstream read(this->config_dir);
+        js = nlohmann::json::parse(read);
+    } else {
+        js["project_directory"] = nlohmann::json::array();
+    }
+
+    // append new project directory
+    js["project_directory"].push_back(this->project_directory);
+
+    std::ofstream file(this->config_dir);
+    file << js.dump(4);
+};
+
+bool Build::create_project_content() {
     const std::vector<std::filesystem::path> content_directories = {
         this->project_directory / "shaders",
         this->project_directory / "components"};
@@ -32,7 +64,7 @@ void Build::create_project_content() {
 
     // create sub directories
     if (!std::filesystem::exists(solution_path)) {
-        // create solution file
+        // create solution file and main.cpp
         {
             std::vector<std::filesystem::path> project_content = {
                 solution_path, this->project_directory / "main.cpp"};
@@ -42,29 +74,34 @@ void Build::create_project_content() {
             }
         }
 
+        // create directories
         for (const auto &directory : content_directories) {
-            if (std::filesystem::create_directories(directory)) {
-                if (directory == this->project_directory / "shaders") {
-                    const std::ofstream shader_file(directory / "test.frag");
-                }
-
-                if (directory == this->project_directory / "components") {
-                    std::vector<std::filesystem::path> comp_files = {
-                        directory / "comp.hpp", directory / "comp.cpp"};
-                    for (const auto &comp : comp_files) {
-                        const std::ofstream file(comp);
-                    }
-                }
-
-                std::cerr << directory << ": directory created" << std::endl;
-            } else {
-                std::cerr << directory << ": directory already exist"
-                          << std::endl;
-                break;
+            if (directory == this->project_directory / "shaders") {
+                std::filesystem::create_directory(directory);
+                const std::ofstream shader_file(directory / "test.frag");
             }
+
+            if (directory == this->project_directory / "components") {
+                std::filesystem::create_directory(directory);
+                std::vector<std::filesystem::path> comp_files = {
+                    directory / "comp.hpp", directory / "comp.cpp"};
+                for (const auto &comp : comp_files) {
+                    const std::ofstream file(comp);
+                }
+            }
+
+            std::cerr << directory << ": directory created" << std::endl;
         }
+
+        // write solution file after project dir init
+        write_solution_file(solution_path);
+
+        create_config_dir();
+
+        return true;
     } else {
         std::cerr << solution_path << " project solution already exist"
                   << std::endl;
+        return false;
     }
 };
