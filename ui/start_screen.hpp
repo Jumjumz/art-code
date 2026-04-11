@@ -39,6 +39,7 @@ class StartScreen {
         };
         }
     };
+
     virtual void set_artboard_custom(const glm::vec3 &dimensions) {
         this->artboard_size = dimensions;
         this->has_dimensions = false;

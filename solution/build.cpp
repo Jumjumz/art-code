@@ -1,7 +1,7 @@
 #include "build.hpp"
 
 #include "json.hpp"
-#include <cstdlib>
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -16,19 +16,10 @@ bool Build::set_project_directory(const std::filesystem::path &dir) {
     return create_project_content();
 };
 
-// TODO: instead of return this->project_directory.. read the .rcd file which contains the project dir
-std::filesystem::path Build::get_project_directory() const {
-    // read file
-    std::ifstream read(this->config_dir);
-    const auto js = nlohmann::json::parse(read);
-    // FIXME: this is not the correct return
-    return js["project_directory"][1].get<std::filesystem::path>();
-};
-
 void Build::write_solution_file(const std::filesystem::path &solution_file) {
     // init json
     nlohmann::json js = {{"project_path", solution_file.parent_path()},
-                         {"file_name", solution_file.filename()}};
+                         {"solution_file", solution_file.filename()}};
 
     // write
     std::ofstream write(solution_file);
@@ -47,11 +38,17 @@ void Build::create_config_dir() {
         js["project_directory"] = nlohmann::json::array();
     }
 
-    // append new project directory
-    js["project_directory"].push_back(this->project_directory);
+    auto path = js["project_directory"];
 
-    std::ofstream file(this->config_dir);
-    file << js.dump(4);
+    // check if new created path already exist.. skips if it is
+    if (std::find(path.begin(), path.end(), this->project_directory.string()) ==
+        path.end()) {
+        // append new project directory
+        js["project_directory"].push_back(this->project_directory);
+
+        std::ofstream file(this->config_dir);
+        file << js.dump(4);
+    }
 };
 
 bool Build::create_project_content() {
@@ -96,6 +93,7 @@ bool Build::create_project_content() {
         // write solution file after project dir init
         write_solution_file(solution_path);
 
+        // create config folder
         create_config_dir();
 
         return true;

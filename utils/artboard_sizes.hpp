@@ -1,10 +1,16 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <tuple>
 #include <vector>
 
-enum class TemplateSizes { WEB_COMMON, WEB_LARGE, WEB_MEDIUM, WEB_MINIMUM };
+enum class TemplateSizes : std::uint32_t {
+    WEB_COMMON,
+    WEB_LARGE,
+    WEB_MEDIUM,
+    WEB_MINIMUM
+};
 
 using Templates = std::tuple<const std::string, const TemplateSizes>;
 

@@ -1,4 +1,5 @@
 #include "template_gallery.hpp"
+#include "nav_items.hpp"
 
 TemplateGallery::TemplateGallery() {
     ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
@@ -43,6 +44,8 @@ void TemplateGallery::render() {
 
     if (this->file_dialog.HasSelected()) {
         if (this->build.set_project_directory(this->file_dialog.GetSelected())) {
+            // pass path to global project path
+            ProjectPath::set_project_path(this->file_dialog.GetSelected());
             this->file_dialog.ClearSelected();
 
             set_artboard_template(this->templates);

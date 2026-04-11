@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -21,4 +22,20 @@ struct NavBuildItems {
                                               {"Debug", "Ctrl+d"},
                                               {"Build", "Ctrl+b"},
                                               {"Run", "Ctrl+r"}};
+};
+
+struct ProjectPath {
+  public:
+    static inline std::filesystem::path
+    set_project_path(const std::filesystem::path &proj_path) {
+        ProjectPath::project_path = proj_path;
+        return ProjectPath::project_path;
+    };
+
+    static inline std::filesystem::path get_project_path() {
+        return ProjectPath::project_path;
+    }
+
+  private:
+    static inline std::filesystem::path project_path;
 };

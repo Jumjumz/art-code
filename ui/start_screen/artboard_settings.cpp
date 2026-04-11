@@ -1,4 +1,5 @@
 #include "artboard_settings.hpp"
+#include "nav_items.hpp"
 
 ArtboardSettings::ArtboardSettings() {
     ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
@@ -48,6 +49,8 @@ void ArtboardSettings::render() {
 
     if (this->file_dialog.HasSelected()) {
         if (this->build.set_project_directory(this->file_dialog.GetSelected())) {
+            // pass the path to global project path
+            ProjectPath::set_project_path(this->file_dialog.GetSelected());
             this->file_dialog.ClearSelected();
 
             set_artboard_custom(glm::vec3{ab_width, ab_height, 72.0f});

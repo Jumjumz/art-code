@@ -8,8 +8,6 @@ class Build {
 
     bool set_project_directory(const std::filesystem::path &dir);
 
-    std::filesystem::path get_project_directory() const;
-
   private:
     std::filesystem::path project_directory;
 

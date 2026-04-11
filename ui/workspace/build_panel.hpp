@@ -12,5 +12,6 @@ class BuildPanel {
 
   private:
     Build build;
+
     ImGui::FileBrowser file_explorer;
 };
