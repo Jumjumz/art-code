@@ -1,8 +1,6 @@
 #pragma once
 
 #include "build.hpp"
-#include "imgui.h"
-#include <imfilebrowser.h>
 
 class BuildPanel {
   public:
@@ -12,6 +10,4 @@ class BuildPanel {
 
   private:
     Build build;
-
-    ImGui::FileBrowser file_explorer;
 };

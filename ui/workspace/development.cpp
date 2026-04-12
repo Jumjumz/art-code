@@ -1,19 +1,17 @@
 #include "development.hpp"
-#include "imgui.h"
 
-Development::Development() {
-
-};
+Development::Development() {};
 
 void Development::render() {
-    const auto *viewport = ImGui::GetMainViewport();
-    const auto work_size = viewport->WorkSize;
-    const auto work_pos = viewport->WorkPos;
+    this->viewport = ImGui::GetMainViewport();
+    this->work_size = this->viewport->WorkSize;
+    this->work_pos = this->viewport->WorkPos;
 
-    const float width = work_size.x * 0.4f; // 40%
-    const float height = work_size.y;
-    const float pos_x = work_size.x - width; // absolute position to the right
-    const float pos_y = work_pos.y;
+    const float width = this->work_size.x * 0.40f; // 40%
+    const float height = this->work_size.y;
+    const float pos_x =
+        this->work_size.x - width; // absolute position to the right
+    const float pos_y = this->work_pos.y;
 
     ImGui::SetNextWindowSize(ImVec2{width, height});
     ImGui::SetNextWindowPos(ImVec2{pos_x, pos_y});
@@ -27,15 +25,17 @@ void Development::render() {
                      ImGuiWindowFlags_NoScrollWithMouse);
 
     // render build panel
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0, 0});
     ImGui::BeginChild("##panel", ImVec2{0, 40}, false);
     this->build_panel.render();
     ImGui::EndChild();
+    ImGui::PopStyleVar();
 
-    // render text editor
+    // render text editor wrapper and project browser
     float console_height = 200.0f;
     float editor_height = ImGui::GetContentRegionAvail().y - console_height;
-    ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 0.0f);
-    ImGui::BeginChild("##editor", ImVec2{0, editor_height});
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0, 0});
+    ImGui::BeginChild("##IDE", ImVec2{0, editor_height});
     this->text_editor.render();
     ImGui::EndChild();
     ImGui::PopStyleVar();

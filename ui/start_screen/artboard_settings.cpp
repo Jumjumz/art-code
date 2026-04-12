@@ -7,7 +7,7 @@ ArtboardSettings::ArtboardSettings() {
                             this->home);
 
     this->file_dialog = file;
-    this->file_dialog.SetTitle("Create Template Project");
+    this->file_dialog.SetTitle("Create Custom Project");
 };
 
 void ArtboardSettings::render() {
