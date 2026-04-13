@@ -80,7 +80,7 @@ class ArtCode {
 
     void loop();
 
-    void canvas_events();
+    void workspace_events();
 
     void imgui_init();
 

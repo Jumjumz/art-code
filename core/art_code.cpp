@@ -11,8 +11,8 @@
 ArtCode::ArtCode() {};
 
 void ArtCode::run() {
-    canvas_events(); // set the canvas events first
-    imgui_init();    // imgui events will be set after canvas
+    workspace_events(); // set the canvas events first
+    imgui_init();       // imgui events will be set after canvas
     loop();
     cleanup();
 };
@@ -134,7 +134,7 @@ void ArtCode::canvas_setup() {
 };
 
 // TODO: REFACTOR: this doesnt need to be in this class
-void ArtCode::canvas_events() {
+void ArtCode::workspace_events() {
     // calculate mouse movement
     glfwSetCursorPosCallback(
         this->window.app_window,
@@ -148,7 +148,8 @@ void ArtCode::canvas_events() {
             CanvasUtils::mouse_last_pos.x = static_cast<float>(x_pos);
             CanvasUtils::mouse_last_pos.y = static_cast<float>(y_pos);
 
-            if (CanvasUtils::mouse_last_pos.x < app->vk_buffers.extent.width) {
+            if (CanvasUtils::mouse_last_pos.x <
+                app->swapchain.resources.extent.width) {
                 app->mouse_in_canvas = true;
                 // check if space bar and mouse left click is pressed
                 if (app->spacebar_pressed && app->left_click_pressed) {
@@ -189,6 +190,14 @@ void ArtCode::canvas_events() {
                                        app->spacebar_pressed = true;
                                    if (action == GLFW_RELEASE)
                                        app->spacebar_pressed = false;
+                               }
+                           }
+                           // for text editor
+                           if (app->ctrl_pressed) {
+                               if (key == GLFW_KEY_S) {
+                                   if (action == GLFW_PRESS) {
+                                       TextEditorUtils::file_save = true;
+                                   }
                                }
                            }
                        });

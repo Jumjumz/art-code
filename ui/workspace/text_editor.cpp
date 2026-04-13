@@ -1,7 +1,10 @@
 #include "text_editor.hpp"
 #include "nav_items.hpp"
+#include "vk_types.hpp"
+
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
 
 TextEditorWrapper::TextEditorWrapper() {
@@ -62,10 +65,16 @@ void TextEditorWrapper::render() {
     this->file_explorer.Display();
 
     if (this->file_explorer.HasSelected()) {
+        // pass the selected file
+        this->selected_file = this->file_explorer.GetSelected();
+
         // display the selected file to text editor
         read_code();
         this->file_explorer.ClearSelected();
     }
+
+    // save written code
+    save_written_code();
 };
 
 void TextEditorWrapper::set_font() {
@@ -82,20 +91,40 @@ void TextEditorWrapper::set_font() {
 };
 
 void TextEditorWrapper::read_code() {
-    std::ifstream read(this->file_explorer.GetSelected());
+    std::ifstream read(this->selected_file);
     // get contents of the file
-    if (read.is_open()) {
-        std::string line;
-        std::vector<std::string> lines;
+    std::string content((std::istreambuf_iterator<char>(read)),
+                        std::istreambuf_iterator<char>());
 
-        while (std::getline(read, line)) {
-            lines.push_back(line);
+    if (content.back() == '\n' || content.back() == '\r' ||
+        content.back() == '\t') {
+        content.pop_back();
+    }
+
+    this->editor.SetText(content);
+
+    read.close();
+};
+
+void TextEditorWrapper::save_written_code() {
+    // update the file
+    if (TextEditorUtils::file_save) {
+        std::ofstream write(this->selected_file);
+
+        if (write.is_open()) {
+            // read the entire code as string
+            write << this->editor.GetText();
+            write.close();
+
+            std::cerr << "File saved!" << std::endl;
+        } else {
+            std::cerr << "Cannot write on this file" << std::endl;
         }
 
-        this->editor.SetTextLines(lines);
+        // read the newly updated code
+        read_code();
 
-        read.close();
-    } else {
-        std::cerr << "File cannot be open" << std::endl;
+        // rest state of file save
+        TextEditorUtils::file_save = false;
     }
 };

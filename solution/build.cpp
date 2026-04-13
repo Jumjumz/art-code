@@ -78,15 +78,15 @@ bool Build::create_project_content() {
             if (directory == this->project_directory / "shaders") {
                 std::filesystem::create_directory(directory);
                 const std::ofstream shader_file(directory / "test.frag");
-            }
-
-            if (directory == this->project_directory / "components") {
+            } else if (directory == this->project_directory / "components") {
                 std::filesystem::create_directory(directory);
                 std::vector<std::filesystem::path> comp_files = {
                     directory / "comp.hpp", directory / "comp.cpp"};
                 for (const auto &comp : comp_files) {
                     const std::ofstream file(comp);
                 }
+            } else {
+                std::filesystem::create_directory(directory);
             }
 
             std::cerr << directory << ": directory created" << std::endl;

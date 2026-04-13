@@ -14,11 +14,15 @@ struct ArtboardBuffer {
 // TODO: create a canvas class specifically design for its own resources to avoid using global variables
 struct CanvasUtils {
     // zoom variable
-    inline static float zoom = 1;
+    static inline float zoom = 1;
     // panning
-    inline static glm::vec2 panning = {0.0f, 0.0f};
+    static inline glm::vec2 panning = {0.0f, 0.0f};
     // most last position
-    inline static glm::vec2 mouse_last_pos = {0.0f, 0.0f};
+    static inline glm::vec2 mouse_last_pos = {0.0f, 0.0f};
     // use in art code and canvas class
-    inline static VkDescriptorSet canvas_texture = VK_NULL_HANDLE;
+    static inline VkDescriptorSet canvas_texture = VK_NULL_HANDLE;
+};
+
+struct TextEditorUtils {
+    static inline bool file_save = false;
 };
