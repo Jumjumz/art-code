@@ -16,22 +16,15 @@ bool Build::set_project_directory(const std::filesystem::path &dir) {
     return create_project_content();
 };
 
-void Build::write_solution_file(const std::filesystem::path &solution_file) {
-    // init json
-    nlohmann::json js = {{"project_path", solution_file.parent_path()},
-                         {"solution_file", solution_file.filename()}};
-
-    // write
-    std::ofstream write(solution_file);
-    write << js.dump(4); // indent 4 spaces
-};
-
 void Build::create_config_dir() {
-    std::filesystem::create_directory(this->config_dir.parent_path());
+    if (!std::filesystem::exists(this->config_dir.parent_path())) {
+        std::filesystem::create_directory(this->config_dir.parent_path());
+    }
 
+    // prepare to read and parse the projects.json file
     nlohmann::json js;
     if (std::filesystem::exists(this->config_dir)) {
-        // read project.json and parse
+        // read projects.json and parse
         std::ifstream read(this->config_dir);
         js = nlohmann::json::parse(read);
     } else {
@@ -53,7 +46,7 @@ void Build::create_config_dir() {
 
 bool Build::create_project_content() {
     const std::vector<std::filesystem::path> content_directories = {
-        this->project_directory / "shaders",
+        this->project_directory / "build", this->project_directory / "shaders",
         this->project_directory / "components"};
     const auto file_name =
         this->project_directory.filename().string() + this->sln_ext;
@@ -61,13 +54,22 @@ bool Build::create_project_content() {
 
     // create sub directories
     if (!std::filesystem::exists(solution_path)) {
-        // create solution file and main.cpp
+        // create and write solution file and main.cpp
         {
             std::vector<std::filesystem::path> project_content = {
                 solution_path, this->project_directory / "main.cpp"};
 
             for (const auto &content : project_content) {
-                const std::ofstream file(content);
+                if (content == this->project_directory / "main.cpp") {
+                    const std::ofstream file(content);
+                    // write main cpp init code
+                    write_main_cpp(content);
+                } else {
+                    // create solution file
+                    const std::ofstream file(content);
+                    // write solution file
+                    write_solution_file(content);
+                }
             }
         }
 
@@ -90,9 +92,6 @@ bool Build::create_project_content() {
             std::cerr << directory << ": directory created" << std::endl;
         }
 
-        // write solution file after project dir init
-        write_solution_file(solution_path);
-
         // create config folder
         create_config_dir();
 
@@ -102,4 +101,26 @@ bool Build::create_project_content() {
                   << std::endl;
         return false;
     }
+};
+
+void Build::write_solution_file(const std::filesystem::path &solution_file) {
+    // init json
+    nlohmann::json js = {{"project_path", solution_file.parent_path()},
+                         {"solution_file", solution_file.filename()}};
+
+    // write
+    std::ofstream write(solution_file);
+    write << js.dump(4); // indent 4 spaces
+};
+
+void Build::write_main_cpp(const std::filesystem::path &main_cpp) {
+    std::ofstream write(main_cpp);
+    // write init code in strign literal
+    write << R"(#include <iostream>
+
+int main() {
+    std::cout << "Hello World!";
+
+    return 0;
+};)";
 };

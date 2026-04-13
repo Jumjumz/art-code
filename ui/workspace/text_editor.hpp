@@ -18,6 +18,8 @@ class TextEditorWrapper {
 
     void set_font();
 
+    void read_code();
+
     const std::vector<std::tuple<std::string, std::string>> side_panel_contents = {
         {"Exp", "Ctrl+x"}};
 };

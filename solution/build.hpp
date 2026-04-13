@@ -22,4 +22,6 @@ class Build {
     void create_config_dir();
 
     void write_solution_file(const std::filesystem::path &solution_file);
+
+    void write_main_cpp(const std::filesystem::path &main_cpp);
 };
