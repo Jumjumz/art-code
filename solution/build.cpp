@@ -31,11 +31,16 @@ void Build::create_config_dir() {
         js["project_directory"] = nlohmann::json::array();
     }
 
-    auto path = js["project_directory"];
+    nlohmann::json path = js["project_directory"];
 
     // check if new created path already exist.. skips if it is
     if (std::find(path.begin(), path.end(), this->project_directory.string()) ==
         path.end()) {
+        // delete the first item if array size is 10
+        if (path.size() == 10) {
+            js["project_directory"].erase(js["project_directory"].begin());
+        }
+
         // append new project directory
         js["project_directory"].push_back(this->project_directory);
 
