@@ -1,15 +1,19 @@
 #pragma once
 
 #include <filesystem>
+#include <glm/glm.hpp>
 
 class Build {
   public:
     Build();
 
-    bool set_project_directory(const std::filesystem::path &dir);
+    bool set_project_directory(const std::filesystem::path &dir,
+                               const glm::vec3 &artboard);
 
   private:
     std::filesystem::path project_directory;
+
+    glm::vec3 artboard_size;
 
     const std::filesystem::path config_dir =
         std::filesystem::path(getenv("HOME")) / ".config" / "artcode" /

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "artboard_sizes.hpp"
 #include "build.hpp"
 #include "imgui.h"
 #include <cstdlib>
@@ -31,16 +30,7 @@ class StartScreen {
 
     ImGui::FileBrowser file_dialog;
 
-    virtual void set_artboard_template(const TemplateSizes &temp) {
-        switch (temp) {
-        default: {
-            this->artboard_size = {0.0f, 0.0f, 0.0f};
-            this->has_dimensions = false;
-        };
-        }
-    };
-
-    virtual void set_artboard_custom(const glm::vec3 &dimensions) {
+    virtual void set_artboard_dimensions(const glm::vec3 &dimensions) {
         this->artboard_size = dimensions;
         this->has_dimensions = false;
     };

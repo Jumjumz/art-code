@@ -10,8 +10,10 @@
 
 Build::Build() {};
 
-bool Build::set_project_directory(const std::filesystem::path &dir) {
+bool Build::set_project_directory(const std::filesystem::path &dir,
+                                  const glm::vec3 &artboard) {
     this->project_directory = dir;
+    this->artboard_size = artboard;
 
     return create_project_content();
 };
@@ -110,8 +112,14 @@ bool Build::create_project_content() {
 
 void Build::write_solution_file(const std::filesystem::path &solution_file) {
     // init json
-    nlohmann::json js = {{"project_path", solution_file.parent_path()},
-                         {"solution_file", solution_file.filename()}};
+    nlohmann::json js = {
+        {"project_path", solution_file.parent_path()},
+        {"solution_file", solution_file.filename()},
+        {"artboard_size",
+         {{"width", this->artboard_size.x},
+          {"height", this->artboard_size.y},
+          {"ppi", this->artboard_size.z}}},
+    };
 
     // write
     std::ofstream write(solution_file);

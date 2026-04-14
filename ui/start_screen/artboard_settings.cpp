@@ -48,12 +48,14 @@ void ArtboardSettings::render() {
     this->file_dialog.Display();
 
     if (this->file_dialog.HasSelected()) {
-        if (this->build.set_project_directory(this->file_dialog.GetSelected())) {
+        if (this->build.set_project_directory(
+                this->file_dialog.GetSelected(),
+                glm::vec3{ab_width, ab_height, 72.0f})) {
             // pass the path to global project path
             ProjectPath::set_project_path(this->file_dialog.GetSelected());
             this->file_dialog.ClearSelected();
 
-            set_artboard_custom(glm::vec3{ab_width, ab_height, 72.0f});
+            set_artboard_dimensions(glm::vec3{ab_width, ab_height, 72.0f});
         } else {
             this->file_dialog.ClearSelected();
             this->file_dialog.Close();
@@ -61,7 +63,7 @@ void ArtboardSettings::render() {
     }
 };
 
-void ArtboardSettings::set_artboard_custom(const glm::vec3 &dimensions) {
+void ArtboardSettings::set_artboard_dimensions(const glm::vec3 &dimensions) {
     this->artboard_size = dimensions;
     this->has_dimensions = true;
 };
