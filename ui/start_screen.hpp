@@ -35,5 +35,7 @@ class StartScreen {
         this->has_dimensions = false;
     };
 
+    virtual void get_artboard_solution() = 0;
+
   private:
 };

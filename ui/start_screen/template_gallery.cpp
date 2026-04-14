@@ -77,6 +77,10 @@ glm::vec3 TemplateGallery::set_artboard_template(const TemplateSizes &temp) {
     }
 };
 
+void TemplateGallery::get_artboard_solution() {
+
+};
+
 void TemplateGallery::set_artboard_dimensions(const glm::vec3 &dimensions) {
     this->artboard_size = dimensions;
     this->has_dimensions = true;
