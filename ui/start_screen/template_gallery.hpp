@@ -16,7 +16,7 @@ class TemplateGallery : public StartScreen {
 
     bool dimensions_acquired() const override;
 
-    glm::vec3 set_artboard_template(const TemplateSizes &temp);
+    void create_new_project(const glm::vec3 &dimensions) override;
 
-    void get_artboard_solution() override;
+    glm::vec3 set_artboard_template(const TemplateSizes &temp);
 };

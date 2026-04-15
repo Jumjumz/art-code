@@ -1,5 +1,7 @@
 #include "template_gallery.hpp"
+#include "imgui.h"
 #include "nav_items.hpp"
+#include "start_screen.hpp"
 
 TemplateGallery::TemplateGallery() {
     ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
@@ -30,11 +32,31 @@ void TemplateGallery::render() {
     static glm::vec3 artboard_size;
     for (const auto &[text, val] : ArtboardTemplates::TEMPLATES) {
         if (ImGui::Button(text.c_str())) {
+            ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
+                                        ImGuiFileBrowserFlags_CreateNewDir,
+                                    this->home);
+
+            this->file_dialog = file;
+            this->file_dialog.SetTitle("Create Template Project");
+
             artboard_size = set_artboard_template(val);
             this->file_dialog.Open();
+            this->open_selected = false;
             break;
         }
         ImGui::SameLine();
+    }
+
+    if (ImGui::Button("Open", ImVec2{60, 20})) {
+        ImGui::FileBrowser file(ImGuiFileBrowserFlags_MultipleSelection |
+                                    ImGuiFileBrowserFlags_CloseOnEsc,
+                                this->home);
+
+        this->file_dialog = file;
+        this->file_dialog.SetTitle("Open Project");
+
+        this->file_dialog.Open();
+        this->open_selected = true;
     }
 
     ImGui::End();
@@ -43,14 +65,22 @@ void TemplateGallery::render() {
     // display file modal browser
     this->file_dialog.Display();
 
+    if (!this->open_selected) {
+        create_new_project(artboard_size);
+    } else {
+        get_artboard_solution();
+    }
+};
+
+void TemplateGallery::create_new_project(const glm::vec3 &dimensions) {
     if (this->file_dialog.HasSelected()) {
         if (this->build.set_project_directory(this->file_dialog.GetSelected(),
-                                              artboard_size)) {
+                                              dimensions)) {
             // pass path to global project path
             ProjectPath::set_project_path(this->file_dialog.GetSelected());
             this->file_dialog.ClearSelected();
 
-            set_artboard_dimensions(artboard_size);
+            set_artboard_dimensions(dimensions);
         } else {
             this->file_dialog.ClearSelected();
             this->file_dialog.Close();
@@ -75,10 +105,6 @@ glm::vec3 TemplateGallery::set_artboard_template(const TemplateSizes &temp) {
     default:
         return {800.0f, 400.0f, 72.0f};
     }
-};
-
-void TemplateGallery::get_artboard_solution() {
-
 };
 
 void TemplateGallery::set_artboard_dimensions(const glm::vec3 &dimensions) {

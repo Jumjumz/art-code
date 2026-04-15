@@ -1,8 +1,5 @@
 #include "artboard_settings.hpp"
-#include "json.hpp"
 #include "nav_items.hpp"
-#include <fstream>
-#include <iostream>
 
 ArtboardSettings::ArtboardSettings() {
     ImGui::FileBrowser file(ImGuiFileBrowserFlags_CreateNewDir |
@@ -45,7 +42,6 @@ void ArtboardSettings::render() {
 
     for (const auto &button : buttons) {
         if (ImGui::Button(button.c_str(), ImVec2{60, 20})) {
-            // TODO: clean up
             if (button == "Create") {
                 // reinitialize file browser
                 ImGui::FileBrowser file(ImGuiFileBrowserFlags_CreateNewDir |
@@ -54,7 +50,6 @@ void ArtboardSettings::render() {
 
                 this->file_dialog = file;
                 this->file_dialog.SetTitle("Create Custom Project");
-
                 this->file_dialog.Open();
 
                 this->open_selected = false;
@@ -78,55 +73,28 @@ void ArtboardSettings::render() {
     ImGui::End();
     ImGui::PopStyleVar();
 
-    // TODO: assign a virtual function for the creating project
+    // display file modal browser
+    this->file_dialog.Display();
+
     if (!this->open_selected) {
-        // display file modal browser
-        this->file_dialog.Display();
-
-        if (this->file_dialog.HasSelected()) {
-            if (this->build.set_project_directory(
-                    this->file_dialog.GetSelected(),
-                    glm::vec3{ab_width, ab_height, 72.0f})) {
-                // pass the path to global project path
-                ProjectPath::set_project_path(this->file_dialog.GetSelected());
-                this->file_dialog.ClearSelected();
-
-                set_artboard_dimensions(glm::vec3{ab_width, ab_height, 72.0f});
-            } else {
-                this->file_dialog.ClearSelected();
-                this->file_dialog.Close();
-            }
-        }
+        create_new_project(glm::vec3{ab_width, ab_height, 72.0f});
     } else {
         get_artboard_solution();
     }
 };
 
-void ArtboardSettings::get_artboard_solution() {
-    this->file_dialog.Display();
-
+void ArtboardSettings::create_new_project(const glm::vec3 &dimensions) {
     if (this->file_dialog.HasSelected()) {
-        nlohmann::json js;
-        const auto solution = this->file_dialog.GetSelected();
+        if (this->build.set_project_directory(this->file_dialog.GetSelected(),
+                                              dimensions)) {
+            // pass the path to global project path
+            ProjectPath::set_project_path(this->file_dialog.GetSelected());
+            this->file_dialog.ClearSelected();
 
-        if (solution.extension() == ".rcd") {
-            // read and parse solution file
-            std::ifstream read(solution);
-            js = nlohmann::json::parse(read);
-            auto artboard_size = js["artboard_size"];
-
-            // set the project path for text editor
-            ProjectPath::set_project_path(js["project_path"]);
-            // get width and height
-            this->artboard_size =
-                glm::vec3{artboard_size["width"], artboard_size["height"],
-                          artboard_size["ppi"]};
-
-            this->has_dimensions = true;
-
-            read.close();
+            set_artboard_dimensions(dimensions);
         } else {
-            std::cerr << "File not readable for this program" << std::endl;
+            this->file_dialog.ClearSelected();
+            this->file_dialog.Close();
         }
     }
 };
