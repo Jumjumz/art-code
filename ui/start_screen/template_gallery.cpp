@@ -1,7 +1,5 @@
 #include "template_gallery.hpp"
-#include "imgui.h"
 #include "nav_items.hpp"
-#include "start_screen.hpp"
 
 TemplateGallery::TemplateGallery() {
     ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
