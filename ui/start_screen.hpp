@@ -52,7 +52,7 @@ class StartScreen {
             nlohmann::json js;
             const auto solution = this->file_dialog.GetSelected();
 
-            if (solution.extension() == ".rcd") {
+            if (solution.extension() == this->build.sln_ext) {
                 // read and parse solution file
                 std::ifstream read(solution);
                 js = nlohmann::json::parse(read);

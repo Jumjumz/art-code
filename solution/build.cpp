@@ -18,6 +18,65 @@ bool Build::set_project_directory(const std::filesystem::path &dir,
     return create_project_content();
 };
 
+bool Build::create_project_content() {
+    const std::vector<std::filesystem::path> content_directories = {
+        this->project_directory / "build", this->project_directory / "shaders",
+        this->project_directory / "components"};
+    const auto file_name =
+        this->project_directory.filename().string() + this->sln_ext;
+    const auto solution_path = this->project_directory / file_name;
+
+    // create sub directories
+    if (!std::filesystem::exists(solution_path)) {
+        // create and write solution file and main.cpp
+        {
+            std::vector<std::filesystem::path> project_content = {
+                solution_path, this->project_directory / "main.cpp"};
+
+            // create files
+            for (const auto &content : project_content) {
+                const std::ofstream file(content);
+            }
+            // write to respective files
+            write_solution_file(project_content[0]);
+            write_main_cpp(project_content[1]);
+        }
+
+        // create directories
+        for (const auto &directory : content_directories) {
+            std::filesystem::create_directory(directory);
+            std::cerr << directory << ": directory created" << std::endl;
+        }
+
+        {
+
+            // create files inside respective directories
+            const auto shader = content_directories[1] / "artcode.frag";
+            const std::ofstream shader_file(shader);
+
+            const auto components_dir = content_directories[2];
+            std::vector<std::filesystem::path> comp_files = {
+                components_dir / "comp.hpp", components_dir / "comp.cpp"};
+            for (const auto comp : components_dir) {
+                const std::ofstream file(comp);
+            }
+
+            // write comp files
+            write_comp_hpp(comp_files[0]);
+            write_comp_cpp(comp_files[1]);
+        }
+
+        // create config folder
+        create_config_dir();
+
+        return true;
+    } else {
+        std::cerr << solution_path << " project solution already exist"
+                  << std::endl;
+        return false;
+    }
+};
+
 void Build::create_config_dir() {
     if (!std::filesystem::exists(this->config_dir.parent_path())) {
         std::filesystem::create_directory(this->config_dir.parent_path());
@@ -46,91 +105,21 @@ void Build::create_config_dir() {
         // append new project directory
         js["project_directory"].push_back(this->project_directory);
 
-        std::ofstream file(this->config_dir);
-        file << js.dump(4);
-    }
-};
-
-bool Build::create_project_content() {
-    const std::vector<std::filesystem::path> content_directories = {
-        this->project_directory / "build", this->project_directory / "shaders",
-        this->project_directory / "components"};
-    const auto file_name =
-        this->project_directory.filename().string() + this->sln_ext;
-    const auto solution_path = this->project_directory / file_name;
-
-    // create sub directories
-    if (!std::filesystem::exists(solution_path)) {
-        // create and write solution file and main.cpp
-        {
-            std::vector<std::filesystem::path> project_content = {
-                solution_path, this->project_directory / "main.cpp"};
-
-            for (const auto &content : project_content) {
-                if (content == this->project_directory / "main.cpp") {
-                    const std::ofstream file(content);
-                    // write main cpp init code
-                    write_main_cpp(content);
-                } else {
-                    // create solution file
-                    const std::ofstream file(content);
-                    // write solution file
-                    write_solution_file(content);
-                }
-            }
-        }
-
-        // create directories
-        for (const auto &directory : content_directories) {
-            if (directory == this->project_directory / "shaders") {
-                std::filesystem::create_directory(directory);
-                const std::ofstream shader_file(directory / "test.frag");
-            } else if (directory == this->project_directory / "components") {
-                std::filesystem::create_directory(directory);
-                std::vector<std::filesystem::path> comp_files = {
-                    directory / "comp.hpp", directory / "comp.cpp"};
-                for (const auto &comp : comp_files) {
-                    // create the file first
-                    if (comp == directory / "comp.cpp") {
-                        const std::ofstream file(comp);
-                        write_comp_cpp(comp);
-                    }
-
-                    if (comp == directory / "comp.hpp") {
-                        const std::ofstream file(comp);
-                        write_comp_hpp(comp);
-                    }
-                }
-            } else {
-                std::filesystem::create_directory(directory);
-            }
-
-            std::cerr << directory << ": directory created" << std::endl;
-        }
-
-        // create config folder
-        create_config_dir();
-
-        return true;
-    } else {
-        std::cerr << solution_path << " project solution already exist"
-                  << std::endl;
-        return false;
+        std::ofstream write(this->config_dir);
+        write << js.dump(4);
     }
 };
 
 void Build::write_solution_file(const std::filesystem::path &solution_file) {
     // init json
-    nlohmann::json js = {
-        {"project_path", solution_file.parent_path()},
-        {"solution_file", solution_file.filename()},
-        {
-            "artboard_size",
-            {{"width", this->artboard_size.x},
-             {"height", this->artboard_size.y},
-             {"ppi", this->artboard_size.z}},
-        },
-        {"compile", "g++ main.cpp components/comp.cpp -o build/art"}};
+    nlohmann::json js = {{"project_path", solution_file.parent_path()},
+                         {"solution_file", solution_file.filename()},
+                         {
+                             "artboard_size",
+                             {{"width", this->artboard_size.x},
+                              {"height", this->artboard_size.y},
+                              {"ppi", this->artboard_size.z}},
+                         }};
 
     // write
     std::ofstream write(solution_file);
@@ -140,14 +129,10 @@ void Build::write_solution_file(const std::filesystem::path &solution_file) {
 void Build::write_main_cpp(const std::filesystem::path &main_cpp) {
     std::ofstream write(main_cpp);
     // write init code in strign literal
-    write << R"(#include "components/comp.hpp"
-#include <iostream>
+    write << R"(#include <iostream>
 
 int main() {
-    Component comp;
-
     std::cout << "Hello World!";
-    std::cout << comp.x;
 
     return 0;
 };)";

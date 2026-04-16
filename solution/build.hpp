@@ -7,6 +7,8 @@ class Build {
   public:
     Build();
 
+    static constexpr std::string sln_ext = ".rcd";
+
     bool set_project_directory(const std::filesystem::path &dir,
                                const glm::vec3 &artboard);
 
@@ -18,8 +20,6 @@ class Build {
     const std::filesystem::path config_dir =
         std::filesystem::path(getenv("HOME")) / ".config" / "artcode" /
         "projects.json";
-
-    static constexpr std::string sln_ext = ".rcd";
 
     bool create_project_content();
 

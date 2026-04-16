@@ -1,6 +1,6 @@
 #pragma once
 
-#include "build.hpp"
+#include <string>
 
 class BuildPanel {
   public:
@@ -9,5 +9,11 @@ class BuildPanel {
     void render();
 
   private:
-    Build build;
+    void build_artcode();
+
+    void run_executable();
+
+    enum class Flags { C, R };
+
+    std::string execute(const Flags &flag);
 };
