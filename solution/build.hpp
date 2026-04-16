@@ -28,4 +28,8 @@ class Build {
     void write_solution_file(const std::filesystem::path &solution_file);
 
     void write_main_cpp(const std::filesystem::path &main_cpp);
+
+    void write_comp_cpp(const std::filesystem::path &comp);
+
+    void write_comp_hpp(const std::filesystem::path &comp);
 };

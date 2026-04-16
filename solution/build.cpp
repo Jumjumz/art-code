@@ -90,7 +90,16 @@ bool Build::create_project_content() {
                 std::vector<std::filesystem::path> comp_files = {
                     directory / "comp.hpp", directory / "comp.cpp"};
                 for (const auto &comp : comp_files) {
-                    const std::ofstream file(comp);
+                    // create the file first
+                    if (comp == directory / "comp.cpp") {
+                        const std::ofstream file(comp);
+                        write_comp_cpp(comp);
+                    }
+
+                    if (comp == directory / "comp.hpp") {
+                        const std::ofstream file(comp);
+                        write_comp_hpp(comp);
+                    }
                 }
             } else {
                 std::filesystem::create_directory(directory);
@@ -115,11 +124,13 @@ void Build::write_solution_file(const std::filesystem::path &solution_file) {
     nlohmann::json js = {
         {"project_path", solution_file.parent_path()},
         {"solution_file", solution_file.filename()},
-        {"artboard_size",
-         {{"width", this->artboard_size.x},
-          {"height", this->artboard_size.y},
-          {"ppi", this->artboard_size.z}}},
-    };
+        {
+            "artboard_size",
+            {{"width", this->artboard_size.x},
+             {"height", this->artboard_size.y},
+             {"ppi", this->artboard_size.z}},
+        },
+        {"compile", "g++ main.cpp components/comp.cpp -o build/art"}};
 
     // write
     std::ofstream write(solution_file);
@@ -129,11 +140,39 @@ void Build::write_solution_file(const std::filesystem::path &solution_file) {
 void Build::write_main_cpp(const std::filesystem::path &main_cpp) {
     std::ofstream write(main_cpp);
     // write init code in strign literal
-    write << R"(#include <iostream>
+    write << R"(#include "components/comp.hpp"
+#include <iostream>
 
 int main() {
+    Component comp;
+
     std::cout << "Hello World!";
+    std::cout << comp.x;
 
     return 0;
+};)";
+};
+
+void Build::write_comp_cpp(const std::filesystem::path &comp) {
+    std::ofstream write(comp);
+    // write init code in strign literal
+    write << R"(#include "comp.hpp"
+
+Component::Component() {
+    this->x = 10;
+};)";
+};
+
+void Build::write_comp_hpp(const std::filesystem::path &comp) {
+    std::ofstream write(comp);
+    // write init code in strign literal
+    write << R"(#pragma once
+
+class Component {
+    public:
+      Component();
+
+      int x;
+    private:
 };)";
 };

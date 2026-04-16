@@ -14,4 +14,6 @@ void BuildPanel::render() {
         ImGui::Button(action.c_str(), ImVec2{width, height});
         ImGui::SameLine();
     }
+
+    // TODO: read solution and file and build and compile main.cpp
 };
