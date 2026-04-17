@@ -1,4 +1,4 @@
-#include "art_code.hpp"
+#include "app.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
@@ -8,16 +8,16 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
-ArtCode::ArtCode() {};
+Application::Application() {};
 
-void ArtCode::run() {
+void Application::run() {
     workspace_events(); // set the canvas events first
     imgui_init();       // imgui events will be set after canvas
     loop();
     cleanup();
 };
 
-void ArtCode::loop() {
+void Application::loop() {
     this->canvas_thread = std::thread([this]() -> void {
         while (this->running) {
             std::unique_lock<std::mutex> lock{this->canvas_mutex};
@@ -93,7 +93,7 @@ void ArtCode::loop() {
     this->canvas_thread.join();
 };
 
-void ArtCode::canvas_setup() {
+void Application::canvas_setup() {
     const auto artboard_size = this->ui_manager.artboard_size;
     const auto width = artboard_size.x;
     const auto height = artboard_size.y;
@@ -134,13 +134,13 @@ void ArtCode::canvas_setup() {
 };
 
 // TODO: REFACTOR: this doesnt need to be in this class
-void ArtCode::workspace_events() {
+void Application::workspace_events() {
     // calculate mouse movement
     glfwSetCursorPosCallback(
         this->window.app_window,
         [](GLFWwindow *window, double x_pos, double y_pos) -> void {
             auto app =
-                reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
+                reinterpret_cast<Application *>(glfwGetWindowUserPointer(window));
             auto dx = static_cast<float>(x_pos) - CanvasUtils::mouse_last_pos.x;
             auto dy = static_cast<float>(y_pos) - CanvasUtils::mouse_last_pos.y;
 
@@ -176,7 +176,7 @@ void ArtCode::workspace_events() {
     glfwSetKeyCallback(this->window.app_window,
                        [](GLFWwindow *window, int key, int scancode, int action,
                           int mods) -> void {
-                           auto app = reinterpret_cast<ArtCode *>(
+                           auto app = reinterpret_cast<Application *>(
                                glfwGetWindowUserPointer(window));
 
                            if (app->mouse_in_canvas) {
@@ -203,24 +203,24 @@ void ArtCode::workspace_events() {
                        });
 
     // scroll
-    glfwSetScrollCallback(
-        this->window.app_window,
-        [](GLFWwindow *window, double x, double y) -> void {
-            auto app =
-                reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
+    glfwSetScrollCallback(this->window.app_window,
+                          [](GLFWwindow *window, double x, double y) -> void {
+                              auto app = reinterpret_cast<Application *>(
+                                  glfwGetWindowUserPointer(window));
 
-            if (app->ctrl_pressed) {
-                CanvasUtils::zoom += y * 0.10;
-                CanvasUtils::zoom = glm::clamp(CanvasUtils::zoom, 0.1f, 10.0f);
-            }
-        });
+                              if (app->ctrl_pressed) {
+                                  CanvasUtils::zoom += y * 0.10;
+                                  CanvasUtils::zoom =
+                                      glm::clamp(CanvasUtils::zoom, 0.1f, 10.0f);
+                              }
+                          });
 
     // panning
     glfwSetMouseButtonCallback(
         this->window.app_window,
         [](GLFWwindow *window, int button, int action, int mods) -> void {
             auto app =
-                reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
+                reinterpret_cast<Application *>(glfwGetWindowUserPointer(window));
 
             if (button == GLFW_MOUSE_BUTTON_LEFT) {
                 if (action == GLFW_PRESS)
@@ -231,7 +231,7 @@ void ArtCode::workspace_events() {
         });
 };
 
-void ArtCode::imgui_init() {
+void Application::imgui_init() {
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForVulkan(this->window.app_window, true);
 
@@ -271,12 +271,12 @@ void ArtCode::imgui_init() {
         this->window.app_window,
         [](GLFWwindow *window, int width, int height) -> void {
             auto app =
-                reinterpret_cast<ArtCode *>(glfwGetWindowUserPointer(window));
+                reinterpret_cast<Application *>(glfwGetWindowUserPointer(window));
             app->frame_buffer_resize = true;
         });
 };
 
-void ArtCode::reset_buffers() {
+void Application::reset_buffers() {
     auto fence_result = this->ctx.device.waitForFences(
         *this->commands.in_flight_fences[this->current_frame], vk::True,
         UINT64_MAX);
@@ -309,7 +309,8 @@ void ArtCode::reset_buffers() {
     this->commands.imgui_command_buffers[this->current_frame].reset();
 };
 
-void ArtCode::submit_buffers(const std::vector<vk::CommandBuffer> &command_buffers) {
+void Application::submit_buffers(
+    const std::vector<vk::CommandBuffer> &command_buffers) {
     vk::PipelineStageFlags destination_stage_mask(
         vk::PipelineStageFlagBits::eColorAttachmentOutput);
 
@@ -348,10 +349,10 @@ void ArtCode::submit_buffers(const std::vector<vk::CommandBuffer> &command_buffe
     }
 
     this->current_frame =
-        (this->current_frame + 1) % ArtCode::MAX_FRAMES_IN_FLIGHT;
+        (this->current_frame + 1) % Application::MAX_FRAMES_IN_FLIGHT;
 };
 
-void ArtCode::record_canvas_command() {
+void Application::record_canvas_command() {
     auto &cmd = this->commands.canvas_command_buffers[this->current_frame];
 
     // render
@@ -416,7 +417,7 @@ void ArtCode::record_canvas_command() {
     cmd.end();
 };
 
-void ArtCode::record_imgui_command() {
+void Application::record_imgui_command() {
     auto &cmd = this->commands.imgui_command_buffers[this->current_frame];
 
     VkCommandBuffer cmd_buffer = *cmd;
@@ -479,7 +480,7 @@ void ArtCode::record_imgui_command() {
     cmd.end();
 };
 
-void ArtCode::transition_image_layout(
+void Application::transition_image_layout(
     const vk::CommandBuffer &cmd_buffer, const vk::Image &image,
     const vk::ImageLayout &old_layout, const vk::ImageLayout &new_layout,
     const vk::AccessFlags2 &src_access_mask,
@@ -506,7 +507,7 @@ void ArtCode::transition_image_layout(
     cmd_buffer.pipelineBarrier2(dependency_info);
 };
 
-void ArtCode::recreate_swapchain() {
+void Application::recreate_swapchain() {
     this->ctx.device.waitIdle();
 
     // imgui ui
@@ -519,12 +520,12 @@ void ArtCode::recreate_swapchain() {
     this->swapchain.imgui_create_image_views();
 };
 
-void ArtCode::clean_swapchain() {
+void Application::clean_swapchain() {
     this->swapchain.resources.image_views.clear();
     this->swapchain.swapchain = nullptr;
 };
 
-void ArtCode::update_canvas() {
+void Application::update_canvas() {
     auto canvas = ImGui::FindWindowByName("##canvas-begin");
 
     if (canvas) {
@@ -549,7 +550,7 @@ void ArtCode::update_canvas() {
     }
 };
 
-void ArtCode::cleanup() {
+void Application::cleanup() {
     this->ctx.device.waitIdle();
 
     ImGui_ImplVulkan_Shutdown();

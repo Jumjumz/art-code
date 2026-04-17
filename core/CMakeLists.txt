@@ -1,5 +1,5 @@
 add_library(core
-  art_code.cpp
+  app.cpp
 )
 
 target_include_directories(core

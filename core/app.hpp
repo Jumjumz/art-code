@@ -12,9 +12,9 @@
 #include <mutex>
 #include <thread>
 
-class ArtCode {
+class Application {
   public:
-    ArtCode();
+    Application();
 
     void run();
 
@@ -44,7 +44,7 @@ class ArtCode {
                             this->pipeline.descriptor_set_layout,
                             this->swapchain.resources.images,
                             this->ctx.family_indices.graphics_family,
-                            ArtCode::MAX_FRAMES_IN_FLIGHT};
+                            Application::MAX_FRAMES_IN_FLIGHT};
 
     VkFormat format =
         static_cast<VkFormat>(this->swapchain.resources.image_format);

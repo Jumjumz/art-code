@@ -1,11 +1,11 @@
-#include "core/art_code.hpp"
+#include "core/app.hpp"
 
 #include <cstdlib>
 #include <exception>
 #include <iostream>
 
 int main() {
-    ArtCode art_code;
+    Application art_code;
 
     try {
         art_code.run();
