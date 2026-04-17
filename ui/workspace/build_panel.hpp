@@ -9,10 +9,7 @@ class BuildPanel {
     void render();
 
   private:
-    void build_artcode();
-
-    void run_executable();
-
+    // C for compile, R for Run
     enum class Flags { C, R };
 
     std::string execute(const Flags &flag);

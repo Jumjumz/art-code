@@ -16,11 +16,10 @@ void Console::render() {
 
     ImGui::PushFont(this->font);
     ImGui::TextUnformatted(project_path.c_str());
-    // TODO: should not check if empty, but base if compiler returned an error
-    if (!run_result.empty()) {
-        ImGui::Text("%s", run_result.c_str());
-    } else {
+    if (!compiler_result.empty()) {
         ImGui::Text("%s", compiler_result.c_str());
+    } else {
+        ImGui::Text("%s", run_result.c_str());
     }
     ImGui::PopFont();
 };

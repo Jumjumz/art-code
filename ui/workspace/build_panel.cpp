@@ -2,10 +2,6 @@
 #include "imgui.h"
 #include "nav_items.hpp"
 
-#include <cstdio>
-#include <filesystem>
-#include <iostream>
-
 BuildPanel::BuildPanel() {};
 
 void BuildPanel::render() {
@@ -19,7 +15,8 @@ void BuildPanel::render() {
             if (action == "Build") {
                 const auto result = execute(Flags::C);
                 CompilerResult::set_compiler_result(result);
-                std::cerr << "pressed!" << std::endl;
+                // prevent persistent data of run result when recompiling
+                CompilerResult::set_run_result("");
             }
 
             if (action == "Run") {
@@ -34,22 +31,30 @@ void BuildPanel::render() {
 // TODO: dont hardcode the files and possibly use dynamic adding of .cpp files for linking
 std::string BuildPanel::execute(const Flags &flag) {
     std::string cmd;
-    std::string result;
-    const auto project_dir = ProjectPath::get_project_path();
-
-    if (flag == Flags::C) {
-        const std::string source = project_dir / "main.cpp";
+    {
+        const auto project_dir = ProjectPath::get_project_path();
         const std::string build = project_dir / "build/artcode";
-        cmd = "g++ -std=c++20 " + source + " -o " + build + " 2>&1";
-    } else if (flag == Flags::R) {
-        cmd = project_dir.string() + "/build/artcode";
+        if (flag == Flags::C) {
+            const std::vector<std::string> dirs = {
+                project_dir / "main.cpp", project_dir / "components/comp.cpp"};
+            std::string source;
+            for (const auto &dir : dirs) {
+                source += dir + " ";
+            }
+            cmd = "g++ -std=c++20 " + source + "-o " + build + " 2>&1";
+        } else if (flag == Flags::R) {
+            cmd = build;
+        }
     }
 
+    std::string result;
     // execute and use gcc compiler
     {
         FILE *pipe = popen(cmd.c_str(), "r");
-        if (!pipe)
-            std::cerr << "Failed to run the command" << std::endl;
+        if (!pipe) {
+            return result =
+                       "Failed to run the command. Error occured somewhere";
+        }
 
         // temporary buffer to read chunks of result
         char buffer[128];
