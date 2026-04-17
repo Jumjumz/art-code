@@ -28,20 +28,28 @@ void BuildPanel::render() {
     }
 };
 
+// TODO: add a way to write in solution file for the executable files
+std::string BuildPanel::executable_files(const std::filesystem::path &project_dir) {
+    const std::vector<std::string> dirs = {project_dir / "main.cpp",
+                                           project_dir / "components/comp.cpp"};
+    std::string source;
+    for (const auto &dir : dirs) {
+        source += dir + " "; // add space at the end of each path
+    }
+
+    return source;
+};
+
 // TODO: dont hardcode the files and possibly use dynamic adding of .cpp files for linking
+// TODO: might actually need to create a library for dynamic adding of .cpp files
 std::string BuildPanel::execute(const Flags &flag) {
     std::string cmd;
     {
         const auto project_dir = ProjectPath::get_project_path();
         const std::string build = project_dir / "build/artcode";
         if (flag == Flags::C) {
-            const std::vector<std::string> dirs = {
-                project_dir / "main.cpp", project_dir / "components/comp.cpp"};
-            std::string source;
-            for (const auto &dir : dirs) {
-                source += dir + " ";
-            }
-            cmd = "g++ -std=c++20 " + source + "-o " + build + " 2>&1";
+            const auto executables = executable_files(project_dir);
+            cmd = "g++ -std=c++20 " + executables + "-o " + build + " 2>&1";
         } else if (flag == Flags::R) {
             cmd = build;
         }

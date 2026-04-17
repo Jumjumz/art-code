@@ -1,5 +1,4 @@
 #include "console.hpp"
-#include "imgui.h"
 #include "nav_items.hpp"
 
 Console::Console() {};
