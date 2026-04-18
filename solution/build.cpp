@@ -10,8 +10,7 @@
 
 Build::Build() {};
 
-bool Build::set_project_directory(const std::filesystem::path &dir,
-                                  const glm::vec3 &artboard) {
+bool Build::set_project_directory(const fs::path &dir, const glm::vec3 &artboard) {
     this->project_directory = dir;
     this->artboard_size = artboard;
 
@@ -19,7 +18,7 @@ bool Build::set_project_directory(const std::filesystem::path &dir,
 };
 
 bool Build::create_project_content() {
-    const std::vector<std::filesystem::path> content_directories = {
+    const std::vector<fs::path> content_directories = {
         this->project_directory / "build", this->project_directory / "shaders",
         this->project_directory / "components"};
     const auto file_name =
@@ -27,10 +26,10 @@ bool Build::create_project_content() {
     const auto solution_path = this->project_directory / file_name;
 
     // create sub directories
-    if (!std::filesystem::exists(solution_path)) {
+    if (!fs::exists(solution_path)) {
         // create and write solution file and main.cpp
         {
-            std::vector<std::filesystem::path> project_content = {
+            std::vector<fs::path> project_content = {
                 solution_path, this->project_directory / "main.cpp"};
 
             // create files
@@ -44,19 +43,18 @@ bool Build::create_project_content() {
 
         // create directories
         for (const auto &directory : content_directories) {
-            std::filesystem::create_directory(directory);
+            fs::create_directory(directory);
             std::cerr << directory << ": directory created" << std::endl;
         }
 
         {
-
             // create files inside respective directories
             const auto shader = content_directories[1] / "artcode.frag";
             const std::ofstream shader_file(shader);
 
             const auto components_dir = content_directories[2];
-            std::vector<std::filesystem::path> comp_files = {
-                components_dir / "comp.hpp", components_dir / "comp.cpp"};
+            std::vector<fs::path> comp_files = {components_dir / "comp.hpp",
+                                                components_dir / "comp.cpp"};
             for (const auto comp : components_dir) {
                 const std::ofstream file(comp);
             }
@@ -78,13 +76,13 @@ bool Build::create_project_content() {
 };
 
 void Build::create_config_dir() {
-    if (!std::filesystem::exists(this->config_dir.parent_path())) {
-        std::filesystem::create_directory(this->config_dir.parent_path());
+    if (!fs::exists(this->config_dir.parent_path())) {
+        fs::create_directory(this->config_dir.parent_path());
     }
 
     // prepare to read and parse the projects.json file
     nlohmann::json js;
-    if (std::filesystem::exists(this->config_dir)) {
+    if (fs::exists(this->config_dir)) {
         // read projects.json and parse
         std::ifstream read(this->config_dir);
         js = nlohmann::json::parse(read);
@@ -110,7 +108,7 @@ void Build::create_config_dir() {
     }
 };
 
-void Build::write_solution_file(const std::filesystem::path &solution_file) {
+void Build::write_solution_file(const fs::path &solution_file) {
     // init json
     nlohmann::json js = {{"project_path", solution_file.parent_path()},
                          {"solution_file", solution_file.filename()},
@@ -126,7 +124,7 @@ void Build::write_solution_file(const std::filesystem::path &solution_file) {
     write << js.dump(4); // indent 4 spaces
 };
 
-void Build::write_main_cpp(const std::filesystem::path &main_cpp) {
+void Build::write_main_cpp(const fs::path &main_cpp) {
     std::ofstream write(main_cpp);
     // write init code in strign literal
     write << R"(#include <iostream>
@@ -138,7 +136,7 @@ int main() {
 };)";
 };
 
-void Build::write_comp_cpp(const std::filesystem::path &comp) {
+void Build::write_comp_cpp(const fs::path &comp) {
     std::ofstream write(comp);
     // write init code in strign literal
     write << R"(#include "comp.hpp"
@@ -148,7 +146,7 @@ Component::Component() {
 };)";
 };
 
-void Build::write_comp_hpp(const std::filesystem::path &comp) {
+void Build::write_comp_hpp(const fs::path &comp) {
     std::ofstream write(comp);
     // write init code in strign literal
     write << R"(#pragma once
