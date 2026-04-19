@@ -1,11 +1,11 @@
-add_library(artcode
+add_library(api
   artcode.cpp
 )
 
-target_include_directories(imgui
+target_include_directories(api
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(window
+target_link_libraries(api
   PRIVATE glm::glm
 )

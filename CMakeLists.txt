@@ -16,6 +16,7 @@ endif()
 find_package(Vulkan REQUIRED)
 find_package(glm REQUIRED)
 
+add_subdirectory(api)
 add_subdirectory(assets)
 add_subdirectory(core)
 add_subdirectory(shaders)
@@ -34,6 +35,7 @@ ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE
   Vulkan::Vulkan
   glm::glm
+  api
   core
   imgui
   solution
