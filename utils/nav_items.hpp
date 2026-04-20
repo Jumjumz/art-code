@@ -32,8 +32,17 @@ struct ProjectPath {
         return ProjectPath::project_path;
     }
 
+    static inline void set_solution_file(const std::filesystem::path &solution) {
+        ProjectPath::solution_file = solution;
+    }
+
+    static inline std::filesystem::path get_solution_file() {
+        return ProjectPath::solution_file;
+    }
+
   private:
     static inline std::filesystem::path project_path;
+    static inline std::filesystem::path solution_file;
 };
 
 struct CompilerResult {

@@ -1,6 +1,9 @@
 #include "build_panel.hpp"
 #include "imgui.h"
+#include "json.hpp"
 #include "nav_items.hpp"
+#include <fstream>
+#include <unistd.h>
 
 BuildPanel::BuildPanel() {};
 
@@ -28,35 +31,43 @@ void BuildPanel::render() {
     }
 };
 
-// TODO: add a way to write in solution file for the executable files
-std::string BuildPanel::executable_files(const std::filesystem::path &project_dir) {
-    const std::vector<std::string> dirs = {project_dir / "main.cpp",
-                                           project_dir / "components/comp.cpp"};
+std::string BuildPanel::executable_files() {
+    // read solution file
+    std::vector<std::string> executables;
+    {
+        std::ifstream read(ProjectPath::get_solution_file());
+
+        nlohmann::json js;
+        js = nlohmann::json::parse(read);
+        executables = js["sources"].get<std::vector<std::string>>();
+    }
+
     std::string source;
-    for (const auto &dir : dirs) {
+    for (const auto &dir : executables) {
         source += dir + " "; // add space at the end of each path
     }
 
     return source;
 };
 
-// TODO: dont hardcode the files and possibly use dynamic adding of .cpp files for linking
-// TODO: might actually need to create a library for dynamic adding of .cpp files
 std::string BuildPanel::execute(const Flags &flag) {
     std::string cmd;
+    // execute and use gcc compiler
     {
         const auto project_dir = ProjectPath::get_project_path();
         const std::string build = project_dir / "build/artcode";
         if (flag == Flags::C) {
-            const auto executables = executable_files(project_dir);
-            cmd = "g++ -std=c++20 " + executables + "-o " + build + " 2>&1";
+            const auto executables = executable_files();
+            // chage dir to project dir before compiling
+            cmd = "cd " + project_dir.string() + " && " + "g++ -std=c++20 " +
+                  executables + "-o " + build + " 2>&1";
         } else if (flag == Flags::R) {
             cmd = build;
         }
     }
 
     std::string result;
-    // execute and use gcc compiler
+    // store compiler result
     {
         FILE *pipe = popen(cmd.c_str(), "r");
         if (!pipe) {

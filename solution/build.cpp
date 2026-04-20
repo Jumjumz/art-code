@@ -117,7 +117,8 @@ void Build::write_solution_file(const fs::path &solution_file) {
                              {{"width", this->artboard_size.x},
                               {"height", this->artboard_size.y},
                               {"ppi", this->artboard_size.z}},
-                         }};
+                         },
+                         {"sources", {"main.cpp", "components/comp.cpp"}}};
 
     // write
     std::ofstream write(solution_file);

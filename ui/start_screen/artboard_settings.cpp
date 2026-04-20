@@ -87,7 +87,7 @@ void ArtboardSettings::create_new_project(const glm::vec3 &dimensions) {
     if (this->file_dialog.HasSelected()) {
         if (this->build.set_project_directory(this->file_dialog.GetSelected(),
                                               dimensions)) {
-            // pass the path to global project path
+            // pass path to global project path
             ProjectPath::set_project_path(this->file_dialog.GetSelected());
             this->file_dialog.ClearSelected();
 

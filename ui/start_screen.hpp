@@ -61,6 +61,9 @@ class StartScreen {
                 // set the project path for text editor
                 ProjectPath::set_project_path(js["project_path"]);
 
+                // set solution file
+                ProjectPath::set_solution_file(solution);
+
                 // get width and height
                 const auto dimensions =
                     glm::vec3{artboard_size["width"], artboard_size["height"],
@@ -69,7 +72,6 @@ class StartScreen {
                 read.close();
 
                 set_artboard_dimensions(dimensions);
-
             } else {
                 std::cerr << "File not readable for this program" << std::endl;
             }
