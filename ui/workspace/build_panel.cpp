@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "json.hpp"
 #include "nav_items.hpp"
+#include <filesystem>
 #include <fstream>
 #include <unistd.h>
 
@@ -31,7 +32,7 @@ void BuildPanel::render() {
     }
 };
 
-std::string BuildPanel::executable_files() {
+std::string BuildPanel::executable_files() const {
     // read solution file
     std::vector<std::string> executables;
     {
@@ -50,7 +51,7 @@ std::string BuildPanel::executable_files() {
     return source;
 };
 
-std::string BuildPanel::execute(const Flags &flag) {
+std::string BuildPanel::execute(const Flags &flag) const {
     std::string cmd;
     // execute and use gcc compiler
     {
@@ -59,8 +60,18 @@ std::string BuildPanel::execute(const Flags &flag) {
         if (flag == Flags::C) {
             const auto executables = executable_files();
             // chage dir to project dir before compiling
+            std::filesystem::path exe_dir =
+                std::filesystem::canonical("/proc/self/exe").parent_path();
+            std::filesystem::path api_dir = exe_dir / "api";
+
+            // compile main with artcode shared lib
             cmd = "cd " + project_dir.string() + " && " + "g++ -std=c++20 " +
-                  executables + "-o " + build + " 2>&1";
+                  executables;
+            cmd += "-I" + api_dir.string() + " ";
+            cmd += "-L" + api_dir.string() + " ";
+            cmd += "-lapi ";
+            cmd += "-Wl,-rpath," + api_dir.string() + " ";
+            cmd += "-o " + build + " 2>&1";
         } else if (flag == Flags::R) {
             cmd = build;
         }

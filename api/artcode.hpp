@@ -35,7 +35,7 @@ struct Sources {
 
     ~Sources();
 
-    void add(const ArrayString &includes);
+    void add(const ArrayString &includes) const;
 
     ArrayString get() const;
 

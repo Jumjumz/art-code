@@ -9,10 +9,10 @@ class BuildPanel {
     void render();
 
   private:
-    std::string executable_files();
+    std::string executable_files() const;
 
     // C for compile, R for Run
     enum class Flags { C, R };
 
-    std::string execute(const Flags &flag);
+    std::string execute(const Flags &flag) const;
 };

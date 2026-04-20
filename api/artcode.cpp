@@ -10,13 +10,10 @@ Sources::Sources() : _sources(std::make_unique<Source>()) {};
 
 Sources::~Sources() = default;
 
-void Sources::add(const ArrayString &includes) {
+void Sources::add(const ArrayString &includes) const {
     this->_sources->includes = includes;
-    // TODO: write in solution file
 };
 
 ArrayString Sources::get() const { return this->_sources->includes; };
 
-void Sources::build() {
-
-};
+void Sources::build() {};

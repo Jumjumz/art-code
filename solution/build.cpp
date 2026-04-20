@@ -129,9 +129,12 @@ void Build::write_main_cpp(const fs::path &main_cpp) {
     std::ofstream write(main_cpp);
     // write init code in strign literal
     write << R"(#include <iostream>
+#include "components/comp.hpp"
 
 int main() {
+    Component comp;
     std::cout << "Hello World!";
+    std::cout << comp.x;
 
     return 0;
 };)";
