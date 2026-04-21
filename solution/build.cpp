@@ -128,13 +128,16 @@ void Build::write_solution_file(const fs::path &solution_file) {
 void Build::write_main_cpp(const fs::path &main_cpp) {
     std::ofstream write(main_cpp);
     // write init code in strign literal
-    write << R"(#include <iostream>
+    write << R"(#include <artcode.hpp> 
 #include "components/comp.hpp"
 
 int main() {
     Component comp;
-    std::cout << "Hello World!";
-    std::cout << comp.x;
+    Sources includes;
+    // add source files to compile
+    // -- list .cpp files here
+    includes.add({});
+    includes.build();
 
     return 0;
 };)";

@@ -37,11 +37,11 @@ struct Sources {
 
     void add(const ArrayString &includes) const;
 
-    ArrayString get() const;
-
-    void build();
+    void build() const;
 
   private:
     struct Source;
     std::unique_ptr<Source> _sources;
+
+    static constexpr std::string EXTENSION = ".rcd";
 };
