@@ -20,35 +20,32 @@ void Sources::add(const ArrayString &includes) const {
 };
 
 void Sources::build() const {
-    if (!this->_sources->includes.empty()) {
-        fs::path solution_file;
-        { // get executable dir
-            const auto exe_dir = fs::canonical("/proc/self/exe").parent_path();
+    fs::path solution_file;
+    {
+        // get executable dir
+        const auto exe_dir = fs::canonical("/proc/self/exe").parent_path();
 
-            for (const auto &file :
-                 fs::directory_iterator(exe_dir.parent_path())) {
-                if (file.path().extension() == this->EXTENSION) {
-                    solution_file = file;
-                }
+        for (const auto &file : fs::directory_iterator(exe_dir.parent_path())) {
+            if (file.path().extension() == this->EXTENSION) {
+                solution_file = file;
+                break;
             }
         }
+    }
 
-        nlohmann::json js;
-        {
-            std::ifstream read(solution_file);
-            js = nlohmann::json::parse(read);
-            read.close();
-        }
+    nlohmann::json js;
+    {
+        std::ifstream read(solution_file);
+        js = nlohmann::json::parse(read);
+    }
 
-        nlohmann::json sources = js["sources"];
-        if (std::find(sources.begin(), sources.end(), solution_file.string()) ==
-            sources.end()) {
-            for (const auto &source : this->_sources->includes) {
-                js["sources"].push_back(source);
+    nlohmann::json includes = js["includes"];
+    if (std::find(includes.begin(), includes.end(), solution_file.string()) ==
+        includes.end()) {
+        // assign the entire array to s property
+        js["includes"] = this->_sources->includes;
 
-                std::ofstream write(solution_file);
-                write << js.dump(4);
-            }
-        }
+        std::ofstream write(solution_file);
+        write << js.dump(4);
     }
 };

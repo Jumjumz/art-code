@@ -118,7 +118,8 @@ void Build::write_solution_file(const fs::path &solution_file) {
                               {"height", this->artboard_size.y},
                               {"ppi", this->artboard_size.z}},
                          },
-                         {"sources", {"main.cpp", "components/comp.cpp"}}};
+                         {"sources", {"main.cpp", "components/comp.cpp"}},
+                         {"includes", nlohmann::json::array()}};
 
     // write
     std::ofstream write(solution_file);

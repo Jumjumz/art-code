@@ -36,11 +36,20 @@ std::string BuildPanel::executable_files() const {
     // read solution file
     std::vector<std::string> executables;
     {
-        std::ifstream read(ProjectPath::get_solution_file());
+        const auto solution_file = ProjectPath::get_solution_file();
+        std::ifstream read(solution_file);
 
         nlohmann::json js;
         js = nlohmann::json::parse(read);
+        read.close();
+
+        const auto includes = js["includes"].get<std::vector<std::string>>();
         executables = js["sources"].get<std::vector<std::string>>();
+        // append includes if not empty
+        if (!includes.empty()) {
+            executables.insert(executables.end(), includes.begin(),
+                               includes.end());
+        }
     }
 
     std::string source;
