@@ -2,13 +2,10 @@
 
 #include <glm/fwd.hpp>
 
-#include <memory>
+#include <string>
 #include <vector>
 
 // Forward declarations
-// build system
-struct Sources;
-
 // artcode
 struct IPen;
 struct PenTool;
@@ -27,21 +24,3 @@ typedef glm::vec1 Vec1;
 typedef glm::vec2 Vec2;
 typedef glm::vec3 Vec3;
 typedef glm::vec4 Vec4;
-
-// sources
-struct Sources {
-  public:
-    Sources();
-
-    ~Sources();
-
-    void add(const ArrayString &includes) const;
-
-    void build() const;
-
-  private:
-    struct Source;
-    std::unique_ptr<Source> _sources;
-
-    static constexpr std::string EXTENSION = ".rcd";
-};
