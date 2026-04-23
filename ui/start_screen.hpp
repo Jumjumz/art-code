@@ -46,7 +46,8 @@ class StartScreen {
         this->has_dimensions = false;
     };
 
-    // implementation is the same for both derived classes
+    // implementation is the same for derived classes
+    // used for opening existing projects
     virtual void get_artboard_solution() {
         if (this->file_dialog.HasSelected()) {
             nlohmann::json js;
@@ -76,6 +77,23 @@ class StartScreen {
                 std::cerr << "File not readable for this program" << std::endl;
             }
             this->file_dialog.ClearSelected();
+        }
+    };
+
+    // implementation is the same for derived classes
+    // used for creating new projects
+    virtual void get_solution_file(const fs::path &project_dir) {
+        const auto itr = std::find_if(
+            fs::directory_iterator(project_dir), fs::directory_iterator{},
+            [this](const auto &file) -> bool {
+                return file.path().extension() == this->build.sln_ext;
+            });
+
+        // check if itr reach with out finding the .rcd file
+        if (itr == fs::directory_iterator{}) {
+            std::cerr << "Solution fle not found!" << std::endl;
+        } else {
+            ProjectPath::set_solution_file(itr->path());
         }
     };
 

@@ -92,6 +92,7 @@ void ArtboardSettings::create_new_project(const glm::vec3 &dimensions) {
             this->file_dialog.ClearSelected();
 
             set_artboard_dimensions(dimensions);
+            get_solution_file(ProjectPath::get_project_path());
         } else {
             this->file_dialog.ClearSelected();
             this->file_dialog.Close();
@@ -102,12 +103,4 @@ void ArtboardSettings::create_new_project(const glm::vec3 &dimensions) {
 void ArtboardSettings::set_artboard_dimensions(const glm::vec3 &dimensions) {
     this->artboard_size = dimensions;
     this->has_dimensions = true;
-};
-
-glm::vec3 ArtboardSettings::get_artboard_size() const {
-    return this->artboard_size;
-}
-
-bool ArtboardSettings::dimensions_acquired() const {
-    return this->has_dimensions;
 };

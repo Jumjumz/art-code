@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 class BuildPanel {
   public:
@@ -13,6 +14,8 @@ class BuildPanel {
 
     // C for compile, R for Run
     enum class Flags { C, R };
+
+    void add_includes(const std::vector<std::string> &selected) const;
 
     std::string execute(const Flags &flag) const;
 };

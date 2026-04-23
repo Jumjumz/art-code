@@ -18,7 +18,6 @@ void TemplateGallery::render() {
     ImGui::SetNextWindowSize(ImVec2{this->work_size.x * 0.7f, this->work_size.y});
     ImGui::SetNextWindowPos(ImVec2{this->work_pos.x, this->work_pos.y});
 
-    // removes padding
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{80, 80});
 
     ImGui::Begin("##template-gallery", nullptr,
@@ -79,6 +78,7 @@ void TemplateGallery::create_new_project(const glm::vec3 &dimensions) {
             this->file_dialog.ClearSelected();
 
             set_artboard_dimensions(dimensions);
+            get_solution_file(ProjectPath::get_project_path());
         } else {
             this->file_dialog.ClearSelected();
             this->file_dialog.Close();
@@ -109,11 +109,3 @@ void TemplateGallery::set_artboard_dimensions(const glm::vec3 &dimensions) {
     this->artboard_size = dimensions;
     this->has_dimensions = true;
 };
-
-glm::vec3 TemplateGallery::get_artboard_size() const {
-    return this->artboard_size;
-}
-
-bool TemplateGallery::dimensions_acquired() const {
-    return this->has_dimensions;
-}

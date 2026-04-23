@@ -130,15 +130,13 @@ void Build::write_main_cpp(const fs::path &main_cpp) {
     std::ofstream write(main_cpp);
     // write init code in strign literal
     write << R"(#include <artcode.hpp> 
+#include <iostream>
 #include "components/comp.hpp"
 
 int main() {
     Component comp;
-    Sources includes;
-    // add source files to compile
-    // -- list .cpp files here
-    includes.add({});
-    includes.build();
+
+    std::cout << comp.x << std::endl;
 
     return 0;
 };)";
