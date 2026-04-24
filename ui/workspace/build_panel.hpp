@@ -1,7 +1,7 @@
 #pragma once
 
+#include <atomic>
 #include <string>
-#include <vector>
 
 class BuildPanel {
   public:
@@ -10,12 +10,15 @@ class BuildPanel {
     void render();
 
   private:
+    std::atomic<bool> show_progress = false;
+    std::atomic<float> progress = 0.0f;
+
     std::string executable_files() const;
+
+    void add_includes() const;
 
     // C for compile, R for Run
     enum class Flags { C, R };
 
-    void add_includes(const std::vector<std::string> &selected) const;
-
-    std::string execute(const Flags &flag) const;
+    std::string execute(const Flags &flag);
 };

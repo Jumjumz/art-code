@@ -25,7 +25,7 @@ void Development::render() {
                      ImGuiWindowFlags_NoScrollWithMouse);
 
     // render build panel
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{20, 0});
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{10, 0});
     ImGui::BeginChild("##panel", ImVec2{0, 40}, false);
     this->build_panel.render();
     ImGui::EndChild();
