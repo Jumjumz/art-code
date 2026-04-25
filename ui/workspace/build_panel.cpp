@@ -26,15 +26,30 @@ void BuildPanel::render() {
             }
 
             if (action == "Build") {
-                const auto result = execute(Flags::C);
+                this->project_compiled = true;
+                const auto result = create_cmd(Flags::C);
                 CompilerResult::set_compiler_result(result);
                 // prevent persistent data of run result when recompiling
                 CompilerResult::set_run_result("");
             }
 
             if (action == "Run") {
-                const auto result = execute(Flags::R);
-                CompilerResult::set_run_result(result);
+                if (!this->project_compiled) {
+                    this->project_compiled = true;
+                    auto result = create_cmd(Flags::C);
+                    CompilerResult::set_compiler_result(result);
+                    // prevent persistent data of run result when recompiling
+                    CompilerResult::set_run_result("");
+
+                    // run command
+                    result = create_cmd(Flags::R);
+                    CompilerResult::set_run_result(result);
+                    this->project_compiled = false;
+                } else {
+                    const auto result = create_cmd(Flags::R);
+                    this->project_compiled = false;
+                    CompilerResult::set_run_result(result);
+                }
             }
         }
         ImGui::SameLine();
@@ -108,8 +123,7 @@ std::string BuildPanel::executable_files() const {
     return source;
 };
 
-// TODO:add progress bar for compiling code
-std::string BuildPanel::execute(const Flags &flag) {
+std::string BuildPanel::create_cmd(const Flags &flag) {
     std::string cmd;
     // execute and use gcc compiler
     {
@@ -124,7 +138,7 @@ std::string BuildPanel::execute(const Flags &flag) {
             fs::path exe_dir = fs::canonical("/proc/self/exe").parent_path();
             fs::path api_dir = exe_dir / "api";
 
-            // change dir to project dir before compiling
+            // change to project dir before compiling
             cmd = "cd " + project_dir.string() + " && " + "g++ -std=c++20 " +
                   executables;
             // compile main with artcode shared lib
@@ -141,8 +155,15 @@ std::string BuildPanel::execute(const Flags &flag) {
         };
         }
     }
-    // run command
+
+    return execute(cmd);
+};
+
+// TODO:add progress bar when executing this function
+// add glsl compilation
+std::string BuildPanel::execute(const std::string &cmd) const {
     std::string result;
+    // run command
     {
         FILE *pipe = popen(cmd.c_str(), "r");
         if (!pipe) {
@@ -163,3 +184,5 @@ std::string BuildPanel::execute(const Flags &flag) {
 
     return result;
 };
+
+// TODO:add a way to compile glsl

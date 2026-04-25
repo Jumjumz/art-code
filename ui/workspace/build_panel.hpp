@@ -1,6 +1,5 @@
 #pragma once
 
-#include <atomic>
 #include <string>
 
 class BuildPanel {
@@ -10,8 +9,11 @@ class BuildPanel {
     void render();
 
   private:
-    std::atomic<bool> show_progress = false;
-    std::atomic<float> progress = 0.0f;
+    /* TODO: implement progress bar
+      std::atomic<bool> show_progress = false;
+      std::atomic<float> progress = 0.0f;
+    */
+    bool project_compiled = false;
 
     std::string executable_files() const;
 
@@ -20,5 +22,7 @@ class BuildPanel {
     // C for compile, R for Run
     enum class Flags { C, R };
 
-    std::string execute(const Flags &flag);
+    std::string create_cmd(const Flags &flag);
+
+    std::string execute(const std::string &cmd) const;
 };
