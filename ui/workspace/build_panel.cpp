@@ -26,30 +26,16 @@ void BuildPanel::render() {
             }
 
             if (action == "Build") {
-                this->project_compiled = true;
-                const auto result = create_cmd(Flags::C);
-                CompilerResult::set_compiler_result(result);
-                // prevent persistent data of run result when recompiling
-                CompilerResult::set_run_result("");
+                compile();
             }
 
             if (action == "Run") {
                 if (!this->project_compiled) {
-                    this->project_compiled = true;
-                    auto result = create_cmd(Flags::C);
-                    CompilerResult::set_compiler_result(result);
-                    // prevent persistent data of run result when recompiling
-                    CompilerResult::set_run_result("");
-
-                    // run command
-                    result = create_cmd(Flags::R);
-                    CompilerResult::set_run_result(result);
-                    this->project_compiled = false;
-                } else {
-                    const auto result = create_cmd(Flags::R);
-                    this->project_compiled = false;
-                    CompilerResult::set_run_result(result);
+                    compile();
                 }
+                const auto result = create_cmd(BuildPanel::Flags::R);
+                CompilerResult::set_run_result(result);
+                this->project_compiled = false;
             }
         }
         ImGui::SameLine();
@@ -59,6 +45,14 @@ void BuildPanel::render() {
         ImGui::Text("Adding includes...");
         show_adding_includes = false;
     }
+};
+
+void BuildPanel::compile() {
+    this->project_compiled = true;
+    const auto result = create_cmd(BuildPanel::Flags::C);
+    CompilerResult::set_compiler_result(result);
+    // prevent persistent data of run result when recompiling
+    CompilerResult::set_run_result("");
 };
 
 void BuildPanel::add_includes() const {
@@ -95,6 +89,16 @@ void BuildPanel::add_includes() const {
     write << js.dump(4);
 };
 
+std::string BuildPanel::shader_files() const {
+    const auto shader_file = ProjectPath::get_solution_file();
+    std::ifstream read(shader_file);
+    nlohmann::json js;
+    js = nlohmann::json::parse(read);
+    read.close();
+
+    return js["shaders"].get<std::string>();
+};
+
 std::string BuildPanel::executable_files() const {
     // read solution file
     std::vector<std::string> executables;
@@ -123,7 +127,7 @@ std::string BuildPanel::executable_files() const {
     return source;
 };
 
-std::string BuildPanel::create_cmd(const Flags &flag) {
+std::string BuildPanel::create_cmd(const BuildPanel::Flags &flag) {
     std::string cmd;
     // execute and use gcc compiler
     {
@@ -131,25 +135,40 @@ std::string BuildPanel::create_cmd(const Flags &flag) {
         const std::string build = project_dir / "build/artcode";
 
         switch (flag) {
-        case Flags::C: {
-            const auto executables = executable_files();
+        case BuildPanel::Flags::C: {
+            // compile c++ code
+            {
+                const auto executables = executable_files();
+                // change to project dir before compiling
+                cmd = "cd " + project_dir.string();
+                cmd += " && ";
+                // access the api dir to locate artcode.hpp library
+                fs::path exe_dir = fs::canonical("/proc/self/exe").parent_path();
+                fs::path api_dir = exe_dir / "api";
 
-            // access the api dir to locate artcode.hpp library
-            fs::path exe_dir = fs::canonical("/proc/self/exe").parent_path();
-            fs::path api_dir = exe_dir / "api";
+                // compile c++
+                cmd += "g++ -std=c++20 " + executables;
+                // compile main with artcode shared lib
+                cmd += "-I" + api_dir.string() + " ";
+                cmd += "-L" + api_dir.string() + " ";
+                cmd += "-lapi ";
+                cmd += "-Wl,-rpath," + api_dir.string() + " ";
+                cmd += "-o " + build + " 2>&1";
+            }
+            // compile shaders
+            {
+                const auto shaders = shader_files();
+                const auto shader_dir = project_dir / "shaders";
+                const auto shader_out = "shaders/" + (shaders + ".spv");
 
-            // change to project dir before compiling
-            cmd = "cd " + project_dir.string() + " && " + "g++ -std=c++20 " +
-                  executables;
-            // compile main with artcode shared lib
-            cmd += "-I" + api_dir.string() + " ";
-            cmd += "-L" + api_dir.string() + " ";
-            cmd += "-lapi ";
-            cmd += "-Wl,-rpath," + api_dir.string() + " ";
-            cmd += "-o " + build + " 2>&1";
+                cmd += " && ";
+                cmd += "glslangValidator -V ";
+                cmd += "shaders/" + shaders + " -o "; // shader in cmd
+                cmd += shader_out;                    // shader out cmd
+            }
             break;
         };
-        case Flags::R: {
+        case BuildPanel::Flags::R: {
             cmd = build;
             break;
         };
@@ -160,7 +179,6 @@ std::string BuildPanel::create_cmd(const Flags &flag) {
 };
 
 // TODO:add progress bar when executing this function
-// add glsl compilation
 std::string BuildPanel::execute(const std::string &cmd) const {
     std::string result;
     // run command
@@ -184,5 +202,3 @@ std::string BuildPanel::execute(const std::string &cmd) const {
 
     return result;
 };
-
-// TODO:add a way to compile glsl

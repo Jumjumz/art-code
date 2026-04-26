@@ -1,12 +1,9 @@
 #include "build.hpp"
 
 #include "json.hpp"
-#include <algorithm>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include <vector>
 
 Build::Build() {};
 
@@ -17,7 +14,7 @@ bool Build::set_project_directory(const fs::path &dir, const glm::vec3 &artboard
     return create_project_content();
 };
 
-bool Build::create_project_content() {
+bool Build::create_project_content() const {
     const std::vector<fs::path> content_directories = {
         this->project_directory / "build", this->project_directory / "shaders",
         this->project_directory / "components"};
@@ -62,6 +59,8 @@ bool Build::create_project_content() {
             // write comp files
             write_comp_hpp(comp_files[0]);
             write_comp_cpp(comp_files[1]);
+            // write shader
+            write_shader(shader);
         }
 
         // create config folder
@@ -75,7 +74,7 @@ bool Build::create_project_content() {
     }
 };
 
-void Build::create_config_dir() {
+void Build::create_config_dir() const {
     if (!fs::exists(this->config_dir.parent_path())) {
         fs::create_directory(this->config_dir.parent_path());
     }
@@ -108,7 +107,7 @@ void Build::create_config_dir() {
     }
 };
 
-void Build::write_solution_file(const fs::path &solution_file) {
+void Build::write_solution_file(const fs::path &solution_file) const {
     // init json
     nlohmann::json js = {{"project_path", solution_file.parent_path()},
                          {"solution_file", solution_file.filename()},
@@ -119,14 +118,15 @@ void Build::write_solution_file(const fs::path &solution_file) {
                               {"ppi", this->artboard_size.z}},
                          },
                          {"sources", {"main.cpp", "components/comp.cpp"}},
-                         {"includes", nlohmann::json::array()}};
+                         {"includes", nlohmann::json::array()},
+                         {"shaders", "artcode.frag"}};
 
     // write
     std::ofstream write(solution_file);
     write << js.dump(4); // indent 4 spaces
 };
 
-void Build::write_main_cpp(const fs::path &main_cpp) {
+void Build::write_main_cpp(const fs::path &main_cpp) const {
     std::ofstream write(main_cpp);
     // write init code in strign literal
     write << R"(#include <artcode.hpp> 
@@ -142,7 +142,7 @@ int main() {
 };)";
 };
 
-void Build::write_comp_cpp(const fs::path &comp) {
+void Build::write_comp_cpp(const fs::path &comp) const {
     std::ofstream write(comp);
     // write init code in strign literal
     write << R"(#include "comp.hpp"
@@ -152,7 +152,7 @@ Component::Component() {
 };)";
 };
 
-void Build::write_comp_hpp(const fs::path &comp) {
+void Build::write_comp_hpp(const fs::path &comp) const {
     std::ofstream write(comp);
     // write init code in strign literal
     write << R"(#pragma once
@@ -164,4 +164,16 @@ class Component {
       int x;
     private:
 };)";
+};
+
+void Build::write_shader(const fs::path &shader) const {
+    std::ofstream write(shader);
+
+    write << R"(#version 450
+
+layout(location = 0) out vec4 out_color;
+
+void main() {
+  out_color = vec4(1.0f);
+})";
 };

@@ -21,15 +21,17 @@ class Build {
     const fs::path config_dir =
         fs::path(getenv("HOME")) / ".config" / "artcode" / "projects.json";
 
-    bool create_project_content();
+    bool create_project_content() const;
 
-    void create_config_dir();
+    void create_config_dir() const;
 
-    void write_solution_file(const fs::path &solution_file);
+    void write_solution_file(const fs::path &solution_file) const;
 
-    void write_main_cpp(const fs::path &main_cpp);
+    void write_main_cpp(const fs::path &main_cpp) const;
 
-    void write_comp_cpp(const fs::path &comp);
+    void write_comp_cpp(const fs::path &comp) const;
 
-    void write_comp_hpp(const fs::path &comp);
+    void write_comp_hpp(const fs::path &comp) const;
+
+    void write_shader(const fs::path &shader) const;
 };
