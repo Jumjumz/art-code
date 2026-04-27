@@ -3,10 +3,7 @@
 #include "json.hpp"
 #include "nav_items.hpp"
 
-#include <filesystem>
 #include <fstream>
-
-namespace fs = std::filesystem;
 
 BuildPanel::BuildPanel() {};
 
@@ -72,7 +69,7 @@ void BuildPanel::add_includes() const {
         if (file_path.extension() == ".cpp") {
             const auto relative_path =
                 fs::relative(file_path, solution_file.parent_path());
-            // exclude the known files
+            // exclude known files
             if (relative_path == "components/comp.cpp" ||
                 relative_path == "main.cpp") {
                 continue;
@@ -89,14 +86,14 @@ void BuildPanel::add_includes() const {
     write << js.dump(4);
 };
 
-std::string BuildPanel::shader_files() const {
+fs::path BuildPanel::shader_files() const {
     const auto shader_file = ProjectPath::get_solution_file();
     std::ifstream read(shader_file);
     nlohmann::json js;
     js = nlohmann::json::parse(read);
     read.close();
 
-    return js["shaders"].get<std::string>();
+    return js["shaders"].get<fs::path>();
 };
 
 std::string BuildPanel::executable_files() const {
@@ -136,7 +133,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags &flag) {
 
         switch (flag) {
         case BuildPanel::Flags::C: {
-            // compile c++ code
+            // compile c++ codes
             {
                 const auto executables = executable_files();
                 // change to project dir before compiling
@@ -158,13 +155,14 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags &flag) {
             // compile shaders
             {
                 const auto shaders = shader_files();
-                const auto shader_dir = project_dir / "shaders";
-                const auto shader_out = "shaders/" + (shaders + ".spv");
+                const auto shader_dir = shaders.parent_path();
+                const auto shader_out =
+                    shader_dir / (shaders.filename().string() + ".spv");
 
                 cmd += " && ";
                 cmd += "glslangValidator -V ";
-                cmd += "shaders/" + shaders + " -o "; // shader in cmd
-                cmd += shader_out;                    // shader out cmd
+                cmd += shaders.string() + " -o "; // shader in cmd
+                cmd += shader_out;                // shader out cmd
             }
             break;
         };
@@ -178,7 +176,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags &flag) {
     return execute(cmd);
 };
 
-// TODO:add progress bar when executing this function
+// TODO:add progress bar/indicator when executing this function
 std::string BuildPanel::execute(const std::string &cmd) const {
     std::string result;
     // run command

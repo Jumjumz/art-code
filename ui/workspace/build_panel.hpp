@@ -1,6 +1,9 @@
 #pragma once
 
+#include <filesystem>
 #include <string>
+
+namespace fs = std::filesystem;
 
 class BuildPanel {
   public:
@@ -17,7 +20,7 @@ class BuildPanel {
 
     std::string executable_files() const;
 
-    std::string shader_files() const;
+    fs::path shader_files() const;
 
     void add_includes() const;
 

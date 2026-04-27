@@ -31,7 +31,7 @@ bool Build::create_project_content() const {
 
             // create files
             for (const auto &content : project_content) {
-                const std::ofstream file(content);
+                std::ofstream file(content);
             }
             // write to respective files
             write_solution_file(project_content[0]);
@@ -47,13 +47,13 @@ bool Build::create_project_content() const {
         {
             // create files inside respective directories
             const auto shader = content_directories[1] / "artcode.frag";
-            const std::ofstream shader_file(shader);
+            std::ofstream shader_file(shader);
 
             const auto components_dir = content_directories[2];
             std::vector<fs::path> comp_files = {components_dir / "comp.hpp",
                                                 components_dir / "comp.cpp"};
             for (const auto comp : components_dir) {
-                const std::ofstream file(comp);
+                std::ofstream file(comp);
             }
 
             // write comp files
@@ -119,7 +119,7 @@ void Build::write_solution_file(const fs::path &solution_file) const {
                          },
                          {"sources", {"main.cpp", "components/comp.cpp"}},
                          {"includes", nlohmann::json::array()},
-                         {"shaders", "artcode.frag"}};
+                         {"shaders", "shaders/artcode.frag"}};
 
     // write
     std::ofstream write(solution_file);
