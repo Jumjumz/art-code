@@ -1,6 +1,21 @@
 #include "ui_manager.hpp"
+#include "start_screen/artboard_settings.hpp"
+#include "start_screen/template_gallery.hpp"
+#include "workspace/canvas.hpp"
+#include "workspace/development.hpp"
 
-UIManager::UIManager() { this->artboard_size = {0.0f, 0.0f, 0.0f}; };
+#include <memory>
+
+UIManager::UIManager() {
+    this->artboard_size = {0.0f, 0.0f, 0.0f};
+    // init start screen
+    this->start_ui.push_back(std::make_unique<TemplateGallery>());
+    this->start_ui.push_back(std::make_unique<ArtboardSettings>());
+
+    // init workspace
+    this->workspace_ui.push_back(std::make_unique<Development>());
+    this->workspace_ui.push_back(std::make_unique<Canvas>());
+};
 
 void UIManager::render() {
     // render main navigation panel

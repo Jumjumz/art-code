@@ -2,11 +2,7 @@
 
 #include "main_nav.hpp"
 #include "start_screen.hpp"
-#include "start_screen/artboard_settings.hpp"
-#include "start_screen/template_gallery.hpp"
 #include "work_space.hpp"
-#include "workspace/canvas.hpp"
-#include "workspace/development.hpp"
 
 #include <memory>
 #include <vector>
@@ -22,14 +18,9 @@ class UIManager {
   private:
     const MainNavigation main_nav;
 
-    std::vector<std::shared_ptr<StartScreen>> start_ui = {
-        std::make_shared<TemplateGallery>(),
-        std::make_shared<ArtboardSettings>()};
+    std::vector<std::unique_ptr<StartScreen>> start_ui = {};
 
-    const std::vector<std::shared_ptr<WorkSpace>> workspace_ui = {
-        std::make_shared<Development>(),
-        std::make_shared<Canvas>(),
-    };
+    std::vector<std::unique_ptr<WorkSpace>> workspace_ui = {};
 
     bool show_main_ui = false;
 };
