@@ -16,10 +16,17 @@ TextEditorWrapper::TextEditorWrapper() {
     this->file_explorer = file_browser;
 
     this->file_explorer.SetTitle("Explorer");
+    this->file_explorer.SetDirectory(ProjectPath::get_project_path());
 
-    // setup text editor
-    this->editor.SetLanguageDefinition(
-        TextEditor::LanguageDefinition::CPlusPlus());
+    // display main.cpp at workspace startup
+    this->selected_file = ProjectPath::get_project_path() / "main.cpp";
+
+    // load font once at start up
+    set_font();
+    // run at constructor
+    set_language();
+    // display the selected file to text editor
+    read_code();
 };
 
 void TextEditorWrapper::render() {
@@ -31,7 +38,6 @@ void TextEditorWrapper::render() {
     for (const auto &[action, shortcut] : this->side_panel_contents) {
         if (ImGui::Button(action.c_str(), ImVec2{panel_width, panel_width})) {
             if (action == "Exp") {
-                this->file_explorer.SetDirectory(ProjectPath::get_project_path());
                 this->file_explorer.Open();
             }
         }
@@ -39,9 +45,6 @@ void TextEditorWrapper::render() {
     ImGui::EndChild();
 
     ImGui::SameLine(); // render side by side
-
-    // load font
-    set_font();
 
     ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 0.0f);
     ImGui::PushFont(this->font);
@@ -68,6 +71,8 @@ void TextEditorWrapper::render() {
         // pass the selected file
         this->selected_file = this->file_explorer.GetSelected();
 
+        // set prg lang of the selected file
+        set_language();
         // display the selected file to text editor
         read_code();
         this->file_explorer.ClearSelected();
@@ -75,6 +80,16 @@ void TextEditorWrapper::render() {
 
     // save written code
     save_written_code();
+};
+
+void TextEditorWrapper::set_language() {
+    const auto file_ext = this->selected_file.extension().string();
+    if (file_ext == ".cpp" || file_ext == ".hpp" || file_ext == ".h") {
+        this->editor.SetLanguageDefinition(
+            TextEditor::LanguageDefinition::CPlusPlus());
+    } else if (file_ext == ".vert" || file_ext == ".frag") {
+        this->editor.SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
+    }
 };
 
 void TextEditorWrapper::set_font() {
@@ -101,6 +116,7 @@ void TextEditorWrapper::read_code() {
         content.pop_back();
     }
 
+    // set the codes once
     this->editor.SetText(content);
 };
 
@@ -118,9 +134,6 @@ void TextEditorWrapper::save_written_code() {
         } else {
             std::cerr << "Cannot write on this file" << std::endl;
         }
-
-        // read the newly updated code
-        read_code();
 
         // rest state of file save
         TextEditorUtils::file_save = false;

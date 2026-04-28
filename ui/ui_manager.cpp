@@ -11,10 +11,6 @@ UIManager::UIManager() {
     // init start screen
     this->start_ui.push_back(std::make_unique<TemplateGallery>());
     this->start_ui.push_back(std::make_unique<ArtboardSettings>());
-
-    // init workspace
-    this->workspace_ui.push_back(std::make_unique<Development>());
-    this->workspace_ui.push_back(std::make_unique<Canvas>());
 };
 
 void UIManager::render() {
@@ -29,11 +25,17 @@ void UIManager::render() {
             // check if artboard dimensions is now ready
             if (start_screen->dimensions_acquired()) {
                 this->artboard_size = start_screen->get_artboard_size();
-                this->show_main_ui = true;
 
                 // clear the vector and its shared ptr
                 this->start_ui.clear();
                 this->start_ui.shrink_to_fit();
+
+                // this is here because start ui init everything workspace needed
+                // it only needs to init if start ui is done rendering and data is prepared
+                this->workspace_ui.push_back(std::make_unique<Development>());
+                this->workspace_ui.push_back(std::make_unique<Canvas>());
+
+                this->show_main_ui = true;
                 break;
             }
         }

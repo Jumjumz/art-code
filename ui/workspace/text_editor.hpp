@@ -18,6 +18,8 @@ class TextEditorWrapper {
 
     ImFont *font = nullptr;
 
+    void set_language();
+
     void set_font();
 
     void read_code();
