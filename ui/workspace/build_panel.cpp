@@ -3,6 +3,9 @@
 #include "json.hpp"
 #include "nav_items.hpp"
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
 
 BuildPanel::BuildPanel() {};
@@ -30,9 +33,13 @@ void BuildPanel::render() {
                 if (!this->project_compiled) {
                     compile();
                 }
-                const auto result = create_cmd(BuildPanel::Flags::R);
-                CompilerResult::set_run_result(result);
-                this->project_compiled = false;
+
+                // 0 = compilation success
+                if (ExecuteResult::get_exit_code() == 0) {
+                    const auto cmd = create_cmd(BuildPanel::Flags::R);
+                    execute(cmd);
+                    this->project_compiled = false;
+                }
             }
         }
         ImGui::SameLine();
@@ -45,11 +52,10 @@ void BuildPanel::render() {
 };
 
 void BuildPanel::compile() {
+    // run compile command
+    const auto cmd = create_cmd(BuildPanel::Flags::C);
+    execute(cmd);
     this->project_compiled = true;
-    const auto result = create_cmd(BuildPanel::Flags::C);
-    CompilerResult::set_compiler_result(result);
-    // prevent persistent data of run result when recompiling
-    CompilerResult::set_run_result("");
 };
 
 void BuildPanel::add_includes() const {
@@ -124,7 +130,7 @@ std::string BuildPanel::executable_files() const {
     return source;
 };
 
-std::string BuildPanel::create_cmd(const BuildPanel::Flags &flag) {
+std::string BuildPanel::create_cmd(const BuildPanel::Flags &flag) const {
     std::string cmd;
     // execute and use gcc compiler
     {
@@ -167,36 +173,35 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags &flag) {
             break;
         };
         case BuildPanel::Flags::R: {
-            cmd = build;
+            cmd = build + " 2>&1";
             break;
         };
         }
     }
 
-    return execute(cmd);
+    return cmd;
 };
 
 // TODO:add progress bar/indicator when executing this function
-std::string BuildPanel::execute(const std::string &cmd) const {
+void BuildPanel::execute(const std::string &cmd) {
     std::string result;
-    // run command
-    {
-        FILE *pipe = popen(cmd.c_str(), "r");
-        if (!pipe) {
-            return result =
-                       "Failed to run the command. Error occured somewhere";
-        }
-
-        // temporary buffer to read chunks of result
-        char buffer[128];
-
-        // append buffer to result
-        while (fgets(buffer, sizeof(buffer), pipe)) {
-            result += buffer;
-        }
-
-        pclose(pipe);
+    FILE *pipe = popen(cmd.c_str(), "r");
+    if (!pipe) {
+        result = "Failed to run the command. Error occured somewhere";
+        ExecuteResult::set_result(result);
+        ExecuteResult::set_exit_code(-1);
+        return;
     }
 
-    return result;
+    // temporary buffer to read chunks of result
+    char buffer[128];
+
+    // append buffer to result
+    while (fgets(buffer, sizeof(buffer), pipe)) {
+        result += buffer;
+    }
+
+    // set global variables
+    ExecuteResult::set_exit_code(pclose(pipe));
+    ExecuteResult::set_result(result);
 };

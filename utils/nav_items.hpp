@@ -47,25 +47,22 @@ struct ProjectPath {
     static inline std::filesystem::path solution_file;
 };
 
-struct CompilerResult {
+struct ExecuteResult {
   public:
-    static inline void set_compiler_result(const std::string &compiler_result) {
-        CompilerResult::compiler_result = compiler_result;
+    static inline void set_result(const std::string &result) {
+        ExecuteResult::result = result;
     }
 
-    static inline std::string get_compiler_result() {
-        return CompilerResult::compiler_result;
+    static inline std::string get_result() { return ExecuteResult::result; }
+
+    static inline void set_exit_code(const int &exit_code) {
+        ExecuteResult::exit_code = exit_code;
     }
 
-    static inline void set_run_result(const std::string &run_result) {
-        CompilerResult::run_result = run_result;
-    }
-
-    static inline std::string get_run_result() {
-        return CompilerResult::run_result;
-    }
+    static inline int get_exit_code() { return ExecuteResult::exit_code; }
 
   private:
-    static inline std::string compiler_result;
-    static inline std::string run_result;
+    static inline std::string result;
+    static inline int
+        exit_code; // 0 = success, 1 = compilation errors, -1 = command error
 };

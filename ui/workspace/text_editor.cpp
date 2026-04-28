@@ -102,8 +102,6 @@ void TextEditorWrapper::read_code() {
     }
 
     this->editor.SetText(content);
-
-    read.close();
 };
 
 void TextEditorWrapper::save_written_code() {
