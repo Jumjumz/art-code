@@ -20,10 +20,11 @@ TextEditorWrapper::TextEditorWrapper() {
 
     // display main.cpp at workspace startup
     this->selected_file = ProjectPath::get_project_path() / "main.cpp";
+    this->tabs.push_back(this->selected_file);
 
     // load font once at start up
     set_font();
-    // run at constructor
+    // set language for main.cpp
     set_language();
     // display the selected file to text editor
     read_code();
@@ -32,6 +33,29 @@ TextEditorWrapper::TextEditorWrapper() {
 void TextEditorWrapper::render() {
     const ImVec2 content_size = ImGui::GetContentRegionAvail();
     const float panel_width = 40.0f;
+
+    // tab
+    ImGui::BeginTabBar("##tab_bar");
+    for (size_t i = 0; i < this->tabs.size(); i++) {
+        bool tab_open = true;
+        const auto tab = tabs[i];
+        if (ImGui::BeginTabItem(tab.filename().c_str(), &tab_open)) {
+            if (this->selected_file != tab) {
+                this->selected_file = tab;
+                // set prog lang of the selected file
+                set_language();
+                // display the selected file to text editor
+                read_code();
+            }
+            ImGui::EndTabItem();
+        }
+
+        if (!tab_open) {
+            this->tabs.erase(this->tabs.begin() + i);
+            i--;
+        }
+    }
+    ImGui::EndTabBar();
 
     ImGui::BeginChild("##file_browser", ImVec2{panel_width, content_size.y},
                       false);
@@ -70,11 +94,10 @@ void TextEditorWrapper::render() {
     if (this->file_explorer.HasSelected()) {
         // pass the selected file
         this->selected_file = this->file_explorer.GetSelected();
-
-        // set prg lang of the selected file
-        set_language();
-        // display the selected file to text editor
-        read_code();
+        if (std::find(this->tabs.begin(), this->tabs.end(),
+                      this->selected_file) == this->tabs.end()) {
+            this->tabs.push_back(this->selected_file);
+        }
         this->file_explorer.ClearSelected();
     }
 

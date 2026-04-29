@@ -18,6 +18,8 @@ class TextEditorWrapper {
 
     ImFont *font = nullptr;
 
+    std::vector<std::filesystem::path> tabs;
+
     void set_language();
 
     void set_font();

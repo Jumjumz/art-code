@@ -35,7 +35,7 @@ void Development::render() {
     float console_height = 200.0f;
     float editor_height = ImGui::GetContentRegionAvail().y - console_height;
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0, 0});
-    ImGui::BeginChild("##IDE", ImVec2{0, editor_height});
+    ImGui::BeginChild("##editor", ImVec2{0, editor_height});
     this->text_editor.render();
     ImGui::EndChild();
     ImGui::PopStyleVar();
