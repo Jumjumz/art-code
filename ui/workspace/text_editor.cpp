@@ -33,13 +33,17 @@ TextEditorWrapper::TextEditorWrapper() {
 void TextEditorWrapper::render() {
     const ImVec2 content_size = ImGui::GetContentRegionAvail();
     const float panel_width = 40.0f;
+    static std::filesystem::path active_tab;
 
-    // tab
+    // tabs
     ImGui::BeginTabBar("##tab_bar");
     for (size_t i = 0; i < this->tabs.size(); i++) {
         bool tab_open = true;
         const auto tab = tabs[i];
-        if (ImGui::BeginTabItem(tab.filename().c_str(), &tab_open)) {
+        // display the newest selected path in the array
+        const auto flags = (tab == active_tab) ? ImGuiTabItemFlags_SetSelected
+                                               : ImGuiTabItemFlags_None;
+        if (ImGui::BeginTabItem(tab.filename().c_str(), &tab_open, flags)) {
             if (this->selected_file != tab) {
                 this->selected_file = tab;
                 // set prog lang of the selected file
@@ -52,6 +56,7 @@ void TextEditorWrapper::render() {
 
         if (!tab_open) {
             this->tabs.erase(this->tabs.begin() + i);
+            // reduce the size of the array
             i--;
         }
     }
@@ -83,9 +88,9 @@ void TextEditorWrapper::render() {
         const auto work_size = viewport->WorkSize;
         const auto work_pos = viewport->WorkPos;
 
-        this->file_explorer.SetWindowSize(100, int(content_size.y + 40.0f));
-        ImGui::SetNextWindowPos(ImVec2{work_size.x * 0.4f, work_pos.y},
-                                ImGuiCond_Always);
+        this->file_explorer.SetWindowSize(80, int(content_size.y + 40.0f));
+        this->file_explorer.SetWindowPos(int(work_size.x * 0.4f),
+                                         int(work_pos.y));
     }
 
     // display file browser modal
@@ -97,22 +102,15 @@ void TextEditorWrapper::render() {
         if (std::find(this->tabs.begin(), this->tabs.end(),
                       this->selected_file) == this->tabs.end()) {
             this->tabs.push_back(this->selected_file);
+            active_tab = this->selected_file;
         }
+        set_language();
+        read_code();
         this->file_explorer.ClearSelected();
     }
 
     // save written code
     save_written_code();
-};
-
-void TextEditorWrapper::set_language() {
-    const auto file_ext = this->selected_file.extension().string();
-    if (file_ext == ".cpp" || file_ext == ".hpp" || file_ext == ".h") {
-        this->editor.SetLanguageDefinition(
-            TextEditor::LanguageDefinition::CPlusPlus());
-    } else if (file_ext == ".vert" || file_ext == ".frag") {
-        this->editor.SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
-    }
 };
 
 void TextEditorWrapper::set_font() {
@@ -125,6 +123,16 @@ void TextEditorWrapper::set_font() {
         palette[(int)TextEditor::PaletteIndex::Background] = 0xFF1D1D1D;
 
         this->editor.SetPalette(palette);
+    }
+};
+
+void TextEditorWrapper::set_language() {
+    const auto file_ext = this->selected_file.extension().string();
+    if (file_ext == ".cpp" || file_ext == ".hpp" || file_ext == ".h") {
+        this->editor.SetLanguageDefinition(
+            TextEditor::LanguageDefinition::CPlusPlus());
+    } else if (file_ext == ".vert" || file_ext == ".frag") {
+        this->editor.SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
     }
 };
 

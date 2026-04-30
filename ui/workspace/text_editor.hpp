@@ -20,9 +20,9 @@ class TextEditorWrapper {
 
     std::vector<std::filesystem::path> tabs;
 
-    void set_language();
-
     void set_font();
+
+    void set_language();
 
     void read_code();
 
