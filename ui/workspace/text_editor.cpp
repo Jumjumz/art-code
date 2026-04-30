@@ -39,12 +39,15 @@ void TextEditorWrapper::render() {
         // pass the selected file
         this->selected_file = this->file_explorer.GetSelected();
         if (std::find(this->tabs.begin(), this->tabs.end(),
-                      this->selected_file) == this->tabs.end()) {
+                      this->selected_file) == this->tabs.end() &&
+            this->tabs.size() < TAB_ITEMS_NUM) {
             this->tabs.push_back(this->selected_file);
         }
+        // set active tab to the current select file
         active_tab = this->selected_file;
         set_language();
         read_code();
+
         this->file_explorer.ClearSelected();
     }
 
@@ -56,7 +59,9 @@ void TextEditorWrapper::render() {
         // display the newest selected path
         const auto flags = (tab == active_tab) ? ImGuiTabItemFlags_SetSelected
                                                : ImGuiTabItemFlags_None;
-        if (ImGui::BeginTabItem(tab.filename().c_str(), &tab_open, flags)) {
+        const std::string tab_name =
+            std::to_string(i + 1) + " " + tab.filename().string();
+        if (ImGui::BeginTabItem(tab_name.c_str(), &tab_open, flags)) {
             if (this->selected_file != tab) {
                 this->selected_file = tab;
                 // set prog lang of the selected file
@@ -109,7 +114,7 @@ void TextEditorWrapper::render() {
     // display file browser modal
     this->file_explorer.Display();
 
-    // save written code
+    // save code
     save_written_code();
 };
 

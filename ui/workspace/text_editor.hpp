@@ -10,6 +10,8 @@ class TextEditorWrapper {
     void render();
 
   private:
+    static constexpr size_t TAB_ITEMS_NUM = 5;
+
     TextEditor editor;
 
     ImGui::FileBrowser file_explorer;
