@@ -4,8 +4,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <iterator>
-#include <string>
 
 TextEditorWrapper::TextEditorWrapper() {
     // setup project browser
@@ -38,9 +36,10 @@ void TextEditorWrapper::render() {
     if (this->file_explorer.HasSelected()) {
         // pass the selected file
         this->selected_file = this->file_explorer.GetSelected();
+        // limit tab items to TAB_ITEMS_NUM
         if (std::find(this->tabs.begin(), this->tabs.end(),
                       this->selected_file) == this->tabs.end() &&
-            this->tabs.size() < TAB_ITEMS_NUM) {
+            this->tabs.size() < TextEditorWrapper::TAB_ITEMS_NUM) {
             this->tabs.push_back(this->selected_file);
         }
         // set active tab to the current select file
@@ -51,7 +50,7 @@ void TextEditorWrapper::render() {
         this->file_explorer.ClearSelected();
     }
 
-    // tab
+    // tabs
     ImGui::BeginTabBar("##tab_bar");
     for (size_t i = 0; i < this->tabs.size(); i++) {
         bool tab_open = true;
@@ -76,6 +75,9 @@ void TextEditorWrapper::render() {
             this->tabs.erase(this->tabs.begin() + i);
             // reduce the size of the array
             i--;
+            if (this->tabs.empty()) {
+                this->editor.SetText("");
+            }
         }
     }
     ImGui::EndTabBar();
