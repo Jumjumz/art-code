@@ -544,7 +544,7 @@ void Application::clean_swapchain() {
 void Application::update_canvas() {
     // can only update if canvas is displayed
     if (this->ui_manager.show_main_ui) {
-        auto canvas = ImGui::FindWindowByName("##canvas-begin");
+        const auto canvas = ImGui::FindWindowByName("##canvas-begin");
 
         if (canvas) {
             const auto width = static_cast<uint32_t>(canvas->Size.x);

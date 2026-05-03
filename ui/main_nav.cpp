@@ -2,9 +2,7 @@
 #include "imgui.h"
 #include "nav_items.hpp"
 
-MainNavigation::MainNavigation() {
-
-};
+MainNavigation::MainNavigation() {};
 
 void MainNavigation::render() const {
     if (ImGui::BeginMainMenuBar()) {
