@@ -44,7 +44,7 @@ void VulkanCommands::imgui_create_command_buffer() {
 };
 
 void VulkanCommands::imgui_create_descriptor_pool() {
-    std::vector<vk::DescriptorPoolSize> pool_sizes = {
+    const std::vector<vk::DescriptorPoolSize> pool_sizes = {
         {vk::DescriptorType::eSampler, 1000},
         {vk::DescriptorType::eCombinedImageSampler, 1000},
         {vk::DescriptorType::eSampledImage, 1000},

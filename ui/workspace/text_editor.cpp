@@ -18,13 +18,21 @@ TextEditorWrapper::TextEditorWrapper() {
 
     // display main.cpp at workspace startup
     this->selected_file = ProjectPath::get_project_path() / "main.cpp";
+    this->tabs.reserve(TAB_ITEMS_NUM);
     this->tabs.push_back(this->selected_file);
 
-    // load font once at start up
+    {
+        // init text editor pallete
+        auto palette = TextEditor::GetDarkPalette();
+        palette[(int)TextEditor::PaletteIndex::Background] = 0xFF1D1D1D;
+
+        this->editor.SetPalette(palette);
+    }
+    // load font once
     set_font();
     // set language for main.cpp
     set_language();
-    // display the selected file to text editor
+    // display main.cpp at workspace startup
     read_code();
 };
 
@@ -121,20 +129,13 @@ void TextEditorWrapper::render() {
 };
 
 void TextEditorWrapper::set_font() {
-    if (this->font == nullptr) {
-        ImGuiIO &io = ImGui::GetIO();
-        this->font = io.Fonts->AddFontFromFileTTF(
-            "assets/fonts/CascadiaMonoNFItalic.ttf", 22.0f);
-
-        auto palette = TextEditor::GetDarkPalette();
-        palette[(int)TextEditor::PaletteIndex::Background] = 0xFF1D1D1D;
-
-        this->editor.SetPalette(palette);
-    }
+    ImGuiIO &io = ImGui::GetIO();
+    this->font = io.Fonts->AddFontFromFileTTF(
+        "assets/fonts/CascadiaMonoNFItalic.ttf", 22.0f);
 };
 
 void TextEditorWrapper::set_language() {
-    const auto file_ext = this->selected_file.extension().string();
+    const auto file_ext = this->selected_file.extension();
     if (file_ext == ".cpp" || file_ext == ".hpp" || file_ext == ".h") {
         this->editor.SetLanguageDefinition(
             TextEditor::LanguageDefinition::CPlusPlus());
@@ -148,6 +149,7 @@ void TextEditorWrapper::read_code() {
     // get contents of the file
     std::string content((std::istreambuf_iterator<char>(read)),
                         std::istreambuf_iterator<char>());
+    read.close();
 
     if (content.back() == '\n' || content.back() == '\r' ||
         content.back() == '\t') {

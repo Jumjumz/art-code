@@ -20,7 +20,7 @@ class TextEditorWrapper {
 
     ImFont *font = nullptr;
 
-    std::vector<std::filesystem::path> tabs;
+    std::vector<std::filesystem::path> tabs = {};
 
     void set_font();
 

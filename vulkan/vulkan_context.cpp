@@ -94,9 +94,8 @@ void VulkanContext::pick_physical_device() {
 
         score += properties.limits.maxImageDimension2D;
 
-        if (!features.geometryShader) {
+        if (!features.geometryShader)
             continue;
-        }
 
         candidates.insert(std::make_pair(score, device));
     };
@@ -104,7 +103,8 @@ void VulkanContext::pick_physical_device() {
     if (candidates.rbegin()->first > 0) {
         this->physical_device = candidates.rbegin()->second;
     } else {
-        throw std::runtime_error("Failed to find a suitable GPU!");
+        throw std::runtime_error(
+            "Failed to find a suitable vulkan compatible physical device!");
     }
 };
 
@@ -112,13 +112,13 @@ void VulkanContext::create_logical_device() {
     find_queue_families();
 
     std::vector<vk::DeviceQueueCreateInfo> device_queue_infos;
-    std::set<int> unique_queue_families = {
+    const std::set<int> unique_queue_families = {
         this->family_indices.graphics_family,
         this->family_indices.present_family,
     };
 
     float queuePriority = 0.5f;
-    for (const int queue_family : unique_queue_families) {
+    for (const auto &queue_family : unique_queue_families) {
         vk::DeviceQueueCreateInfo device_queue_info{};
         device_queue_info.queueFamilyIndex = queue_family;
         device_queue_info.queueCount = 1;
@@ -170,7 +170,7 @@ void VulkanContext::create_logical_device() {
 };
 
 void VulkanContext::find_queue_families() {
-    std::vector<vk::QueueFamilyProperties> family_properties =
+    const std::vector<vk::QueueFamilyProperties> family_properties =
         this->physical_device.getQueueFamilyProperties();
 
     for (size_t i = 0; i < family_properties.size(); i++) {
@@ -181,13 +181,11 @@ void VulkanContext::find_queue_families() {
         vk::Bool32 present =
             this->physical_device.getSurfaceSupportKHR(i, this->surface);
 
-        if (present) {
+        if (present)
             this->family_indices.present_family = i;
-        }
 
-        if (this->family_indices.is_complete()) {
+        if (this->family_indices.is_complete())
             break;
-        }
     }
 };
 

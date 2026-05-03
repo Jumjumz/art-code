@@ -25,7 +25,7 @@ void VulkanSwapchain::create_swapchain(const vk::Extent2D &extent) {
     swapchain_info.imageArrayLayers = 1;
     swapchain_info.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
 
-    uint32_t queue_family_indices[] = {
+    const uint32_t queue_family_indices[] = {
         static_cast<uint32_t>(this->graphics_family),
         static_cast<uint32_t>(this->present_family)};
 

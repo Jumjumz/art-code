@@ -58,27 +58,36 @@ void Application::loop() {
         ImGui::Render();
 
         reset_buffers();
+        std::vector<vk::CommandBuffer> buffers;
+        // pre allocate
+        buffers.reserve(2);
 
-        // signal canvas thread to start recording
-        {
-            std::lock_guard<std::mutex> lock{this->canvas_mutex};
-            this->canvas_ready = false;
+        if (this->ui_manager.show_main_ui) {
+            // signal canvas thread to start recording
+            {
+                std::lock_guard<std::mutex> lock{this->canvas_mutex};
+                this->canvas_ready = false;
+            }
+            this->canvas_cv.notify_one();
+
+            // records imgui and runs parallel with canvas
+            record_imgui_command();
+
+            // wait for canvas to finish
+            std::unique_lock<std::mutex> lock{this->canvas_mutex};
+            this->canvas_cv.wait(lock, [this]() -> bool {
+                return this->canvas_ready || !this->running;
+            });
+            lock.unlock();
+
+            buffers.push_back(
+                *this->commands.canvas_command_buffers[this->current_frame]);
+        } else {
+            record_imgui_command();
         }
-        this->canvas_cv.notify_one();
 
-        // records imgui and runs parallel with canvas
-        record_imgui_command();
-
-        // wait for canvas to finish
-        std::unique_lock<std::mutex> lock{this->canvas_mutex};
-        this->canvas_cv.wait(lock, [this]() -> bool {
-            return this->canvas_ready || !this->running;
-        });
-        lock.unlock();
-
-        const std::vector<vk::CommandBuffer> buffers = {
-            *this->commands.canvas_command_buffers[this->current_frame],
-            *this->commands.imgui_command_buffers[this->current_frame]};
+        buffers.push_back(
+            *this->commands.imgui_command_buffers[this->current_frame]);
 
         submit_buffers(buffers);
     }
@@ -141,6 +150,9 @@ void Application::workspace_events() {
         [](GLFWwindow *window, double x_pos, double y_pos) -> void {
             auto app =
                 reinterpret_cast<Application *>(glfwGetWindowUserPointer(window));
+            if (!app->ui_manager.show_main_ui)
+                return;
+
             auto dx = static_cast<float>(x_pos) - CanvasUtils::mouse_last_pos.x;
             auto dy = static_cast<float>(y_pos) - CanvasUtils::mouse_last_pos.y;
 
@@ -179,6 +191,9 @@ void Application::workspace_events() {
                            auto app = reinterpret_cast<Application *>(
                                glfwGetWindowUserPointer(window));
 
+                           if (!app->ui_manager.show_main_ui)
+                               return;
+
                            if (app->mouse_in_canvas) {
                                if (key == GLFW_KEY_LEFT_CONTROL) {
                                    if (action == GLFW_PRESS)
@@ -208,6 +223,9 @@ void Application::workspace_events() {
                               auto app = reinterpret_cast<Application *>(
                                   glfwGetWindowUserPointer(window));
 
+                              if (!app->ui_manager.show_main_ui)
+                                  return;
+
                               if (app->ctrl_pressed) {
                                   CanvasUtils::zoom += y * 0.10;
                                   CanvasUtils::zoom =
@@ -221,6 +239,9 @@ void Application::workspace_events() {
         [](GLFWwindow *window, int button, int action, int mods) -> void {
             auto app =
                 reinterpret_cast<Application *>(glfwGetWindowUserPointer(window));
+
+            if (!app->ui_manager.show_main_ui)
+                return;
 
             if (button == GLFW_MOUSE_BUTTON_LEFT) {
                 if (action == GLFW_PRESS)
@@ -260,11 +281,6 @@ void Application::imgui_init() {
     init_info.ImageCount = this->ctx.config.image_count;
 
     ImGui_ImplVulkan_Init(&init_info);
-
-    // init descriptor set
-    CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
-        *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
-        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     glfwSetWindowUserPointer(this->window.app_window, this);
     glfwSetFramebufferSizeCallback(
@@ -320,7 +336,7 @@ void Application::submit_buffers(
     submit_info.pWaitSemaphores =
         &*this->commands.available_semaphores[this->current_frame];
     submit_info.pWaitDstStageMask = &destination_stage_mask;
-    submit_info.commandBufferCount = 2;
+    submit_info.commandBufferCount = command_buffers.size() == 1 ? 1 : 2;
     submit_info.pCommandBuffers = command_buffers.data();
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores =
@@ -526,26 +542,30 @@ void Application::clean_swapchain() {
 };
 
 void Application::update_canvas() {
-    auto canvas = ImGui::FindWindowByName("##canvas-begin");
+    // can only update if canvas is displayed
+    if (this->ui_manager.show_main_ui) {
+        auto canvas = ImGui::FindWindowByName("##canvas-begin");
 
-    if (canvas) {
-        auto width = static_cast<uint32_t>(canvas->Size.x);
-        auto height = static_cast<uint32_t>(canvas->Size.y);
+        if (canvas) {
+            const auto width = static_cast<uint32_t>(canvas->Size.x);
+            const auto height = static_cast<uint32_t>(canvas->Size.y);
 
-        if (width != this->vk_buffers.extent.width ||
-            height != this->vk_buffers.extent.height) {
-            this->ctx.device.waitIdle();
+            if (width != this->vk_buffers.extent.width ||
+                height != this->vk_buffers.extent.height) {
+                this->ctx.device.waitIdle();
 
-            this->vk_buffers.canvas_create_image(width, height);
-            this->vk_buffers.canvas_create_image_views();
+                this->vk_buffers.canvas_create_image(width, height);
+                this->vk_buffers.canvas_create_image_views();
 
-            // remove the old texture at canvas resize
-            ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
+                // remove the old texture at canvas resize
+                ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
 
-            // run again after texture removal
-            CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
-                *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                // run again after texture removal
+                CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
+                    *this->vk_buffers.canvas_sampler,
+                    *this->vk_buffers.image_views,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            }
         }
     }
 };

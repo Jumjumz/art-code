@@ -13,6 +13,8 @@ class UIManager {
 
     void render();
 
+    bool show_main_ui = false;
+
     glm::vec3 artboard_size;
 
   private:
@@ -21,6 +23,4 @@ class UIManager {
     std::vector<std::unique_ptr<StartScreen>> start_ui = {};
 
     std::vector<std::unique_ptr<WorkSpace>> workspace_ui = {};
-
-    bool show_main_ui = false;
 };
