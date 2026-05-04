@@ -1,19 +1,17 @@
 #pragma once
 
-#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
 
 #include <string>
 #include <vector>
 
 // Forward declarations
 // artcode
-class IPen;
-class PenTool;
-class Triangle;
-class Square;
-class Circle;
-// structs
-struct Impl;
+struct IPen;
+struct PenTool;
+struct Triangle;
+struct Square;
+struct Circle;
 
 // Arrays
 typedef std::vector<int> ArrayInt;
@@ -27,18 +25,41 @@ typedef glm::vec2 Vec2;
 typedef glm::vec3 Vec3;
 typedef glm::vec4 Vec4;
 
-class IPen {
-  public:
+// Colors
+typedef glm::vec3 Color;
+
+namespace Art {
+namespace detail {
+struct IPen {
     virtual ~IPen() = default;
 
-  protected:
     // must implement
-    virtual IPen &position(const Vec2 &position) const = 0;
-    virtual IPen &scale(const Vec2 &scale) const = 0;
-    virtual IPen &handle(const Vec2 &handle) const = 0;
-    virtual void draw() const = 0;
+    Vec2 position;
+
+    Color color;
+
+    float stroke;
+
+    float scale;
+
+    virtual void draw() = 0;
     // optional
     // only for shapes
 };
+} // namespace detail
 
-// Draw::PenTool("upper-left")->position()->draw();
+struct Circle : detail::IPen {
+    Circle();
+
+    float radius;
+
+    void draw() override;
+};
+// TODO:add others
+
+}; // namespace Art
+
+// Draw::Pen("upper-left")->position()->render();
+// Draw::Pen pen_tool;
+// pen_tool.position = {100, 100};
+// pen_tool.render();
