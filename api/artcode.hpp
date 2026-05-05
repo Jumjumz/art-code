@@ -28,12 +28,17 @@ typedef glm::vec4 Vec4;
 // Colors
 typedef glm::vec3 Color;
 
+// string
+typedef std::string string;
+
 namespace Art {
 namespace detail {
 struct IPen {
     virtual ~IPen() = default;
 
     // must implement
+    string name;
+
     Vec2 position;
 
     Color color;
@@ -41,6 +46,10 @@ struct IPen {
     float stroke;
 
     float scale;
+
+    virtual string to_glsl() = 0;
+
+    virtual void write_shader(const string &glsl_code) = 0;
 
     virtual void draw() = 0;
     // optional
@@ -54,12 +63,32 @@ struct Circle : detail::IPen {
     float radius;
 
     void draw() override;
+
+  private:
+    string to_glsl() override;
+
+    void write_shader(const string &glsl_code) override;
 };
 // TODO:add others
 
 }; // namespace Art
 
-// Draw::Pen("upper-left")->position()->render();
-// Draw::Pen pen_tool;
-// pen_tool.position = {100, 100};
-// pen_tool.render();
+/* STILL LEARNING THIS SHIT
+template <typename Drawable> struct Draw {
+  private:
+    Drawable drawable;
+    std::string glsl_code;
+
+  public:
+    void glsl() {
+        if (this->drawable.radius != 0.0f) {
+            this->glsl_code = "float" + this->drawable.name + "()" + "{";
+            this->glsl_code += "return length(artboard_pos - " +
+                               std::to_string(this->drawable.position) + ") - "
++ std::to_string(this->drawable.radius) + ";"; this->glsl_code += "}";
+        }
+    };
+
+    void draw() { glsl(); };
+};
+*/
