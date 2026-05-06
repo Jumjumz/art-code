@@ -49,9 +49,9 @@ void VulkanGraphics::create_descriptor_set_layout() {
 
 void VulkanGraphics::create_graphics_pipeline() {
     this->vert_shader_module =
-        create_shader_module(read_file("shaders/test.vert.spv"));
+        create_shader_module(read_file("shaders/core.vert.spv"));
     this->frag_shader_module =
-        create_shader_module(read_file("shaders/test.frag.spv"));
+        create_shader_module(read_file("shaders/core.frag.spv"));
 
     vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
     vert_shader_stage_info.stage = vk::ShaderStageFlagBits::eVertex;

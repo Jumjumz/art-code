@@ -12,8 +12,8 @@ DrawCircle::Circle() {
     this->scale = 1.0f;
 };
 
-string DrawCircle::to_glsl() {
-    std::string glsl_code = "float" + this->name + "()" + "{";
+string DrawCircle::to_glsl() const {
+    string glsl_code = "float " + this->name + "()" + "{";
     glsl_code += "return length(artboard_pos - vec2(" +
                  std::to_string(this->position.x) + "," +
                  std::to_string(this->position.y) + ")" + ") - " +
@@ -25,7 +25,4 @@ string DrawCircle::to_glsl() {
 
 void DrawCircle::write_shader(const string &glsl_code) {};
 
-void DrawCircle::draw() {
-    const auto cl = this;
-    write_shader(to_glsl());
-};
+void DrawCircle::draw() { write_shader(to_glsl()); };

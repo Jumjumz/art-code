@@ -47,7 +47,7 @@ struct IPen {
 
     float scale;
 
-    virtual string to_glsl() = 0;
+    virtual string to_glsl() const = 0;
 
     virtual void write_shader(const string &glsl_code) = 0;
 
@@ -65,7 +65,7 @@ struct Circle : detail::IPen {
     void draw() override;
 
   private:
-    string to_glsl() override;
+    string to_glsl() const override;
 
     void write_shader(const string &glsl_code) override;
 };
@@ -80,15 +80,6 @@ template <typename Drawable> struct Draw {
     std::string glsl_code;
 
   public:
-    void glsl() {
-        if (this->drawable.radius != 0.0f) {
-            this->glsl_code = "float" + this->drawable.name + "()" + "{";
-            this->glsl_code += "return length(artboard_pos - " +
-                               std::to_string(this->drawable.position) + ") - "
-+ std::to_string(this->drawable.radius) + ";"; this->glsl_code += "}";
-        }
-    };
-
-    void draw() { glsl(); };
+    void draw() { this->drawable.glsl(); };
 };
 */
