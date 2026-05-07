@@ -28,9 +28,9 @@ void DrawCircle::write_shader(const string &glsl_code) {
     ArrayString lines;
     // reserve 100 lines
     lines.reserve(100);
-    // read file first
+    // read file
     {
-        std::ifstream read(this->SHADER_FILE);
+        std::ifstream read(shader_file());
         string line;
         while (std::getline(read, line)) {
             lines.push_back(line);
@@ -45,7 +45,7 @@ void DrawCircle::write_shader(const string &glsl_code) {
 
     // write to file
     {
-        std::ofstream write(this->SHADER_FILE);
+        std::ofstream write(shader_file());
         for (const auto &line : lines) {
             write << line << "\n";
         }

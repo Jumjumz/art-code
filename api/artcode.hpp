@@ -55,17 +55,16 @@ struct IPen {
     float scale;
 
   protected:
-    const fs::path SHADER_FILE =
-        fs::canonical("/proc/self/exe").parent_path().parent_path() /
-        "shaders" / "artcode.frag";
+    fs::path shader_file() const {
+        return fs::canonical("/proc/self/exe").parent_path().parent_path() /
+               "shaders" / "artcode.frag";
+    };
 
     virtual string to_glsl() const = 0;
 
     virtual void write_shader(const string &glsl_code) = 0;
 
     virtual void draw() = 0;
-    // optional
-    // only for shapes
 };
 } // namespace detail
 
