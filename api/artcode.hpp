@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <glm/glm.hpp>
 
 #include <string>
@@ -28,8 +29,14 @@ typedef glm::vec4 Vec4;
 // Colors
 typedef glm::vec3 Color;
 
-// string
+// strings
 typedef std::string string;
+template <typename to_string> string ToString(const to_string &to_str) {
+    return std::to_string(to_str);
+};
+
+// filesystem
+namespace fs = std::filesystem;
 
 namespace Art {
 namespace detail {
@@ -46,6 +53,11 @@ struct IPen {
     float stroke;
 
     float scale;
+
+  protected:
+    const fs::path SHADER_FILE =
+        fs::canonical("/proc/self/exe").parent_path().parent_path() /
+        "shaders" / "artcode.frag";
 
     virtual string to_glsl() const = 0;
 

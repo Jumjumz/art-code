@@ -173,6 +173,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags &flag) const {
             break;
         };
         case BuildPanel::Flags::R: {
+            // TODO:compile shader should be here.. have a way to compile it first before running the run
             cmd = build + " 2>&1";
             break;
         };

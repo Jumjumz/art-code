@@ -1,4 +1,6 @@
 #include "artcode.hpp"
+#include <algorithm>
+#include <fstream>
 
 using DrawCircle = Art::Circle;
 // Circle
@@ -15,14 +17,39 @@ DrawCircle::Circle() {
 string DrawCircle::to_glsl() const {
     string glsl_code = "float " + this->name + "()" + "{";
     glsl_code += "return length(artboard_pos - vec2(" +
-                 std::to_string(this->position.x) + "," +
-                 std::to_string(this->position.y) + ")" + ") - " +
-                 std::to_string(this->radius) + ";";
+                 ToString(this->position.x) + "," + ToString(this->position.y) +
+                 ")" + ") - " + ToString(this->radius) + ";";
     glsl_code += "}";
 
     return glsl_code;
 };
 
-void DrawCircle::write_shader(const string &glsl_code) {};
+void DrawCircle::write_shader(const string &glsl_code) {
+    ArrayString lines;
+    // reserve 100 lines
+    lines.reserve(100);
+    // read file first
+    {
+        std::ifstream read(this->SHADER_FILE);
+        string line;
+        while (std::getline(read, line)) {
+            lines.push_back(line);
+        }
+    }
+
+    if (std::find(lines.begin(), lines.end(), glsl_code) == lines.end()) {
+        if (glsl_code.find(this->name) != string::npos) {
+            lines.insert(lines.begin() + 3, glsl_code);
+        }
+    }
+
+    // write to file
+    {
+        std::ofstream write(this->SHADER_FILE);
+        for (const auto &line : lines) {
+            write << line << "\n";
+        }
+    }
+}
 
 void DrawCircle::draw() { write_shader(to_glsl()); };

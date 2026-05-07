@@ -170,9 +170,8 @@ void Build::write_shader(const fs::path &shader) const {
     std::ofstream write(shader);
 
     write << R"(#version 450
-
+loyout(location = 0) in vec2 artboard_pos;
 layout(location = 0) out vec4 out_color;
-
 void main() {
   out_color = vec4(1.0f);
 })";
