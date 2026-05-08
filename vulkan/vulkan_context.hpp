@@ -7,36 +7,34 @@
 
 class VulkanContext {
   public:
-    VulkanContext(GLFWwindow *window);
+    VulkanContext(GLFWwindow* window);
     // core
-    vk::raii::Context context;
-    vk::raii::Instance instance = nullptr;
-    vk::raii::SurfaceKHR surface = nullptr;
+    vk::raii::Context    context;
+    vk::raii::Instance   instance = nullptr;
+    vk::raii::SurfaceKHR surface  = nullptr;
 
     vk::raii::PhysicalDevice physical_device = nullptr;
-    vk::raii::Device device = nullptr;
+    vk::raii::Device         device          = nullptr;
 
     vk::raii::Queue graphics_queue = nullptr;
-    vk::raii::Queue present_queue = nullptr;
+    vk::raii::Queue present_queue  = nullptr;
 
     struct QueueFamilyIndices {
         int graphics_family = -1;
-        int present_family = -1;
+        int present_family  = -1;
 
-        bool is_complete() const {
-            return graphics_family >= 0 && present_family >= 0;
-        };
+        bool is_complete() const { return graphics_family >= 0 && present_family >= 0; };
     } family_indices;
 
     // surface
     struct SurfaceConfig {
-        vk::SurfaceCapabilitiesKHR capabilities;
+        vk::SurfaceCapabilitiesKHR        capabilities;
         std::vector<vk::SurfaceFormatKHR> formats;
-        std::vector<vk::PresentModeKHR> present_modes;
+        std::vector<vk::PresentModeKHR>   present_modes;
 
         vk::SurfaceFormatKHR chosen_format;
-        vk::PresentModeKHR chosen_present_mode;
-        vk::Extent2D chosen_extent;
+        vk::PresentModeKHR   chosen_present_mode;
+        vk::Extent2D         chosen_extent;
 
         uint32_t image_count;
     } config;
@@ -44,7 +42,7 @@ class VulkanContext {
     void create_extent();
 
   private:
-    GLFWwindow *window;
+    GLFWwindow* window;
 
     void create_instance();
 

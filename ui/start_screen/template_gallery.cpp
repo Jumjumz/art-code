@@ -11,9 +11,9 @@ TemplateGallery::TemplateGallery() {
 };
 
 void TemplateGallery::render() {
-    this->viewport = ImGui::GetMainViewport();
+    this->viewport  = ImGui::GetMainViewport();
     this->work_size = viewport->WorkSize;
-    this->work_pos = viewport->WorkPos;
+    this->work_pos  = viewport->WorkPos;
 
     ImGui::SetNextWindowSize(ImVec2{this->work_size.x * 0.7f, this->work_size.y});
     ImGui::SetNextWindowPos(ImVec2{this->work_pos.x, this->work_pos.y});
@@ -27,7 +27,7 @@ void TemplateGallery::render() {
 
     ImGui::Text("Template Gallery");
     static glm::vec3 artboard_size;
-    for (const auto &[text, val] : ArtboardTemplates::TEMPLATES) {
+    for (const auto& [text, val] : ArtboardTemplates::TEMPLATES) {
         if (ImGui::Button(text.c_str())) {
             ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
                                         ImGuiFileBrowserFlags_CreateNewDir,
@@ -69,10 +69,9 @@ void TemplateGallery::render() {
     }
 };
 
-void TemplateGallery::create_new_project(const glm::vec3 &dimensions) {
+void TemplateGallery::create_new_project(const glm::vec3& dimensions) {
     if (this->file_dialog.HasSelected()) {
-        if (this->build.set_project_directory(this->file_dialog.GetSelected(),
-                                              dimensions)) {
+        if (this->build.set_project_directory(this->file_dialog.GetSelected(), dimensions)) {
             // pass path to global project path
             ProjectPath::set_project_path(this->file_dialog.GetSelected());
             this->file_dialog.ClearSelected();
@@ -86,7 +85,7 @@ void TemplateGallery::create_new_project(const glm::vec3 &dimensions) {
     }
 };
 
-glm::vec3 TemplateGallery::set_artboard_template(const TemplateSizes &temp) {
+glm::vec3 TemplateGallery::set_artboard_template(const TemplateSizes& temp) {
     switch (temp) {
     case TemplateSizes::WEB_COMMON: {
         return {1366.0f, 768.0f, 72.0f};
@@ -105,7 +104,7 @@ glm::vec3 TemplateGallery::set_artboard_template(const TemplateSizes &temp) {
     }
 };
 
-void TemplateGallery::set_artboard_dimensions(const glm::vec3 &dimensions) {
-    this->artboard_size = dimensions;
+void TemplateGallery::set_artboard_dimensions(const glm::vec3& dimensions) {
+    this->artboard_size  = dimensions;
     this->has_dimensions = true;
 };

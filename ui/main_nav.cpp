@@ -6,9 +6,9 @@ MainNavigation::MainNavigation() {};
 
 void MainNavigation::render() const {
     if (ImGui::BeginMainMenuBar()) {
-        for (const auto &[menus, items] : NavMainItems::MENUS) {
+        for (const auto& [menus, items] : NavMainItems::MENUS) {
             if (ImGui::BeginMenu(menus.c_str())) {
-                for (const auto &[item_label, item_shortcut] : items) {
+                for (const auto& [item_label, item_shortcut] : items) {
                     ImGui::MenuItem(item_label.c_str(), item_shortcut.c_str());
                 }
                 ImGui::EndMenu();

@@ -12,7 +12,7 @@ class Development : public WorkSpace {
     void render() override;
 
   private:
-    BuildPanel build_panel;
+    BuildPanel        build_panel;
     TextEditorWrapper text_editor;
-    Console console;
+    Console           console;
 };

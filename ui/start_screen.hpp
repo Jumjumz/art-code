@@ -22,28 +22,28 @@ class StartScreen {
     virtual bool dimensions_acquired() const { return this->has_dimensions; };
 
   protected:
-    ImGuiViewport *viewport = nullptr;
-    ImVec2 work_size = ImVec2{0.0f, 0.0f};
-    ImVec2 work_pos = ImVec2{0.0f, 0.0f};
+    ImGuiViewport* viewport  = nullptr;
+    ImVec2         work_size = ImVec2{0.0f, 0.0f};
+    ImVec2         work_pos  = ImVec2{0.0f, 0.0f};
 
-    glm::vec3 artboard_size = {0.0f, 0.0f, 0.0f};
-    bool has_dimensions = false;
+    glm::vec3 artboard_size  = {0.0f, 0.0f, 0.0f};
+    bool      has_dimensions = false;
 
     bool open_selected = false; // for open button
 
     Build build;
 
-    const char *home = getenv("HOME"); // set home directory
+    const char* home = getenv("HOME"); // set home directory
 
     ImGui::FileBrowser file_dialog;
 
-    virtual void set_artboard_dimensions(const glm::vec3 &dimensions) {
-        this->artboard_size = dimensions;
+    virtual void set_artboard_dimensions(const glm::vec3& dimensions) {
+        this->artboard_size  = dimensions;
         this->has_dimensions = false;
     };
 
-    virtual void create_new_project(const glm::vec3 &dimensions) {
-        this->artboard_size = dimensions;
+    virtual void create_new_project(const glm::vec3& dimensions) {
+        this->artboard_size  = dimensions;
         this->has_dimensions = false;
     };
 
@@ -52,12 +52,12 @@ class StartScreen {
     virtual void get_artboard_solution() {
         if (this->file_dialog.HasSelected()) {
             nlohmann::json js;
-            const auto solution = this->file_dialog.GetSelected();
+            const auto     solution = this->file_dialog.GetSelected();
 
             if (solution.extension() == this->build.sln_ext) {
                 // read and parse solution file
                 std::ifstream read(solution);
-                js = nlohmann::json::parse(read);
+                js                 = nlohmann::json::parse(read);
                 auto artboard_size = js["artboard_size"];
 
                 // set the project path for text editor
@@ -67,9 +67,8 @@ class StartScreen {
                 ProjectPath::set_solution_file(solution);
 
                 // get width and height
-                const auto dimensions =
-                    glm::vec3{artboard_size["width"], artboard_size["height"],
-                              artboard_size["ppi"]};
+                const auto dimensions = glm::vec3{
+                    artboard_size["width"], artboard_size["height"], artboard_size["ppi"]};
 
                 read.close();
 
@@ -83,12 +82,12 @@ class StartScreen {
 
     // implementation is the same for derived classes
     // used for creating new projects
-    virtual void get_solution_file(const fs::path &project_dir) {
-        const auto itr = std::find_if(
-            fs::directory_iterator(project_dir), fs::directory_iterator{},
-            [this](const auto &file) -> bool {
-                return file.path().extension() == this->build.sln_ext;
-            });
+    virtual void get_solution_file(const fs::path& project_dir) {
+        const auto itr =
+            std::find_if(fs::directory_iterator(project_dir), fs::directory_iterator{},
+                         [this](const auto& file) -> bool {
+                             return file.path().extension() == this->build.sln_ext;
+                         });
 
         // check if itr reach with out finding the .rcd file
         if (itr == fs::directory_iterator{}) {

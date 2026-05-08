@@ -14,11 +14,14 @@ struct Triangle;
 struct Square;
 struct Circle;
 
+// strings
+typedef std::string string;
+
 // Arrays
-typedef std::vector<int> ArrayInt;
-typedef std::vector<float> ArrayFloat;
+typedef std::vector<int>    ArrayInt;
+typedef std::vector<float>  ArrayFloat;
 typedef std::vector<double> ArrayDouble;
-typedef std::vector<std::string> ArrayString;
+typedef std::vector<string> ArrayString;
 
 // Vectors data types
 typedef glm::vec1 Vec1;
@@ -29,9 +32,7 @@ typedef glm::vec4 Vec4;
 // Colors
 typedef glm::vec3 Color;
 
-// strings
-typedef std::string string;
-template <typename to_string> string ToString(const to_string &to_str) {
+template <typename to_string> string ToString(const to_string& to_str) {
     return std::to_string(to_str);
 };
 
@@ -39,48 +40,41 @@ template <typename to_string> string ToString(const to_string &to_str) {
 namespace fs = std::filesystem;
 
 namespace Art {
-namespace detail {
-struct IPen {
-    virtual ~IPen() = default;
+    namespace detail {
+        struct IPen {
+            virtual ~IPen() = default;
 
-    // must implement
-    string name;
+            // must implement
+            string name;
+            Vec2   position;
+            Color  color;
+            float  stroke;
+            float  scale;
 
-    Vec2 position;
+          protected:
+            fs::path shader_file() const {
+                return fs::canonical("/proc/self/exe").parent_path().parent_path() /
+                       "shaders" / "artcode.frag";
+            };
+            virtual string to_glsl() const                       = 0;
+            virtual void   write_shader(const string& glsl_code) = 0;
+            virtual void   draw()                                = 0;
+        };
+    } // namespace detail
 
-    Color color;
+    struct Circle : detail::IPen {
+        Circle();
 
-    float stroke;
+        float radius;
 
-    float scale;
+        void draw() override;
 
-  protected:
-    fs::path shader_file() const {
-        return fs::canonical("/proc/self/exe").parent_path().parent_path() /
-               "shaders" / "artcode.frag";
+      private:
+        string to_glsl() const override;
+
+        void write_shader(const string& glsl_code) override;
     };
-
-    virtual string to_glsl() const = 0;
-
-    virtual void write_shader(const string &glsl_code) = 0;
-
-    virtual void draw() = 0;
-};
-} // namespace detail
-
-struct Circle : detail::IPen {
-    Circle();
-
-    float radius;
-
-    void draw() override;
-
-  private:
-    string to_glsl() const override;
-
-    void write_shader(const string &glsl_code) override;
-};
-// TODO:add others
+    // TODO:add others
 
 }; // namespace Art
 

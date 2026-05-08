@@ -46,8 +46,7 @@ class Application {
                             this->ctx.family_indices.graphics_family,
                             Application::MAX_FRAMES_IN_FLIGHT};
 
-    VkFormat format =
-        static_cast<VkFormat>(this->swapchain.resources.image_format);
+    VkFormat format = static_cast<VkFormat>(this->swapchain.resources.image_format);
 
     vk::Result draw_result;
 
@@ -64,18 +63,18 @@ class Application {
     UIManager ui_manager;
 
     // multi  threading
-    std::mutex canvas_mutex;
+    std::mutex              canvas_mutex;
     std::condition_variable canvas_cv;
-    std::atomic<bool> running = true;
+    std::atomic<bool>       running = true;
 
     std::atomic<bool> canvas_ready = true;
 
     std::thread canvas_thread;
 
     // key inputs
-    bool mouse_in_canvas = false;
-    bool ctrl_pressed = false;
-    bool spacebar_pressed = false;
+    bool mouse_in_canvas    = false;
+    bool ctrl_pressed       = false;
+    bool spacebar_pressed   = false;
     bool left_click_pressed = false;
 
     void loop();
@@ -88,7 +87,7 @@ class Application {
 
     void reset_buffers();
 
-    void submit_buffers(const std::vector<vk::CommandBuffer> &command_buffers);
+    void submit_buffers(const std::vector<vk::CommandBuffer>& command_buffers);
 
     void update_canvas();
 
@@ -98,15 +97,14 @@ class Application {
 
     void record_imgui_command();
 
-    void transition_image_layout(const vk::CommandBuffer &cmd_buffer,
-                                 const vk::Image &image,
-                                 const vk::ImageLayout &old_layout,
-                                 const vk::ImageLayout &new_layout,
-                                 const vk::AccessFlags2 &src_access_mask,
-                                 const vk::AccessFlags2 &dst_accessmask,
-                                 const vk::PipelineStageFlags2 &src_stage_mask,
-                                 const vk::PipelineStageFlags2 &dst_stage_mask,
-                                 const vk::ImageAspectFlags &image_aspect_flags);
+    void transition_image_layout(const vk::CommandBuffer& cmd_buffer,
+                                 const vk::Image& image, const vk::ImageLayout& old_layout,
+                                 const vk::ImageLayout&         new_layout,
+                                 const vk::AccessFlags2&        src_access_mask,
+                                 const vk::AccessFlags2&        dst_accessmask,
+                                 const vk::PipelineStageFlags2& src_stage_mask,
+                                 const vk::PipelineStageFlags2& dst_stage_mask,
+                                 const vk::ImageAspectFlags&    image_aspect_flags);
 
     void clean_swapchain();
 

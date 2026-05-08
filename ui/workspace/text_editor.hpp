@@ -18,7 +18,7 @@ class TextEditorWrapper {
 
     std::filesystem::path selected_file;
 
-    ImFont *font = nullptr;
+    ImFont* font = nullptr;
 
     std::vector<std::filesystem::path> tabs = {};
 

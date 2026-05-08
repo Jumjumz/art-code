@@ -21,11 +21,11 @@ TextEditorWrapper::TextEditorWrapper() {
     this->tabs.reserve(TAB_ITEMS_NUM);
     this->tabs.push_back(this->selected_file);
 
+    // init text editor pallete
     {
-        // init text editor pallete
         auto palette = TextEditor::GetDarkPalette();
-        palette[(int)TextEditor::PaletteIndex::Background] = 0xFF1D1D1D;
 
+        palette[(int)TextEditor::PaletteIndex::Background] = 0xFF1D1D1D;
         this->editor.SetPalette(palette);
     }
     // load font once
@@ -37,16 +37,16 @@ TextEditorWrapper::TextEditorWrapper() {
 };
 
 void TextEditorWrapper::render() {
-    const ImVec2 content_size = ImGui::GetContentRegionAvail();
-    const float panel_width = 40.0f;
+    const ImVec2          content_size = ImGui::GetContentRegionAvail();
+    const float           panel_width  = 40.0f;
     std::filesystem::path active_tab;
 
     if (this->file_explorer.HasSelected()) {
         // pass the selected file
         this->selected_file = this->file_explorer.GetSelected();
         // limit tab items to TAB_ITEMS_NUM
-        if (std::find(this->tabs.begin(), this->tabs.end(),
-                      this->selected_file) == this->tabs.end() &&
+        if (std::find(this->tabs.begin(), this->tabs.end(), this->selected_file) ==
+                this->tabs.end() &&
             this->tabs.size() < TextEditorWrapper::TAB_ITEMS_NUM) {
             this->tabs.push_back(this->selected_file);
         }
@@ -61,13 +61,12 @@ void TextEditorWrapper::render() {
     // tabs
     ImGui::BeginTabBar("##tab_bar");
     for (size_t i = 0; i < this->tabs.size(); i++) {
-        bool tab_open = true;
-        const auto tab = this->tabs[i];
+        bool       tab_open = true;
+        const auto tab      = this->tabs[i];
         // display the newest selected path
-        const auto flags = (tab == active_tab) ? ImGuiTabItemFlags_SetSelected
-                                               : ImGuiTabItemFlags_None;
-        const std::string tab_name =
-            std::to_string(i + 1) + " " + tab.filename().string();
+        const auto flags =
+            (tab == active_tab) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+        const std::string tab_name = std::to_string(i + 1) + " " + tab.filename().string();
         if (ImGui::BeginTabItem(tab_name.c_str(), &tab_open, flags)) {
             if (this->selected_file != tab) {
                 this->selected_file = tab;
@@ -90,9 +89,8 @@ void TextEditorWrapper::render() {
     }
     ImGui::EndTabBar();
 
-    ImGui::BeginChild("##file_browser", ImVec2{panel_width, content_size.y},
-                      false);
-    for (const auto &[action, shortcut] : this->side_panel_contents) {
+    ImGui::BeginChild("##file_browser", ImVec2{panel_width, content_size.y}, false);
+    for (const auto& [action, shortcut] : this->side_panel_contents) {
         if (ImGui::Button(action.c_str(), ImVec2{panel_width, panel_width})) {
             if (action == "Exp") {
                 this->file_explorer.Open();
@@ -112,13 +110,12 @@ void TextEditorWrapper::render() {
 
     // FIXME: this doesnt work as intended..
     if (this->file_explorer.IsOpened()) {
-        const auto viewport = ImGui::GetMainViewport();
+        const auto viewport  = ImGui::GetMainViewport();
         const auto work_size = viewport->WorkSize;
-        const auto work_pos = viewport->WorkPos;
+        const auto work_pos  = viewport->WorkPos;
 
         this->file_explorer.SetWindowSize(80, int(content_size.y + 40.0f));
-        this->file_explorer.SetWindowPos(int(work_size.x * 0.4f),
-                                         int(work_pos.y));
+        this->file_explorer.SetWindowPos(int(work_size.x * 0.4f), int(work_pos.y));
     }
 
     // display file browser modal
@@ -129,16 +126,15 @@ void TextEditorWrapper::render() {
 };
 
 void TextEditorWrapper::set_font() {
-    ImGuiIO &io = ImGui::GetIO();
-    this->font = io.Fonts->AddFontFromFileTTF(
-        "assets/fonts/CascadiaMonoNFItalic.ttf", 22.0f);
+    ImGuiIO& io = ImGui::GetIO();
+    this->font =
+        io.Fonts->AddFontFromFileTTF("assets/fonts/CascadiaMonoNFItalic.ttf", 22.0f);
 };
 
 void TextEditorWrapper::set_language() {
     const auto file_ext = this->selected_file.extension();
     if (file_ext == ".cpp" || file_ext == ".hpp" || file_ext == ".h") {
-        this->editor.SetLanguageDefinition(
-            TextEditor::LanguageDefinition::CPlusPlus());
+        this->editor.SetLanguageDefinition(TextEditor::LanguageDefinition::CPlusPlus());
     } else if (file_ext == ".vert" || file_ext == ".frag") {
         this->editor.SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
     }
@@ -151,8 +147,7 @@ void TextEditorWrapper::read_code() {
                         std::istreambuf_iterator<char>());
     read.close();
 
-    if (content.back() == '\n' || content.back() == '\r' ||
-        content.back() == '\t') {
+    if (content.back() == '\n' || content.back() == '\r' || content.back() == '\t') {
         content.pop_back();
     }
 

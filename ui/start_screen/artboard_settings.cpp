@@ -11,20 +11,20 @@ ArtboardSettings::ArtboardSettings() {
 };
 
 void ArtboardSettings::render() {
-    this->viewport = ImGui::GetMainViewport();
+    this->viewport  = ImGui::GetMainViewport();
     this->work_size = this->viewport->WorkSize;
-    this->work_pos = this->viewport->WorkPos;
+    this->work_pos  = this->viewport->WorkPos;
 
-    const float width = this->work_size.x * 0.3f;
+    const float width  = this->work_size.x * 0.3f;
     const float height = this->work_size.y;
-    const float pos_x = this->work_size.x - width;
-    const float pos_y = this->work_pos.y;
+    const float pos_x  = this->work_size.x - width;
+    const float pos_y  = this->work_pos.y;
 
     ImGui::SetNextWindowSize(ImVec2{width, height});
     ImGui::SetNextWindowPos(ImVec2{pos_x, pos_y});
 
     // init values
-    static float ab_width = 1920.0f;
+    static float ab_width  = 1920.0f;
     static float ab_height = 1080.0f;
 
     const std::vector<std::string> buttons = {"Create", "Open"};
@@ -40,7 +40,7 @@ void ArtboardSettings::render() {
     ImGui::DragFloat("Width", &ab_width, 1.0f, 10.0f, 5000.0f, "%.0f");
     ImGui::DragFloat("Height", &ab_height, 1.0f, 10.0f, 5000.0f, "%.0f");
 
-    for (const auto &button : buttons) {
+    for (const auto& button : buttons) {
         if (ImGui::Button(button.c_str(), ImVec2{60, 20})) {
             if (button == "Create") {
                 // reinitialize file browser
@@ -83,10 +83,9 @@ void ArtboardSettings::render() {
     }
 };
 
-void ArtboardSettings::create_new_project(const glm::vec3 &dimensions) {
+void ArtboardSettings::create_new_project(const glm::vec3& dimensions) {
     if (this->file_dialog.HasSelected()) {
-        if (this->build.set_project_directory(this->file_dialog.GetSelected(),
-                                              dimensions)) {
+        if (this->build.set_project_directory(this->file_dialog.GetSelected(), dimensions)) {
             // pass path to global project path
             ProjectPath::set_project_path(this->file_dialog.GetSelected());
             this->file_dialog.ClearSelected();
@@ -100,7 +99,7 @@ void ArtboardSettings::create_new_project(const glm::vec3 &dimensions) {
     }
 };
 
-void ArtboardSettings::set_artboard_dimensions(const glm::vec3 &dimensions) {
-    this->artboard_size = dimensions;
+void ArtboardSettings::set_artboard_dimensions(const glm::vec3& dimensions) {
+    this->artboard_size  = dimensions;
     this->has_dimensions = true;
 };

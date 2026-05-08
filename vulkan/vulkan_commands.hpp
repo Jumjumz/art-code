@@ -4,14 +4,14 @@
 
 class VulkanCommands {
   public:
-    VulkanCommands(const vk::raii::Device &device,
-                   const vk::raii::Buffer &canvas_uniform_buffer,
-                   const vk::raii::DescriptorSetLayout &canvas_descriptor_set_layout,
-                   const std::vector<vk::Image> &images,
-                   const int &graphics_family, const int &MAX_FRAMES_IN_FLIGHT);
+    VulkanCommands(const vk::raii::Device&              device,
+                   const vk::raii::Buffer&              canvas_uniform_buffer,
+                   const vk::raii::DescriptorSetLayout& canvas_descriptor_set_layout,
+                   const std::vector<vk::Image>& images, const int& graphics_family,
+                   const int& MAX_FRAMES_IN_FLIGHT);
 
     // imgui and canvas command pool
-    vk::raii::CommandPool imgui_command_pool = nullptr;
+    vk::raii::CommandPool imgui_command_pool  = nullptr;
     vk::raii::CommandPool canvas_command_pool = nullptr;
 
     // imgui and canvas commanmd buffer
@@ -21,7 +21,7 @@ class VulkanCommands {
     // semaphores
     std::vector<vk::raii::Semaphore> available_semaphores;
     std::vector<vk::raii::Semaphore> finished_semaphores;
-    std::vector<vk::raii::Fence> in_flight_fences;
+    std::vector<vk::raii::Fence>     in_flight_fences;
 
     // imgui and canvas descriptor pool
     vk::raii::DescriptorPool imgui_descriptor_pool = nullptr;
@@ -31,17 +31,13 @@ class VulkanCommands {
     std::vector<vk::raii::DescriptorSet> canvas_descriptor_set;
 
   private:
-    const vk::raii::Device &device;
+    const vk::raii::Device&              device;
+    const vk::raii::Buffer&              canvas_uniform_buffer;
+    const vk::raii::DescriptorSetLayout& canvas_descriptor_set_layout;
 
-    const vk::raii::Buffer &canvas_uniform_buffer;
+    const std::vector<vk::Image>& images;
 
-    const vk::raii::DescriptorSetLayout &canvas_descriptor_set_layout;
-
-    const std::vector<vk::Image> &images;
-
-    const int &graphics_family;
-
-    const int &MAX_FRAMES_IN_FLIGHT;
+    const int &graphics_family, MAX_FRAMES_IN_FLIGHT;
 
     void imgui_create_command_pool();
 

@@ -29,7 +29,7 @@ class BuildPanel {
     // C for compile, R for Run
     enum class Flags { C, R };
 
-    std::string create_cmd(const BuildPanel::Flags &flag) const;
+    std::string create_cmd(const BuildPanel::Flags& flag) const;
 
-    void execute(const std::string &cmd);
+    void execute(const std::string& cmd);
 };

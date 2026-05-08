@@ -7,9 +7,9 @@
 
 Build::Build() {};
 
-bool Build::set_project_directory(const fs::path &dir, const glm::vec3 &artboard) {
+bool Build::set_project_directory(const fs::path& dir, const glm::vec3& artboard) {
     this->project_directory = dir;
-    this->artboard_size = artboard;
+    this->artboard_size     = artboard;
 
     return create_project_content();
 };
@@ -18,8 +18,7 @@ bool Build::create_project_content() const {
     const std::vector<fs::path> content_directories = {
         this->project_directory / "build", this->project_directory / "shaders",
         this->project_directory / "components"};
-    const auto file_name =
-        this->project_directory.filename().string() + this->sln_ext;
+    const auto file_name = this->project_directory.filename().string() + this->sln_ext;
     const auto solution_path = this->project_directory / file_name;
 
     // create sub directories
@@ -30,7 +29,7 @@ bool Build::create_project_content() const {
                 solution_path, this->project_directory / "main.cpp"};
 
             // create files
-            for (const auto &content : project_content) {
+            for (const auto& content : project_content) {
                 std::ofstream file(content);
             }
             // write to respective files
@@ -39,19 +38,19 @@ bool Build::create_project_content() const {
         }
 
         // create directories
-        for (const auto &directory : content_directories) {
+        for (const auto& directory : content_directories) {
             fs::create_directory(directory);
             std::cerr << directory << ": directory created" << std::endl;
         }
 
         {
             // create files inside respective directories
-            const auto shader = content_directories[1] / "artcode.frag";
+            const auto    shader = content_directories[1] / "artcode.frag";
             std::ofstream shader_file(shader);
 
-            const auto components_dir = content_directories[2];
-            std::vector<fs::path> comp_files = {components_dir / "comp.hpp",
-                                                components_dir / "comp.cpp"};
+            const auto            components_dir = content_directories[2];
+            std::vector<fs::path> comp_files     = {components_dir / "comp.hpp",
+                                                    components_dir / "comp.cpp"};
             for (const auto comp : components_dir) {
                 std::ofstream file(comp);
             }
@@ -68,8 +67,7 @@ bool Build::create_project_content() const {
 
         return true;
     } else {
-        std::cerr << solution_path << " project solution already exist"
-                  << std::endl;
+        std::cerr << solution_path << " project solution already exist" << std::endl;
         return false;
     }
 };
@@ -107,7 +105,7 @@ void Build::create_config_dir() const {
     }
 };
 
-void Build::write_solution_file(const fs::path &solution_file) const {
+void Build::write_solution_file(const fs::path& solution_file) const {
     // init json
     nlohmann::json js = {{"project_path", solution_file.parent_path()},
                          {"solution_file", solution_file.filename()},
@@ -126,7 +124,7 @@ void Build::write_solution_file(const fs::path &solution_file) const {
     write << js.dump(4); // indent 4 spaces
 };
 
-void Build::write_main_cpp(const fs::path &main_cpp) const {
+void Build::write_main_cpp(const fs::path& main_cpp) const {
     std::ofstream write(main_cpp);
     // write init code in strign literal
     write << R"(#include <artcode.hpp> 
@@ -142,7 +140,7 @@ int main() {
 };)";
 };
 
-void Build::write_comp_cpp(const fs::path &comp) const {
+void Build::write_comp_cpp(const fs::path& comp) const {
     std::ofstream write(comp);
     // write init code in strign literal
     write << R"(#include "comp.hpp"
@@ -152,7 +150,7 @@ Component::Component() {
 };)";
 };
 
-void Build::write_comp_hpp(const fs::path &comp) const {
+void Build::write_comp_hpp(const fs::path& comp) const {
     std::ofstream write(comp);
     // write init code in strign literal
     write << R"(#pragma once
@@ -166,7 +164,7 @@ class Component {
 };)";
 };
 
-void Build::write_shader(const fs::path &shader) const {
+void Build::write_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 
     write << R"(#version 450

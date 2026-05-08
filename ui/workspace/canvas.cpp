@@ -4,9 +4,9 @@
 Canvas::Canvas() {};
 
 void Canvas::render() {
-    this->viewport = ImGui::GetMainViewport();
+    this->viewport  = ImGui::GetMainViewport();
     this->work_size = this->viewport->WorkSize;
-    this->work_pos = this->viewport->WorkPos;
+    this->work_pos  = this->viewport->WorkPos;
 
     ImGui::SetNextWindowSize(ImVec2{this->work_size.x * 0.6f, this->work_size.y});
     ImGui::SetNextWindowPos(ImVec2{this->work_pos.x, this->work_pos.y});

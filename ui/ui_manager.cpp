@@ -18,7 +18,7 @@ void UIManager::render() {
     this->main_nav.render();
 
     if (!this->show_main_ui) {
-        for (const auto &start_screen : this->start_ui) {
+        for (const auto& start_screen : this->start_ui) {
             // immidiately render the start screen ui's
             start_screen->render();
 
@@ -40,7 +40,7 @@ void UIManager::render() {
             }
         }
     } else {
-        for (const auto &workspace : this->workspace_ui) {
+        for (const auto& workspace : this->workspace_ui) {
             workspace->render();
         }
     }

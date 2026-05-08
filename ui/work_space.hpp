@@ -9,10 +9,10 @@ class WorkSpace {
     virtual void render() = 0;
 
   protected:
-    ImGuiViewport *viewport = nullptr;
+    ImGuiViewport* viewport = nullptr;
 
     ImVec2 work_size = ImVec2{0.0f, 0.0f};
-    ImVec2 work_pos = ImVec2{0.0f, 0.0f};
+    ImVec2 work_pos  = ImVec2{0.0f, 0.0f};
 
   private:
 };

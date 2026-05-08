@@ -6,11 +6,10 @@ Window::Window() {
     glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+    GLFWmonitor*       monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode    = glfwGetVideoMode(monitor);
 
-    this->app_window =
-        glfwCreateWindow(mode->width, mode->height, "Art Code", NULL, NULL);
+    this->app_window = glfwCreateWindow(mode->width, mode->height, "Art Code", NULL, NULL);
 };
 
 void Window::destroy_window() const {

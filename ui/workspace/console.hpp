@@ -9,5 +9,5 @@ class Console {
     void render();
 
   private:
-    ImFont *font = nullptr;
+    ImFont* font = nullptr;
 };

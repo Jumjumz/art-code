@@ -3,7 +3,8 @@
 #include <map>
 #include <set>
 
-VulkanContext::VulkanContext(GLFWwindow *window) : window(window) {
+VulkanContext::VulkanContext(GLFWwindow* window)
+    : window(window) {
     create_instance();
     pick_physical_device();
     create_surface();
@@ -12,23 +13,21 @@ VulkanContext::VulkanContext(GLFWwindow *window) : window(window) {
 };
 
 void VulkanContext::create_instance() {
-    constexpr vk::ApplicationInfo app_info{
-        "Art Code", VK_MAKE_VERSION(0, 0, 1), "Jumz Art Engine",
-        VK_MAKE_VERSION(0, 0, 1), vk::ApiVersion13};
+    constexpr vk::ApplicationInfo app_info{"Art Code", VK_MAKE_VERSION(0, 0, 1),
+                                           "Jumz Art Engine", VK_MAKE_VERSION(0, 0, 1),
+                                           vk::ApiVersion13};
 
     uint32_t extension_count = 0;
-    auto glfw_extensions = glfwGetRequiredInstanceExtensions(&extension_count);
+    auto     glfw_extensions = glfwGetRequiredInstanceExtensions(&extension_count);
 
     std::vector extensions(glfw_extensions, glfw_extensions + extension_count);
-    auto extension_properties =
-        this->context.enumerateInstanceExtensionProperties();
+    auto extension_properties = this->context.enumerateInstanceExtensionProperties();
 
-    auto unsupported_property = std::ranges::find_if(
-        extensions, [&extension_properties](const auto &extension) {
+    auto unsupported_property =
+        std::ranges::find_if(extensions, [&extension_properties](const auto& extension) {
             return std::ranges::none_of(
-                extension_properties, [extension](const auto &extension_property) {
-                    return strcmp(extension_property.extensionName, extension) ==
-                           0;
+                extension_properties, [extension](const auto& extension_property) {
+                    return strcmp(extension_property.extensionName, extension) == 0;
                 });
         });
 
@@ -36,36 +35,32 @@ void VulkanContext::create_instance() {
         throw std::runtime_error("Required extension not supported: ");
     }
 
-    std::vector<char const *> required_layers;
+    std::vector<char const*> required_layers;
 
     // enable validation layers
     if (enable_validation_layers)
-        required_layers.assign(validation_layers.begin(),
-                               validation_layers.end());
+        required_layers.assign(validation_layers.begin(), validation_layers.end());
 
     auto layer_properties = this->context.enumerateInstanceLayerProperties();
 
-    if (std::ranges::any_of(required_layers, [&layer_properties](
-                                                 const auto &requiredLayer) {
+    if (std::ranges::any_of(required_layers, [&layer_properties](const auto& requiredLayer) {
             return std::ranges::none_of(
-                layer_properties, [requiredLayer](auto const &layerProperty) {
+                layer_properties, [requiredLayer](auto const& layerProperty) {
                     return strcmp(layerProperty.layerName, requiredLayer) == 0;
                 });
         })) {
-        throw std::runtime_error(
-            "One or more required layers are not supported!");
+        throw std::runtime_error("One or more required layers are not supported!");
     }
 
     vk::InstanceCreateInfo instance_info;
     instance_info.pApplicationInfo = &app_info;
 
     if (enable_validation_layers) {
-        instance_info.enabledLayerCount =
-            static_cast<uint32_t>(required_layers.size());
+        instance_info.enabledLayerCount   = static_cast<uint32_t>(required_layers.size());
         instance_info.ppEnabledLayerNames = required_layers.data();
     }
 
-    instance_info.enabledExtensionCount = extension_count;
+    instance_info.enabledExtensionCount   = extension_count;
     instance_info.ppEnabledExtensionNames = extensions.data();
 
     // create instance
@@ -80,15 +75,14 @@ void VulkanContext::pick_physical_device() {
 
     std::multimap<int, vk::raii::PhysicalDevice> candidates;
 
-    for (const auto &device : devices) {
-        auto properties = device.getProperties();
-        auto features = device.getFeatures();
-        uint32_t score = 0;
+    for (const auto& device : devices) {
+        const auto properties = device.getProperties();
+        const auto features   = device.getFeatures();
+        uint32_t   score      = 0;
 
         if (properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) {
             score += 1000;
-        } else if (properties.deviceType ==
-                   vk::PhysicalDeviceType::eIntegratedGpu) {
+        } else if (properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu) {
             score += 100;
         }
 
@@ -112,17 +106,18 @@ void VulkanContext::create_logical_device() {
     find_queue_families();
 
     std::vector<vk::DeviceQueueCreateInfo> device_queue_infos;
+
     const std::set<int> unique_queue_families = {
         this->family_indices.graphics_family,
         this->family_indices.present_family,
     };
 
-    float queuePriority = 0.5f;
-    for (const auto &queue_family : unique_queue_families) {
+    constexpr float QUEUE_PRIORITY = 0.5f;
+    for (const auto& queue_family : unique_queue_families) {
         vk::DeviceQueueCreateInfo device_queue_info{};
         device_queue_info.queueFamilyIndex = queue_family;
-        device_queue_info.queueCount = 1;
-        device_queue_info.pQueuePriorities = &queuePriority;
+        device_queue_info.queueCount       = 1;
+        device_queue_info.pQueuePriorities = &QUEUE_PRIORITY;
 
         device_queue_infos.push_back(device_queue_info);
     }
@@ -131,42 +126,39 @@ void VulkanContext::create_logical_device() {
                        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
         feature_chain{};
 
-    auto &features = feature_chain.get<vk::PhysicalDeviceFeatures2>();
-    features.features.geometryShader = vk::True;
-    features.features.samplerAnisotropy = vk::True;
-    features.features.dualSrcBlend = vk::True;
+    auto& features = feature_chain.get<vk::PhysicalDeviceFeatures2>();
+
+    features.features.geometryShader     = vk::True;
+    features.features.samplerAnisotropy  = vk::True;
+    features.features.dualSrcBlend       = vk::True;
     features.features.robustBufferAccess = vk::True;
 
-    auto &dynamic_rendering =
-        feature_chain.get<vk::PhysicalDeviceVulkan13Features>();
+    auto& dynamic_rendering = feature_chain.get<vk::PhysicalDeviceVulkan13Features>();
     dynamic_rendering.dynamicRendering = vk::True;
     dynamic_rendering.synchronization2 = vk::True;
 
-    auto &dynamic_state =
+    auto& dynamic_state =
         feature_chain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
     dynamic_state.extendedDynamicState = vk::True;
 
     // get swapchains extensions
-    const std::vector<const char *> device_extensions = {
+    const std::vector<const char*> device_extensions = {
         vk::KHRSwapchainExtensionName, vk::EXTExtendedDynamicState3ExtensionName};
 
     vk::DeviceCreateInfo device_info{};
-    device_info.pNext = &features;
-    device_info.queueCreateInfoCount = 1;
-    device_info.pQueueCreateInfos = device_queue_infos.data();
-    device_info.enabledExtensionCount =
-        static_cast<uint32_t>(device_extensions.size());
+    device_info.pNext                   = &features;
+    device_info.queueCreateInfoCount    = 1;
+    device_info.pQueueCreateInfos       = device_queue_infos.data();
+    device_info.enabledExtensionCount   = static_cast<uint32_t>(device_extensions.size());
     device_info.ppEnabledExtensionNames = device_extensions.data();
 
     this->device = vk::raii::Device{this->physical_device, device_info};
 
     this->graphics_queue = vk::raii::Queue{
-        this->device,
-        static_cast<uint32_t>(this->family_indices.graphics_family), 0};
+        this->device, static_cast<uint32_t>(this->family_indices.graphics_family), 0};
 
     this->present_queue = vk::raii::Queue{
-        this->device,
-        static_cast<uint32_t>(this->family_indices.present_family), 0};
+        this->device, static_cast<uint32_t>(this->family_indices.present_family), 0};
 };
 
 void VulkanContext::find_queue_families() {
@@ -174,12 +166,10 @@ void VulkanContext::find_queue_families() {
         this->physical_device.getQueueFamilyProperties();
 
     for (size_t i = 0; i < family_properties.size(); i++) {
-        if (family_properties[i].queueFlags & vk::QueueFlagBits::eGraphics) {
+        if (family_properties[i].queueFlags & vk::QueueFlagBits::eGraphics)
             this->family_indices.graphics_family = i;
-        }
 
-        vk::Bool32 present =
-            this->physical_device.getSurfaceSupportKHR(i, this->surface);
+        vk::Bool32 present = this->physical_device.getSurfaceSupportKHR(i, this->surface);
 
         if (present)
             this->family_indices.present_family = i;
@@ -192,17 +182,15 @@ void VulkanContext::find_queue_families() {
 void VulkanContext::create_surface() {
     VkSurfaceKHR surface;
 
-    if (glfwCreateWindowSurface(*this->instance, this->window, nullptr,
-                                &surface) != 0) {
+    if (glfwCreateWindowSurface(*this->instance, this->window, nullptr, &surface) != 0)
         throw std::runtime_error("Failed to create window surface");
-    }
 
     this->surface = vk::raii::SurfaceKHR{this->instance, surface, nullptr};
 
     surface_config();
 
     this->config.chosen_format = this->config.formats[0];
-    for (const auto &format : this->config.formats) {
+    for (const auto& format : this->config.formats) {
         if (format.format == vk::Format::eB8G8R8A8Srgb &&
             format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
             this->config.chosen_format = format;
@@ -223,10 +211,9 @@ void VulkanContext::create_extent() {
         int width, height;
         glfwGetFramebufferSize(this->window, &width, &height);
 
-        this->config.chosen_extent.width =
-            std::clamp(static_cast<uint32_t>(width),
-                       this->config.capabilities.minImageExtent.width,
-                       this->config.capabilities.maxImageExtent.width);
+        this->config.chosen_extent.width = std::clamp(
+            static_cast<uint32_t>(width), this->config.capabilities.minImageExtent.width,
+            this->config.capabilities.maxImageExtent.width);
 
         this->config.chosen_extent.height =
             std::clamp(static_cast<uint32_t>(height),
@@ -245,8 +232,7 @@ void VulkanContext::surface_config() {
     this->config.capabilities =
         this->physical_device.getSurfaceCapabilitiesKHR(this->surface);
 
-    this->config.formats =
-        this->physical_device.getSurfaceFormatsKHR(this->surface);
+    this->config.formats = this->physical_device.getSurfaceFormatsKHR(this->surface);
 
     this->config.present_modes =
         this->physical_device.getSurfacePresentModesKHR(this->surface);

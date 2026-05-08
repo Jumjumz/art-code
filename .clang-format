@@ -1,6 +1,26 @@
 ---
+Language: Cpp
 BasedOnStyle: LLVM
-ColumnLimit: 80
+ColumnLimit: 90
 IndentWidth: 4
 PenaltyExcessCharacter: 10
+NamespaceIndentation: All
+
+# pointers and references
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# assignment alignments
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignCompound: true
+  PadOperators: true
+AlignConsecutiveDeclarations: true
+
+# constructors
+PackConstructorInitializers: Never
+ConstructorInitializerIndentWidth: 4
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ---

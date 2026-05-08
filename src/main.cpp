@@ -9,11 +9,11 @@ int main() {
 
     try {
         art_code.run();
-    } catch (const vk::SystemError &err) {
+    } catch (const vk::SystemError& err) {
         std::cerr << "Vulkan Error: " << err.what() << std::endl;
 
         return EXIT_FAILURE;
-    } catch (const std::exception &exc) {
+    } catch (const std::exception& exc) {
         std::cerr << exc.what() << std::endl;
 
         return EXIT_FAILURE;
