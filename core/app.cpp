@@ -11,8 +11,11 @@
 Application::Application() {};
 
 void Application::run() {
-    workspace_events(); // set the canvas events first
-    imgui_init();       // imgui events will be set after canvas
+    // set the workspace events first
+    // this->ui_manager.workspace_events();
+    workspace_events();
+    // imgui events will be set after workspace
+    imgui_init();
     loop();
     cleanup();
 };
@@ -28,6 +31,7 @@ void Application::loop() {
             if (!this->running)
                 break;
 
+            // this->ui_manager.canvas_setup();
             canvas_setup();
 
             record_canvas_command();
@@ -45,6 +49,7 @@ void Application::loop() {
         glfwWaitEvents();
 
         // update canvas and texture first
+        // this->ui_manager.update_canvas();
         update_canvas();
 
         ImGui_ImplVulkan_NewFrame();
@@ -349,7 +354,7 @@ void Application::record_canvas_command() {
     // render
     cmd.begin({});
 
-    transition_image_layout(cmd, this->vk_buffers.images, vk::ImageLayout::eUndefined,
+    transition_image_layout(this->vk_buffers.images, cmd, vk::ImageLayout::eUndefined,
                             vk::ImageLayout::eColorAttachmentOptimal, {},
                             vk::AccessFlagBits2::eColorAttachmentWrite,
                             vk::PipelineStageFlagBits2::eColorAttachmentOutput,
@@ -393,7 +398,7 @@ void Application::record_canvas_command() {
     cmd.endRendering();
 
     transition_image_layout(
-        cmd, this->vk_buffers.images, vk::ImageLayout::eColorAttachmentOptimal,
+        this->vk_buffers.images, cmd, vk::ImageLayout::eColorAttachmentOptimal,
         vk::ImageLayout::eShaderReadOnlyOptimal, vk::AccessFlagBits2::eColorAttachmentWrite,
         {}, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
         vk::PipelineStageFlagBits2::eBottomOfPipe, vk::ImageAspectFlagBits::eColor);
@@ -410,7 +415,7 @@ void Application::record_imgui_command() {
     cmd.begin({});
 
     // render imgui ui components to swapchain
-    transition_image_layout(cmd, this->swapchain.resources.images[this->image_index],
+    transition_image_layout(this->swapchain.resources.images[this->image_index], cmd,
                             vk::ImageLayout::eUndefined,
                             vk::ImageLayout::eColorAttachmentOptimal, {},
                             vk::AccessFlagBits2::eColorAttachmentWrite,
@@ -449,7 +454,7 @@ void Application::record_imgui_command() {
     cmd.endRendering();
 
     transition_image_layout(
-        cmd, this->swapchain.resources.images[this->image_index],
+        this->swapchain.resources.images[this->image_index], cmd,
         vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR,
         vk::AccessFlagBits2::eColorAttachmentWrite, {},
         vk::PipelineStageFlagBits2::eColorAttachmentOutput,
@@ -458,8 +463,8 @@ void Application::record_imgui_command() {
     cmd.end();
 };
 
-void Application::transition_image_layout(const vk::CommandBuffer&       cmd_buffer,
-                                          const vk::Image&               image,
+void Application::transition_image_layout(const vk::Image&               image,
+                                          const vk::CommandBuffer&       cmd_buffer,
                                           const vk::ImageLayout&         old_layout,
                                           const vk::ImageLayout&         new_layout,
                                           const vk::AccessFlags2&        src_access_mask,

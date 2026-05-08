@@ -50,24 +50,20 @@ class Application {
 
     vk::Result draw_result;
 
-    uint32_t image_index;
-
-    uint32_t current_frame = 0;
+    uint32_t image_index, current_frame = 0;
 
     bool frame_buffer_resize = false;
 
     const vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
+    const vk::Offset2D        offset      = {0, 0};
 
-    const vk::Offset2D offset = {0, 0};
-
-    UIManager ui_manager;
+    UIManager ui_manager{this->window, this->ctx, this->vk_buffers};
 
     // multi  threading
     std::mutex              canvas_mutex;
     std::condition_variable canvas_cv;
-    std::atomic<bool>       running = true;
-
-    std::atomic<bool> canvas_ready = true;
+    std::atomic<bool>       running      = true;
+    std::atomic<bool>       canvas_ready = true;
 
     std::thread canvas_thread;
 
@@ -97,8 +93,9 @@ class Application {
 
     void record_imgui_command();
 
-    void transition_image_layout(const vk::CommandBuffer& cmd_buffer,
-                                 const vk::Image& image, const vk::ImageLayout& old_layout,
+    void transition_image_layout(const vk::Image&               image,
+                                 const vk::CommandBuffer&       cmd_buffer,
+                                 const vk::ImageLayout&         old_layout,
                                  const vk::ImageLayout&         new_layout,
                                  const vk::AccessFlags2&        src_access_mask,
                                  const vk::AccessFlags2&        dst_accessmask,
