@@ -13,9 +13,9 @@ VulkanContext::VulkanContext(GLFWwindow* window)
 };
 
 void VulkanContext::create_instance() {
-    constexpr vk::ApplicationInfo app_info{"Art Code", VK_MAKE_VERSION(0, 0, 1),
-                                           "Jumz Art Engine", VK_MAKE_VERSION(0, 0, 1),
-                                           vk::ApiVersion13};
+    static constexpr vk::ApplicationInfo app_info{
+        "Art Code", VK_MAKE_VERSION(0, 0, 1), "Jumz Art Engine", VK_MAKE_VERSION(0, 0, 1),
+        vk::ApiVersion13};
 
     uint32_t extension_count = 0;
     auto     glfw_extensions = glfwGetRequiredInstanceExtensions(&extension_count);
@@ -112,7 +112,7 @@ void VulkanContext::create_logical_device() {
         this->family_indices.present_family,
     };
 
-    constexpr float QUEUE_PRIORITY = 0.5f;
+    static constexpr float QUEUE_PRIORITY = 0.5f;
     for (const auto& queue_family : unique_queue_families) {
         vk::DeviceQueueCreateInfo device_queue_info{};
         device_queue_info.queueFamilyIndex = queue_family;

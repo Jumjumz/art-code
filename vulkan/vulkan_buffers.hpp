@@ -7,17 +7,12 @@ class VulkanBuffers {
     VulkanBuffers(const vk::raii::PhysicalDevice& physical_device,
                   const vk::raii::Device&         device);
 
-    vk::raii::Image images = nullptr;
-
-    vk::raii::DeviceMemory canvas_image_memory = nullptr;
-
-    vk::raii::ImageView image_views = nullptr;
-
-    vk::raii::Buffer canvas_uniform_buffer = nullptr;
-
+    vk::raii::Image        images                       = nullptr;
+    vk::raii::DeviceMemory canvas_image_memory          = nullptr;
+    vk::raii::ImageView    image_views                  = nullptr;
+    vk::raii::Buffer       canvas_uniform_buffer        = nullptr;
     vk::raii::DeviceMemory canvas_uniform_buffer_memory = nullptr;
-
-    vk::raii::Sampler canvas_sampler = nullptr;
+    vk::raii::Sampler      canvas_sampler               = nullptr;
 
     void* canvas_uniform_buffer_mapped = nullptr;
 
@@ -39,6 +34,6 @@ class VulkanBuffers {
 
     void canvas_create_sampler();
 
-    uint32_t find_memory_type(uint32_t                type_filter,
-                              vk::MemoryPropertyFlags properties);
+    uint32_t find_memory_type(const uint32_t&                type_filter,
+                              const vk::MemoryPropertyFlags& properties);
 };

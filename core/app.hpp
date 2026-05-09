@@ -57,7 +57,7 @@ class Application {
     const vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
     const vk::Offset2D        offset      = {0, 0};
 
-    UIManager ui_manager{this->window, this->ctx, this->vk_buffers};
+    UIManager ui_manager;
 
     // multi  threading
     std::mutex              canvas_mutex;
@@ -67,8 +67,12 @@ class Application {
 
     std::thread canvas_thread;
 
+    // mouse pointers controls
+    static float     zoom;
+    static glm::vec2 panning;
+    static glm::vec2 mouse_last_pos;
+
     // key inputs
-    bool mouse_in_canvas    = false;
     bool ctrl_pressed       = false;
     bool spacebar_pressed   = false;
     bool left_click_pressed = false;

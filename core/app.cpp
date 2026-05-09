@@ -8,11 +8,15 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
+// definition
+float     Application::zoom           = 1;
+glm::vec2 Application::panning        = {0.0f, 0.0f};
+glm::vec2 Application::mouse_last_pos = {0.0f, 0.0f};
+
 Application::Application() {};
 
 void Application::run() {
     // set the workspace events first
-    // this->ui_manager.workspace_events();
     workspace_events();
     // imgui events will be set after workspace
     imgui_init();
@@ -31,10 +35,10 @@ void Application::loop() {
             if (!this->running)
                 break;
 
-            // this->ui_manager.canvas_setup();
-            canvas_setup();
-
-            record_canvas_command();
+            if (this->ui_manager.show_main_ui) {
+                canvas_setup();
+                record_canvas_command();
+            }
 
             // records canvas and runs parallel with the main thread
             {
@@ -49,8 +53,8 @@ void Application::loop() {
         glfwWaitEvents();
 
         // update canvas and texture first
-        // this->ui_manager.update_canvas();
-        update_canvas();
+        if (this->ui_manager.show_main_ui)
+            update_canvas();
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -119,14 +123,14 @@ void Application::canvas_setup() {
     view = glm::translate(view, glm::vec3(center_x, center_y, 0.0f));
 
     // scale to center
-    view = glm::scale(view, glm::vec3(CanvasUtils::zoom, CanvasUtils::zoom, 1.0f));
+    view = glm::scale(view, glm::vec3(Application::zoom, Application::zoom, 1.0f));
 
     // tanslate back
     view = glm::translate(view, glm::vec3(-center_x, -center_y, 0.0f));
 
     // translate to the panning position
     view = glm::translate(view,
-                          glm::vec3(CanvasUtils::panning.x, CanvasUtils::panning.y, 0.0f));
+                          glm::vec3(Application::panning.x, Application::panning.y, 0.0f));
 
     ArtboardBuffer a_ubo{
         .proj = glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
@@ -141,7 +145,6 @@ void Application::canvas_setup() {
     memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
 };
 
-// TODO: REFACTOR: this doesnt need to be in this class
 void Application::workspace_events() {
     // calculate mouse movement
     glfwSetCursorPosCallback(
@@ -150,32 +153,30 @@ void Application::workspace_events() {
             if (!app->ui_manager.show_main_ui)
                 return;
 
-            auto dx = static_cast<float>(x_pos) - CanvasUtils::mouse_last_pos.x;
-            auto dy = static_cast<float>(y_pos) - CanvasUtils::mouse_last_pos.y;
+            auto dx = static_cast<float>(x_pos) - Application::mouse_last_pos.x;
+            auto dy = static_cast<float>(y_pos) - Application::mouse_last_pos.y;
 
             // update last position
-            CanvasUtils::mouse_last_pos.x = static_cast<float>(x_pos);
-            CanvasUtils::mouse_last_pos.y = static_cast<float>(y_pos);
+            Application::mouse_last_pos.x = static_cast<float>(x_pos);
+            Application::mouse_last_pos.y = static_cast<float>(y_pos);
 
-            if (CanvasUtils::mouse_last_pos.x < app->swapchain.resources.extent.width) {
-                app->mouse_in_canvas = true;
+            // uses swapchain width (window width) for the save controls
+            if (Application::mouse_last_pos.x < app->swapchain.resources.extent.width) {
                 // check if space bar and mouse left click is pressed
                 if (app->spacebar_pressed && app->left_click_pressed) {
-                    CanvasUtils::panning.x += dx * 1.0f;
-                    CanvasUtils::panning.y += -dy * 1.0f;
+                    Application::panning.x += dx * 1.0f;
+                    Application::panning.y += -dy * 1.0f;
 
                     // add extra space in both ends of width and height
-                    constexpr float EXTRA_SPACE = 50.0f;
+                    static constexpr float EXTRA_SPACE = 50.0f;
                     auto width  = static_cast<float>(app->vk_buffers.extent.width);
                     auto height = static_cast<float>(app->vk_buffers.extent.height);
 
-                    CanvasUtils::panning =
-                        glm::clamp(CanvasUtils::panning,
+                    Application::panning =
+                        glm::clamp(Application::panning,
                                    glm::vec2(-width + EXTRA_SPACE, -height + EXTRA_SPACE),
                                    glm::vec2(width + EXTRA_SPACE, height + EXTRA_SPACE));
                 }
-            } else {
-                app->mouse_in_canvas = false;
             }
         });
 
@@ -188,19 +189,18 @@ void Application::workspace_events() {
             if (!app->ui_manager.show_main_ui)
                 return;
 
-            if (app->mouse_in_canvas) {
-                if (key == GLFW_KEY_LEFT_CONTROL) {
-                    if (action == GLFW_PRESS)
-                        app->ctrl_pressed = true;
-                    if (action == GLFW_RELEASE)
-                        app->ctrl_pressed = false;
-                } else if (key == GLFW_KEY_SPACE) {
-                    if (action == GLFW_PRESS)
-                        app->spacebar_pressed = true;
-                    if (action == GLFW_RELEASE)
-                        app->spacebar_pressed = false;
-                }
+            if (key == GLFW_KEY_LEFT_CONTROL) {
+                if (action == GLFW_PRESS)
+                    app->ctrl_pressed = true;
+                if (action == GLFW_RELEASE)
+                    app->ctrl_pressed = false;
+            } else if (key == GLFW_KEY_SPACE) {
+                if (action == GLFW_PRESS)
+                    app->spacebar_pressed = true;
+                if (action == GLFW_RELEASE)
+                    app->spacebar_pressed = false;
             }
+
             // for text editor
             if (app->ctrl_pressed) {
                 if (key == GLFW_KEY_S) {
@@ -220,8 +220,8 @@ void Application::workspace_events() {
                 return;
 
             if (app->ctrl_pressed) {
-                CanvasUtils::zoom += y * 0.10;
-                CanvasUtils::zoom  = glm::clamp(CanvasUtils::zoom, 0.1f, 10.0f);
+                Application::zoom += y * 0.10;
+                Application::zoom  = glm::clamp(Application::zoom, 0.1f, 10.0f);
             }
         });
 
@@ -491,6 +491,31 @@ void Application::transition_image_layout(const vk::Image&               image,
     cmd_buffer.pipelineBarrier2(dependency_info);
 };
 
+void Application::update_canvas() {
+    const auto canvas = ImGui::FindWindowByName("##canvas-begin");
+
+    if (canvas) {
+        const auto width  = static_cast<uint32_t>(canvas->Size.x);
+        const auto height = static_cast<uint32_t>(canvas->Size.y);
+
+        if (width != this->vk_buffers.extent.width ||
+            height != this->vk_buffers.extent.height) {
+            this->ctx.device.waitIdle();
+
+            this->vk_buffers.canvas_create_image(width, height);
+            this->vk_buffers.canvas_create_image_views();
+
+            // remove the old texture at canvas resize
+            ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
+
+            // run again after texture removal
+            CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
+                *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
+    }
+};
+
 void Application::recreate_swapchain() {
     this->ctx.device.waitIdle();
 
@@ -507,34 +532,6 @@ void Application::recreate_swapchain() {
 void Application::clean_swapchain() {
     this->swapchain.resources.image_views.clear();
     this->swapchain.swapchain = nullptr;
-};
-
-void Application::update_canvas() {
-    // can only update if canvas is displayed
-    if (this->ui_manager.show_main_ui) {
-        const auto canvas = ImGui::FindWindowByName("##canvas-begin");
-
-        if (canvas) {
-            const auto width  = static_cast<uint32_t>(canvas->Size.x);
-            const auto height = static_cast<uint32_t>(canvas->Size.y);
-
-            if (width != this->vk_buffers.extent.width ||
-                height != this->vk_buffers.extent.height) {
-                this->ctx.device.waitIdle();
-
-                this->vk_buffers.canvas_create_image(width, height);
-                this->vk_buffers.canvas_create_image_views();
-
-                // remove the old texture at canvas resize
-                ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
-
-                // run again after texture removal
-                CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
-                    *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
-                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            }
-        }
-    }
 };
 
 void Application::cleanup() {

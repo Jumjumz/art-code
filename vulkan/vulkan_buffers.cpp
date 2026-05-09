@@ -96,8 +96,8 @@ void VulkanBuffers::canvas_create_sampler() {
     this->canvas_sampler = vk::raii::Sampler{this->device, sampler_info, nullptr};
 };
 
-uint32_t VulkanBuffers::find_memory_type(uint32_t                type_filter,
-                                         vk::MemoryPropertyFlags properties) {
+uint32_t VulkanBuffers::find_memory_type(const uint32_t&                type_filter,
+                                         const vk::MemoryPropertyFlags& properties) {
     vk::PhysicalDeviceMemoryProperties mem_properties =
         this->physical_device.getMemoryProperties();
 

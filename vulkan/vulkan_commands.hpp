@@ -9,7 +9,6 @@ class VulkanCommands {
                    const vk::raii::DescriptorSetLayout& canvas_descriptor_set_layout,
                    const std::vector<vk::Image>& images, const int& graphics_family,
                    const int& MAX_FRAMES_IN_FLIGHT);
-
     // imgui and canvas command pool
     vk::raii::CommandPool imgui_command_pool  = nullptr;
     vk::raii::CommandPool canvas_command_pool = nullptr;

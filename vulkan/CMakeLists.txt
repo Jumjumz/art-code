@@ -1,5 +1,6 @@
 add_library(vulkan
   vulkan_buffers.cpp
+  vulkan_canvas.cpp
   vulkan_commands.cpp
   vulkan_context.cpp
   vulkan_graphics.cpp

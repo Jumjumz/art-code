@@ -1,6 +1,7 @@
 #include "vulkan_commands.hpp"
 #include "vk_types.hpp"
 
+// TODO:move the canvas related funcitons to its own class
 VulkanCommands::VulkanCommands(
     const vk::raii::Device& device, const vk::raii::Buffer& canvas_uniform_buffer,
     const vk::raii::DescriptorSetLayout& canvas_descriptor_set_layout,
