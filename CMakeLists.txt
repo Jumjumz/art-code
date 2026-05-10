@@ -19,9 +19,10 @@ find_package(glm REQUIRED)
 add_subdirectory(api)
 add_subdirectory(assets)
 add_subdirectory(core)
+add_subdirectory(imgui)
+add_subdirectory(renderer)
 add_subdirectory(shaders)
 add_subdirectory(solution)
-add_subdirectory(imgui)
 add_subdirectory(ui)
 add_subdirectory(utils)
 add_subdirectory(vulkan)
@@ -38,6 +39,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   api
   core
   imgui
+  renderer
   solution
   ui
   utils

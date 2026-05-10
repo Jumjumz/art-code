@@ -39,10 +39,7 @@ class Application {
 
     VulkanGraphics pipeline{this->ctx.device, this->vk_buffers.image_format};
 
-    VulkanCommands commands{this->ctx.device,
-                            this->vk_buffers.canvas_uniform_buffer,
-                            this->pipeline.descriptor_set_layout,
-                            this->swapchain.resources.images,
+    VulkanCommands commands{this->ctx.device, this->swapchain.resources.images,
                             this->ctx.family_indices.graphics_family,
                             Application::MAX_FRAMES_IN_FLIGHT};
 

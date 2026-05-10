@@ -13,12 +13,13 @@ float     Application::zoom           = 1;
 glm::vec2 Application::panning        = {0.0f, 0.0f};
 glm::vec2 Application::mouse_last_pos = {0.0f, 0.0f};
 
+// TODO:refactor to decouple canvas resources
 Application::Application() {};
 
 void Application::run() {
     // set the workspace events first
     workspace_events();
-    // imgui events will be set after workspace
+    // imgui events will be set after
     imgui_init();
     loop();
     cleanup();
@@ -108,10 +109,6 @@ void Application::loop() {
 };
 
 void Application::canvas_setup() {
-    const auto artboard_size = this->ui_manager.artboard_size;
-    const auto width         = artboard_size.x;
-    const auto height        = artboard_size.y;
-
     // identity matrix
     glm::mat4 view = glm::mat4(1.0f);
 
@@ -131,6 +128,10 @@ void Application::canvas_setup() {
     // translate to the panning position
     view = glm::translate(view,
                           glm::vec3(Application::panning.x, Application::panning.y, 0.0f));
+
+    const auto artboard_size = this->ui_manager.artboard_size;
+    const auto width         = artboard_size.x;
+    const auto height        = artboard_size.y;
 
     ArtboardBuffer a_ubo{
         .proj = glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
