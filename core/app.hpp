@@ -1,10 +1,9 @@
 #pragma once
 
+#include "canvas_renderer.hpp"
 #include "ui_manager.hpp"
-#include "vulkan_buffers.hpp"
 #include "vulkan_commands.hpp"
 #include "vulkan_context.hpp"
-#include "vulkan_graphics.hpp"
 #include "vulkan_swapchain.hpp"
 #include "window.hpp"
 
@@ -35,10 +34,6 @@ class Application {
                               this->ctx.family_indices.present_family,
                               this->ctx.config.image_count};
 
-    VulkanBuffers vk_buffers{this->ctx.physical_device, this->ctx.device};
-
-    VulkanGraphics pipeline{this->ctx.device, this->vk_buffers.image_format};
-
     VulkanCommands commands{this->ctx.device, this->swapchain.resources.images,
                             this->ctx.family_indices.graphics_family,
                             Application::MAX_FRAMES_IN_FLIGHT};
@@ -48,6 +43,10 @@ class Application {
     vk::Result draw_result;
 
     uint32_t image_index, current_frame = 0;
+
+    CanvasRenderer canvas{this->ctx.physical_device, this->ctx.device,
+                          this->ctx.family_indices.graphics_family,
+                          Application::MAX_FRAMES_IN_FLIGHT};
 
     bool frame_buffer_resize = false;
 

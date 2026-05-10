@@ -16,6 +16,14 @@ VulkanCanvas::VulkanCanvas(const vk::raii::Device& device,
     canvas_create_descriptor_set();
 };
 
+void VulkanCanvas::canvas_create_command_pool() {
+    vk::CommandPoolCreateInfo pool_info{};
+    pool_info.flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+    pool_info.queueFamilyIndex = static_cast<uint32_t>(this->graphics_family);
+
+    this->canvas_command_pool = vk::raii::CommandPool{this->device, pool_info, nullptr};
+};
+
 void VulkanCanvas::canvas_create_command_buffer() {
     vk::CommandBufferAllocateInfo alloc_info{};
     alloc_info.level              = vk::CommandBufferLevel::ePrimary;

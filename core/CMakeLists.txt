@@ -8,6 +8,7 @@ target_include_directories(core
 
 target_link_libraries(core
 PRIVATE imgui
+PRIVATE renderer
 PRIVATE ui
 PRIVATE utils
 PRIVATE vulkan

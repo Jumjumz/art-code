@@ -38,7 +38,7 @@ void Application::loop() {
 
             if (this->ui_manager.show_main_ui) {
                 canvas_setup();
-                record_canvas_command();
+                this->canvas.record_canvas_command(this->current_frame);
             }
 
             // records canvas and runs parallel with the main thread
@@ -88,7 +88,8 @@ void Application::loop() {
                 lock, [this]() -> bool { return this->canvas_ready || !this->running; });
             lock.unlock();
 
-            buffers.push_back(*this->commands.canvas_command_buffers[this->current_frame]);
+            buffers.push_back(
+                *this->canvas.canvas_commands.canvas_command_buffers[this->current_frame]);
         } else {
             record_imgui_command();
         }
@@ -113,8 +114,8 @@ void Application::canvas_setup() {
     glm::mat4 view = glm::mat4(1.0f);
 
     // get canvas center
-    const float center_x = this->vk_buffers.extent.width / 2.0f;
-    const float center_y = this->vk_buffers.extent.height / 2.0f;
+    const float center_x = this->canvas.vk_buffers.extent.width / 2.0f;
+    const float center_y = this->canvas.vk_buffers.extent.height / 2.0f;
 
     // translate to center
     view = glm::translate(view, glm::vec3(center_x, center_y, 0.0f));
@@ -134,16 +135,16 @@ void Application::canvas_setup() {
     const auto height        = artboard_size.y;
 
     ArtboardBuffer a_ubo{
-        .proj = glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
-                           (float)this->vk_buffers.extent.height, 0.0f, -1.0f, 0.0f),
-        .view = view,
-        .model =
-            glm::translate(glm::mat4(1.0f),
-                           glm::vec3((this->vk_buffers.extent.width - width) / 2,
-                                     (this->vk_buffers.extent.height - height) / 2, 0.0f)),
+        .proj  = glm::ortho(0.0f, (float)this->canvas.vk_buffers.extent.width,
+                            (float)this->canvas.vk_buffers.extent.height, 0.0f, -1.0f, 0.0f),
+        .view  = view,
+        .model = glm::translate(
+            glm::mat4(1.0f),
+            glm::vec3((this->canvas.vk_buffers.extent.width - width) / 2,
+                      (this->canvas.vk_buffers.extent.height - height) / 2, 0.0f)),
         .reso = {width, height}};
 
-    memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
+    memcpy(this->canvas.vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
 };
 
 void Application::workspace_events() {
@@ -163,15 +164,14 @@ void Application::workspace_events() {
 
             // uses swapchain width (window width) for the save controls
             if (Application::mouse_last_pos.x < app->swapchain.resources.extent.width) {
-                // check if space bar and mouse left click is pressed
                 if (app->spacebar_pressed && app->left_click_pressed) {
                     Application::panning.x += dx * 1.0f;
                     Application::panning.y += -dy * 1.0f;
 
                     // add extra space in both ends of width and height
                     static constexpr float EXTRA_SPACE = 50.0f;
-                    auto width  = static_cast<float>(app->vk_buffers.extent.width);
-                    auto height = static_cast<float>(app->vk_buffers.extent.height);
+                    auto width = static_cast<float>(app->canvas.vk_buffers.extent.width);
+                    auto height = static_cast<float>(app->canvas.vk_buffers.extent.height);
 
                     Application::panning =
                         glm::clamp(Application::panning,
@@ -305,7 +305,7 @@ void Application::reset_buffers() {
     this->ctx.device.resetFences(*this->commands.in_flight_fences[this->current_frame]);
 
     // resets all command buffers
-    this->commands.canvas_command_buffers[this->current_frame].reset();
+    this->canvas.canvas_commands.canvas_command_buffers[this->current_frame].reset();
     this->commands.imgui_command_buffers[this->current_frame].reset();
 };
 
@@ -349,7 +349,7 @@ void Application::submit_buffers(const std::vector<vk::CommandBuffer>& command_b
     this->current_frame = (this->current_frame + 1) % Application::MAX_FRAMES_IN_FLIGHT;
 };
 
-void Application::record_canvas_command() {
+/*void Application::record_canvas_command() {
     auto& cmd = this->commands.canvas_command_buffers[this->current_frame];
 
     // render
@@ -405,7 +405,7 @@ void Application::record_canvas_command() {
         vk::PipelineStageFlagBits2::eBottomOfPipe, vk::ImageAspectFlagBits::eColor);
 
     cmd.end();
-};
+};*/
 
 void Application::record_imgui_command() {
     auto& cmd = this->commands.imgui_command_buffers[this->current_frame];
@@ -499,20 +499,21 @@ void Application::update_canvas() {
         const auto width  = static_cast<uint32_t>(canvas->Size.x);
         const auto height = static_cast<uint32_t>(canvas->Size.y);
 
-        if (width != this->vk_buffers.extent.width ||
-            height != this->vk_buffers.extent.height) {
+        if (width != this->canvas.vk_buffers.extent.width ||
+            height != this->canvas.vk_buffers.extent.height) {
             this->ctx.device.waitIdle();
 
-            this->vk_buffers.canvas_create_image(width, height);
-            this->vk_buffers.canvas_create_image_views();
+            this->canvas.vk_buffers.canvas_create_image(width, height);
+            this->canvas.vk_buffers.canvas_create_image_views();
 
             // remove the old texture at canvas resize
             ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
 
             // run again after texture removal
-            CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
-                *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            CanvasUtils::canvas_texture =
+                ImGui_ImplVulkan_AddTexture(*this->canvas.vk_buffers.canvas_sampler,
+                                            *this->canvas.vk_buffers.image_views,
+                                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
     }
 };
