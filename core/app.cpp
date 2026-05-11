@@ -1,24 +1,12 @@
 #include "app.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
-#include "imgui_internal.h"
-#include "vk_types.hpp"
 
-#include <cstring>
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
-
-// definition
-float     Application::zoom           = 1;
-glm::vec2 Application::panning        = {0.0f, 0.0f};
-glm::vec2 Application::mouse_last_pos = {0.0f, 0.0f};
-
-// TODO:refactor to decouple canvas resources
 Application::Application() {};
 
 void Application::run() {
     // set the workspace events first
-    workspace_events();
+    this->canvas.workspace_events(this->window.app_window);
     // imgui events will be set after
     imgui_init();
     loop();
@@ -37,7 +25,8 @@ void Application::loop() {
                 break;
 
             if (this->ui_manager.show_main_ui) {
-                canvas_setup();
+                this->canvas.canvas_setup(this->ui_manager.artboard_size,
+                                          this->ui_manager.show_main_ui);
                 this->canvas.record_canvas_command(this->current_frame);
             }
 
@@ -55,7 +44,7 @@ void Application::loop() {
 
         // update canvas and texture first
         if (this->ui_manager.show_main_ui)
-            update_canvas();
+            this->canvas.update_canvas(this->ctx.device);
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -109,141 +98,6 @@ void Application::loop() {
     this->canvas_thread.join();
 };
 
-void Application::canvas_setup() {
-    // identity matrix
-    glm::mat4 view = glm::mat4(1.0f);
-
-    // get canvas center
-    const float center_x = this->canvas.vk_buffers.extent.width / 2.0f;
-    const float center_y = this->canvas.vk_buffers.extent.height / 2.0f;
-
-    // translate to center
-    view = glm::translate(view, glm::vec3(center_x, center_y, 0.0f));
-
-    // scale to center
-    view = glm::scale(view, glm::vec3(Application::zoom, Application::zoom, 1.0f));
-
-    // tanslate back
-    view = glm::translate(view, glm::vec3(-center_x, -center_y, 0.0f));
-
-    // translate to the panning position
-    view = glm::translate(view,
-                          glm::vec3(Application::panning.x, Application::panning.y, 0.0f));
-
-    const auto artboard_size = this->ui_manager.artboard_size;
-    const auto width         = artboard_size.x;
-    const auto height        = artboard_size.y;
-
-    ArtboardBuffer a_ubo{
-        .proj  = glm::ortho(0.0f, (float)this->canvas.vk_buffers.extent.width,
-                            (float)this->canvas.vk_buffers.extent.height, 0.0f, -1.0f, 0.0f),
-        .view  = view,
-        .model = glm::translate(
-            glm::mat4(1.0f),
-            glm::vec3((this->canvas.vk_buffers.extent.width - width) / 2,
-                      (this->canvas.vk_buffers.extent.height - height) / 2, 0.0f)),
-        .reso = {width, height}};
-
-    memcpy(this->canvas.vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
-};
-
-void Application::workspace_events() {
-    // calculate mouse movement
-    glfwSetCursorPosCallback(
-        this->window.app_window, [](GLFWwindow* window, double x_pos, double y_pos) -> void {
-            auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-            if (!app->ui_manager.show_main_ui)
-                return;
-
-            auto dx = static_cast<float>(x_pos) - Application::mouse_last_pos.x;
-            auto dy = static_cast<float>(y_pos) - Application::mouse_last_pos.y;
-
-            // update last position
-            Application::mouse_last_pos.x = static_cast<float>(x_pos);
-            Application::mouse_last_pos.y = static_cast<float>(y_pos);
-
-            // uses swapchain width (window width) for the save controls
-            if (Application::mouse_last_pos.x < app->swapchain.resources.extent.width) {
-                if (app->spacebar_pressed && app->left_click_pressed) {
-                    Application::panning.x += dx * 1.0f;
-                    Application::panning.y += -dy * 1.0f;
-
-                    // add extra space in both ends of width and height
-                    static constexpr float EXTRA_SPACE = 50.0f;
-                    auto width = static_cast<float>(app->canvas.vk_buffers.extent.width);
-                    auto height = static_cast<float>(app->canvas.vk_buffers.extent.height);
-
-                    Application::panning =
-                        glm::clamp(Application::panning,
-                                   glm::vec2(-width + EXTRA_SPACE, -height + EXTRA_SPACE),
-                                   glm::vec2(width + EXTRA_SPACE, height + EXTRA_SPACE));
-                }
-            }
-        });
-
-    // detect if a key is pressed down or release
-    glfwSetKeyCallback(
-        this->window.app_window,
-        [](GLFWwindow* window, int key, int scancode, int action, int mods) -> void {
-            auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-
-            if (!app->ui_manager.show_main_ui)
-                return;
-
-            if (key == GLFW_KEY_LEFT_CONTROL) {
-                if (action == GLFW_PRESS)
-                    app->ctrl_pressed = true;
-                if (action == GLFW_RELEASE)
-                    app->ctrl_pressed = false;
-            } else if (key == GLFW_KEY_SPACE) {
-                if (action == GLFW_PRESS)
-                    app->spacebar_pressed = true;
-                if (action == GLFW_RELEASE)
-                    app->spacebar_pressed = false;
-            }
-
-            // for text editor
-            if (app->ctrl_pressed) {
-                if (key == GLFW_KEY_S) {
-                    if (action == GLFW_PRESS) {
-                        TextEditorUtils::file_save = true;
-                    }
-                }
-            }
-        });
-
-    // scroll
-    glfwSetScrollCallback(
-        this->window.app_window, [](GLFWwindow* window, double x, double y) -> void {
-            auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-
-            if (!app->ui_manager.show_main_ui)
-                return;
-
-            if (app->ctrl_pressed) {
-                Application::zoom += y * 0.10;
-                Application::zoom  = glm::clamp(Application::zoom, 0.1f, 10.0f);
-            }
-        });
-
-    // panning
-    glfwSetMouseButtonCallback(
-        this->window.app_window,
-        [](GLFWwindow* window, int button, int action, int mods) -> void {
-            auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-
-            if (!app->ui_manager.show_main_ui)
-                return;
-
-            if (button == GLFW_MOUSE_BUTTON_LEFT) {
-                if (action == GLFW_PRESS)
-                    app->left_click_pressed = true;
-                if (action == GLFW_RELEASE)
-                    app->left_click_pressed = false;
-            }
-        });
-};
-
 void Application::imgui_init() {
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForVulkan(this->window.app_window, true);
@@ -271,13 +125,6 @@ void Application::imgui_init() {
     init_info.ImageCount     = this->ctx.config.image_count;
 
     ImGui_ImplVulkan_Init(&init_info);
-
-    glfwSetWindowUserPointer(this->window.app_window, this);
-    glfwSetFramebufferSizeCallback(
-        this->window.app_window, [](GLFWwindow* window, int width, int height) -> void {
-            auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-            app->frame_buffer_resize = true;
-        });
 };
 
 void Application::reset_buffers() {
@@ -348,64 +195,6 @@ void Application::submit_buffers(const std::vector<vk::CommandBuffer>& command_b
 
     this->current_frame = (this->current_frame + 1) % Application::MAX_FRAMES_IN_FLIGHT;
 };
-
-/*void Application::record_canvas_command() {
-    auto& cmd = this->commands.canvas_command_buffers[this->current_frame];
-
-    // render
-    cmd.begin({});
-
-    transition_image_layout(this->vk_buffers.images, cmd, vk::ImageLayout::eUndefined,
-                            vk::ImageLayout::eColorAttachmentOptimal, {},
-                            vk::AccessFlagBits2::eColorAttachmentWrite,
-                            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-                            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-                            vk::ImageAspectFlagBits::eColor);
-
-    // prepare to render canvas
-    vk::RenderingAttachmentInfo canvas_attachement_info{};
-    canvas_attachement_info.imageView   = this->vk_buffers.image_views;
-    canvas_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-    canvas_attachement_info.loadOp      = vk::AttachmentLoadOp::eClear;
-    canvas_attachement_info.storeOp     = vk::AttachmentStoreOp::eStore;
-    canvas_attachement_info.clearValue  = this->clear_color;
-
-    vk::RenderingInfo canvas_rendering_info{};
-    canvas_rendering_info.renderArea.offset = this->offset;
-    canvas_rendering_info.renderArea.extent =
-        vk::Extent2D{this->vk_buffers.extent.width, this->vk_buffers.extent.height};
-    canvas_rendering_info.layerCount           = 1;
-    canvas_rendering_info.colorAttachmentCount = 1;
-    canvas_rendering_info.pColorAttachments    = &canvas_attachement_info;
-
-    // render canvas
-    cmd.beginRendering(canvas_rendering_info);
-
-    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->pipeline.graphics_pipeline);
-
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline.layout, 0,
-                           *this->commands.canvas_descriptor_set[0], nullptr);
-
-    cmd.setViewport(
-        0, vk::Viewport{0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),
-                        static_cast<float>(this->vk_buffers.extent.height), 0.0f, 1.0f});
-
-    cmd.setScissor(
-        0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
-                                                       this->vk_buffers.extent.height}});
-
-    cmd.draw(4, 1, 0, 0);
-
-    cmd.endRendering();
-
-    transition_image_layout(
-        this->vk_buffers.images, cmd, vk::ImageLayout::eColorAttachmentOptimal,
-        vk::ImageLayout::eShaderReadOnlyOptimal, vk::AccessFlagBits2::eColorAttachmentWrite,
-        {}, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-        vk::PipelineStageFlagBits2::eBottomOfPipe, vk::ImageAspectFlagBits::eColor);
-
-    cmd.end();
-};*/
 
 void Application::record_imgui_command() {
     auto& cmd = this->commands.imgui_command_buffers[this->current_frame];
@@ -490,32 +279,6 @@ void Application::transition_image_layout(const vk::Image&               image,
     dependency_info.pImageMemoryBarriers    = &barrier;
 
     cmd_buffer.pipelineBarrier2(dependency_info);
-};
-
-void Application::update_canvas() {
-    const auto canvas = ImGui::FindWindowByName("##canvas-begin");
-
-    if (canvas) {
-        const auto width  = static_cast<uint32_t>(canvas->Size.x);
-        const auto height = static_cast<uint32_t>(canvas->Size.y);
-
-        if (width != this->canvas.vk_buffers.extent.width ||
-            height != this->canvas.vk_buffers.extent.height) {
-            this->ctx.device.waitIdle();
-
-            this->canvas.vk_buffers.canvas_create_image(width, height);
-            this->canvas.vk_buffers.canvas_create_image_views();
-
-            // remove the old texture at canvas resize
-            ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
-
-            // run again after texture removal
-            CanvasUtils::canvas_texture =
-                ImGui_ImplVulkan_AddTexture(*this->canvas.vk_buffers.canvas_sampler,
-                                            *this->canvas.vk_buffers.image_views,
-                                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        }
-    }
 };
 
 void Application::recreate_swapchain() {

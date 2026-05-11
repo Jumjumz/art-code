@@ -1,28 +1,48 @@
 #pragma once
 
+#include "imgui_impl_glfw.h"
 #include "vulkan_buffers.hpp"
 #include "vulkan_canvas.hpp"
 #include "vulkan_graphics.hpp"
+
+#include <glm/glm.hpp>
 
 class CanvasRenderer {
   public:
     CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
                    const vk::raii::Device& device, const int& graphics_family,
-                   const int& MAX_FRAMES_IN_FLIGHT);
+                   const int& MAX_FRAMES_IN_FLIGHT, const uint32_t* app_width);
 
     VulkanBuffers  vk_buffers;
     VulkanGraphics pipeline;
     VulkanCanvas   canvas_commands;
 
+    void workspace_events(GLFWwindow* app_window);
+
+    void canvas_setup(const glm::vec3& artboard_size, bool show_main_ui);
+
     void record_canvas_command(const uint32_t& current_frame);
 
-    // void update_canvas();
+    void update_canvas(const vk::raii::Device& device);
 
   private:
     const vk::raii::PhysicalDevice& physical_device;
     const vk::raii::Device&         device;
 
-    const int &graphics_family, MAX_FRAMES_IN_FLIGHT;
+    const int &graphics_family, &MAX_FRAMES_IN_FLIGHT;
+
+    const uint32_t* app_width;
+
+    // mouse pointers controls
+    static float     zoom;
+    static glm::vec2 panning;
+    static glm::vec2 mouse_last_pos;
+
+    bool show_main_ui = false;
+    // key inputs
+    bool ctrl_pressed       = false;
+    bool spacebar_pressed   = false;
+    bool left_click_pressed = false;
 
     const vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
     const vk::Offset2D        offset      = {0, 0};

@@ -44,16 +44,17 @@ class Application {
 
     uint32_t image_index, current_frame = 0;
 
-    CanvasRenderer canvas{this->ctx.physical_device, this->ctx.device,
-                          this->ctx.family_indices.graphics_family,
-                          Application::MAX_FRAMES_IN_FLIGHT};
-
     bool frame_buffer_resize = false;
 
     const vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
     const vk::Offset2D        offset      = {0, 0};
 
     UIManager ui_manager;
+
+    CanvasRenderer canvas{this->ctx.physical_device, this->ctx.device,
+                          this->ctx.family_indices.graphics_family,
+                          Application::MAX_FRAMES_IN_FLIGHT,
+                          &this->swapchain.resources.extent.width};
 
     // multi  threading
     std::mutex              canvas_mutex;
@@ -63,33 +64,15 @@ class Application {
 
     std::thread canvas_thread;
 
-    // mouse pointers controls
-    static float     zoom;
-    static glm::vec2 panning;
-    static glm::vec2 mouse_last_pos;
-
-    // key inputs
-    bool ctrl_pressed       = false;
-    bool spacebar_pressed   = false;
-    bool left_click_pressed = false;
-
     void loop();
 
-    void workspace_events();
-
     void imgui_init();
-
-    void canvas_setup();
 
     void reset_buffers();
 
     void submit_buffers(const std::vector<vk::CommandBuffer>& command_buffers);
 
-    void update_canvas();
-
     void recreate_swapchain();
-
-    void record_canvas_command();
 
     void record_imgui_command();
 

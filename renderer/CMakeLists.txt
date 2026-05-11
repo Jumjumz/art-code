@@ -7,5 +7,7 @@ target_include_directories(renderer
 )
 
 target_link_libraries(renderer
+  PRIVATE imgui
   PRIVATE vulkan
+  PRIVATE utils
 )
