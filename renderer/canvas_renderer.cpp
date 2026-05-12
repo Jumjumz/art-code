@@ -20,11 +20,19 @@ CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
       graphics_family(graphics_family),
       MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT),
       app_width(app_width),
-      vk_buffers(physical_device, device),
-      pipeline(device, this->vk_buffers.image_format),
-      canvas_commands(device, this->vk_buffers.canvas_uniform_buffer,
-                      this->pipeline.descriptor_set_layout, graphics_family,
-                      MAX_FRAMES_IN_FLIGHT) {};
+      vk_buffers(physical_device, device) {};
+
+void CanvasRenderer::set_canvas_pipeline() {
+    this->pipeline =
+        std::make_unique<VulkanGraphics>(this->device, this->vk_buffers.image_format);
+};
+
+void CanvasRenderer::set_canvas_commands() {
+    this->canvas_commands =
+        std::make_unique<VulkanCanvas>(this->device, this->vk_buffers.canvas_uniform_buffer,
+                                       this->pipeline->descriptor_set_layout,
+                                       this->graphics_family, this->MAX_FRAMES_IN_FLIGHT);
+};
 
 void CanvasRenderer::workspace_events(GLFWwindow* app_window) {
     // set window user pointer at the beginning
@@ -35,6 +43,7 @@ void CanvasRenderer::workspace_events(GLFWwindow* app_window) {
         app_window, [](GLFWwindow* window, double x_pos, double y_pos) -> void {
             auto canvas =
                 reinterpret_cast<CanvasRenderer*>(glfwGetWindowUserPointer(window));
+
             if (!canvas->show_main_ui)
                 return;
 
@@ -166,9 +175,8 @@ void CanvasRenderer::canvas_setup(const glm::vec3& artboard_size, bool show_main
     memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
 };
 
-// TODO:add function that init pipeliene and commands for conditional rendering of shaders
 void CanvasRenderer::record_canvas_command(const uint32_t& current_frame) {
-    auto& cmd = this->canvas_commands.canvas_command_buffers[current_frame];
+    auto& cmd = this->canvas_commands->canvas_command_buffers[current_frame];
 
     // render
     cmd.begin({});
@@ -199,10 +207,10 @@ void CanvasRenderer::record_canvas_command(const uint32_t& current_frame) {
     // render canvas
     cmd.beginRendering(canvas_rendering_info);
 
-    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->pipeline.graphics_pipeline);
+    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->pipeline->graphics_pipeline);
 
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline.layout, 0,
-                           *this->canvas_commands.canvas_descriptor_set[0], nullptr);
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->layout, 0,
+                           *this->canvas_commands->canvas_descriptor_set[0], nullptr);
 
     cmd.setViewport(
         0, vk::Viewport{0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),

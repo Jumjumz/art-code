@@ -6,6 +6,7 @@
 #include "vulkan_graphics.hpp"
 
 #include <glm/glm.hpp>
+#include <memory>
 
 class CanvasRenderer {
   public:
@@ -13,9 +14,16 @@ class CanvasRenderer {
                    const vk::raii::Device& device, const int& graphics_family,
                    const int& MAX_FRAMES_IN_FLIGHT, const uint32_t* app_width);
 
-    VulkanBuffers  vk_buffers;
-    VulkanGraphics pipeline;
-    VulkanCanvas   canvas_commands;
+    VulkanBuffers vk_buffers;
+
+    std::unique_ptr<VulkanGraphics> pipeline;
+    std::unique_ptr<VulkanCanvas>   canvas_commands;
+
+    bool vulkan_init = true;
+
+    void set_canvas_pipeline();
+
+    void set_canvas_commands();
 
     void workspace_events(GLFWwindow* app_window);
 

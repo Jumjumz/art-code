@@ -7,7 +7,6 @@ Application::Application() {};
 void Application::run() {
     // set the workspace events first
     this->canvas.workspace_events(this->window.app_window);
-    // imgui events will be set after
     imgui_init();
     loop();
     cleanup();
@@ -24,7 +23,8 @@ void Application::loop() {
             if (!this->running)
                 break;
 
-            if (this->ui_manager.show_main_ui) {
+            // ensure canvas functions are only executed if canvas commands is not nullptr
+            if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
                 this->canvas.canvas_setup(this->ui_manager.artboard_size,
                                           this->ui_manager.show_main_ui);
                 this->canvas.record_canvas_command(this->current_frame);
@@ -42,8 +42,16 @@ void Application::loop() {
     while (!glfwWindowShouldClose(this->window.app_window)) {
         glfwWaitEvents();
 
+        // init canvas vulkan resources once
+        if (this->ui_manager.show_main_ui && this->canvas.vulkan_init) {
+            this->canvas.set_canvas_pipeline();
+            this->canvas.set_canvas_commands();
+            // set to false to not run this if block after init
+            this->canvas.vulkan_init = false;
+        }
+
         // update canvas and texture first
-        if (this->ui_manager.show_main_ui)
+        if (this->ui_manager.show_main_ui && this->canvas.canvas_commands)
             this->canvas.update_canvas(this->ctx.device);
 
         ImGui_ImplVulkan_NewFrame();
@@ -60,7 +68,7 @@ void Application::loop() {
         // pre allocate
         buffers.reserve(2);
 
-        if (this->ui_manager.show_main_ui) {
+        if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
             // signal canvas thread to start recording
             {
                 std::lock_guard<std::mutex> lock{this->canvas_mutex};
@@ -78,11 +86,10 @@ void Application::loop() {
             lock.unlock();
 
             buffers.push_back(
-                *this->canvas.canvas_commands.canvas_command_buffers[this->current_frame]);
+                this->canvas.canvas_commands->canvas_command_buffers[this->current_frame]);
         } else {
             record_imgui_command();
         }
-
         buffers.push_back(*this->commands.imgui_command_buffers[this->current_frame]);
 
         submit_buffers(buffers);
@@ -152,7 +159,9 @@ void Application::reset_buffers() {
     this->ctx.device.resetFences(*this->commands.in_flight_fences[this->current_frame]);
 
     // resets all command buffers
-    this->canvas.canvas_commands.canvas_command_buffers[this->current_frame].reset();
+    if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
+        this->canvas.canvas_commands->canvas_command_buffers[this->current_frame].reset();
+    }
     this->commands.imgui_command_buffers[this->current_frame].reset();
 };
 

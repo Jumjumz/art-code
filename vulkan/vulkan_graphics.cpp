@@ -2,7 +2,6 @@
 #include "nav_items.hpp"
 #include <fstream>
 
-// TODO:this class should not be init at app startup.. instead only when show main ui is true
 VulkanGraphics::VulkanGraphics(const vk::raii::Device& device,
                                const vk::Format&       image_format)
     : device(device),
@@ -51,11 +50,11 @@ void VulkanGraphics::create_descriptor_set_layout() {
 
 void VulkanGraphics::create_graphics_pipeline() {
     // get shader project dir
-    // const auto shader_exec =
-    //     ProjectPath::get_project_path() / "shaders" / "artcode.frag.spv";
+    const auto shader_exec =
+        ProjectPath::get_project_path() / "shaders" / "artcode.frag.spv";
     this->vert_shader_module = create_shader_module(read_file("shaders/core.vert.spv"));
-    this->frag_shader_module = create_shader_module(read_file("shaders/core.frag.spv"));
-    // this->frag_shader_module = create_shader_module(read_file(shader_exec));
+    // uses project shader from api user
+    this->frag_shader_module = create_shader_module(read_file(shader_exec));
 
     vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
     vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;
