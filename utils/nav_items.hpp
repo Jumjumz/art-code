@@ -40,6 +40,8 @@ struct ProjectPath {
         return ProjectPath::solution_file;
     }
 
+    static inline bool fresh_project = false;
+
   private:
     static inline std::filesystem::path project_path;
     static inline std::filesystem::path solution_file;

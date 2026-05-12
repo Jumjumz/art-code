@@ -1,6 +1,7 @@
 #include "app.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
+#include "nav_items.hpp"
 
 Application::Application() {};
 
@@ -44,6 +45,13 @@ void Application::loop() {
 
         // init canvas vulkan resources once
         if (this->ui_manager.show_main_ui && this->canvas.vulkan_init) {
+            // compile the artcode shader first to generate a .spv file
+            if (ProjectPath::fresh_project) {
+                this->canvas.compile_shader();
+                ProjectPath::fresh_project = false;
+            }
+
+            // init pipeline and commands
             this->canvas.set_canvas_pipeline();
             this->canvas.set_canvas_commands();
             // set to false to not run this if block after init

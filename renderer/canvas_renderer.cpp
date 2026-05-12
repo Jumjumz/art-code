@@ -1,9 +1,12 @@
 #include "canvas_renderer.hpp"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
+#include "json.hpp"
+#include "nav_items.hpp"
 #include "vk_types.hpp"
 
 #include <GLFW/glfw3.h>
+#include <fstream>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
@@ -21,6 +24,47 @@ CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
       MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT),
       app_width(app_width),
       vk_buffers(physical_device, device) {};
+
+// TODO:improve this, result should go somewhere
+void CanvasRenderer::compile_shader() {
+    nlohmann::json js;
+    {
+        const auto    shader_file = ProjectPath::get_solution_file();
+        std::ifstream read(shader_file);
+        js = nlohmann::json::parse(read);
+    }
+
+    std::string cmd;
+    {
+        const auto project_dir = ProjectPath::get_project_path();
+        const auto shaders     = js["shaders"].get<std::filesystem::path>();
+        const auto shader_dir  = shaders.parent_path();
+        const auto shader_out  = shader_dir / (shaders.filename().string() + ".spv");
+
+        // cd to shader dir first
+        cmd += "cd " + project_dir.string() + " && ";
+        // compile
+        cmd += "glslangValidator -V ";
+        cmd += shaders.string() + " -o "; // shader in cmd
+        cmd += shader_out.string();       // shader out cmd
+        cmd += " 2>&1";
+    }
+
+    std::string result;
+    FILE*       pipe = popen(cmd.c_str(), "r");
+    if (!pipe) {
+        result = "Failed to run the command. Error occured somewhere";
+        return;
+    }
+
+    // temporary buffer to read chunks of result
+    char buffer[128];
+
+    // append buffer to result
+    while (fgets(buffer, sizeof(buffer), pipe)) {
+        result += buffer;
+    }
+};
 
 void CanvasRenderer::set_canvas_pipeline() {
     this->pipeline =
