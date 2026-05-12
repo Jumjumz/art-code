@@ -16,17 +16,17 @@ class VulkanGraphics {
 
     vk::raii::DescriptorSetLayout descriptor_set_layout = nullptr;
 
+    void create_graphics_pipeline();
+
   private:
     const vk::raii::Device& device;
 
     const vk::Format& image_format;
 
-    void create_descriptor_set_layout();
-
-    void create_graphics_pipeline();
-
-    static std::vector<char> read_file(const std::string& file_name);
+    std::vector<char> read_file(const std::string& file_name);
 
     [[nodiscard]]
     vk::raii::ShaderModule create_shader_module(const std::vector<char>& code) const;
+
+    void create_descriptor_set_layout();
 };

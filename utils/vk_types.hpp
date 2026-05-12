@@ -13,12 +13,17 @@ struct ArtboardBuffer {
     glm::vec2 _padding;
 };
 
-// used in application and canvas class
+// used in canvas renderer and canvas class
 struct CanvasUtils {
     static inline VkDescriptorSet canvas_texture = VK_NULL_HANDLE;
 };
 
-// used in applicaiton and text editor wrapper class
+// used in canvas renderer and text editor wrapper class
 struct TextEditorUtils {
     static inline bool file_save = false;
+};
+
+// used in build panel and canvas renderer class
+struct ShadersCompiled {
+    static inline bool compiled = false;
 };

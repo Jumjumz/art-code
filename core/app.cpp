@@ -51,8 +51,10 @@ void Application::loop() {
         }
 
         // update canvas and texture first
-        if (this->ui_manager.show_main_ui && this->canvas.canvas_commands)
+        if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
+            this->canvas.reload_pipeline();
             this->canvas.update_canvas(this->ctx.device);
+        }
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();

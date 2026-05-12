@@ -25,6 +25,8 @@ class CanvasRenderer {
 
     void set_canvas_commands();
 
+    void reload_pipeline();
+
     void workspace_events(GLFWwindow* app_window);
 
     void canvas_setup(const glm::vec3& artboard_size, bool show_main_ui);

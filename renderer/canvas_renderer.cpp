@@ -34,6 +34,19 @@ void CanvasRenderer::set_canvas_commands() {
                                        this->graphics_family, this->MAX_FRAMES_IN_FLIGHT);
 };
 
+void CanvasRenderer::reload_pipeline() {
+    if (ShadersCompiled::compiled) {
+        // reset pipeline
+        this->device.waitIdle();
+        this->pipeline->graphics_pipeline.clear();
+
+        // recreate pipeline
+        this->pipeline->create_graphics_pipeline();
+        // reset to false
+        ShadersCompiled::compiled = false;
+    }
+};
+
 void CanvasRenderer::workspace_events(GLFWwindow* app_window) {
     // set window user pointer at the beginning
     glfwSetWindowUserPointer(app_window, this);

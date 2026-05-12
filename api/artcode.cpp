@@ -8,7 +8,7 @@ DrawCircle::Circle() {
     // initialize at object creation
     this->name     = "circle";
     this->radius   = 0.5f;
-    this->position = Vec2{200, 200};
+    this->position = Vec2{200, -200};
     this->color    = Vec3{0.0f, 0.0f, 0.0f};
     this->stroke   = 1.0f;
     this->scale    = 1.0f;
@@ -17,7 +17,8 @@ DrawCircle::Circle() {
 string DrawCircle::to_glsl() const {
     string glsl_code = "float " + this->name + "()" + "{";
     glsl_code += "return length(artboard_pos - vec2(" + ToString(this->position.x) + "," +
-                 ToString(this->position.y) + ")" + ") - " + ToString(this->radius) + ";";
+                 ToString(this->position.y) + ")" + ") - " + // vulkan is y inverse
+                 ToString(this->radius) + ";";
     glsl_code += "}";
 
     return glsl_code;
@@ -36,9 +37,13 @@ void DrawCircle::write_shader(const string& glsl_code) {
         }
     }
 
+    // TODO:check for the whole code.. replace code if there are changes
     if (std::find(lines.begin(), lines.end(), glsl_code) == lines.end()) {
-        if (glsl_code.find(this->name) != string::npos) {
+        // FIXME:reimplement logic, this is wrong
+        if (glsl_code.find(this->name) == string::npos) {
             lines.insert(lines.begin() + 3, glsl_code);
+        } else {
+            lines.at(3) = glsl_code;
         }
     }
 

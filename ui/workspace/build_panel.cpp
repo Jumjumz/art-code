@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "json.hpp"
 #include "nav_items.hpp"
+#include "vk_types.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -154,23 +155,28 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) const {
                 cmd += "-Wl,-rpath," + api_dir.string() + " ";
                 cmd += "-o " + build + " 2>&1";
             }
-            // compile shaders
+            break;
+        };
+        case BuildPanel::Flags::R: {
+            cmd  = build + " 2>&1";
+            cmd += " && ";
+            // executing runtime compile shaders
             {
                 const auto shaders    = shader_files();
                 const auto shader_dir = shaders.parent_path();
                 const auto shader_out =
                     shader_dir / (shaders.filename().string() + ".spv");
 
-                cmd += " && ";
+                // cd to shader dir first
+                cmd += "cd " + project_dir.string() + " && ";
+                // compile
                 cmd += "glslangValidator -V ";
                 cmd += shaders.string() + " -o "; // shader in cmd
-                cmd += shader_out;                // shader out cmd
+                cmd += shader_out.string();       // shader out cmd
+                cmd += " 2>&1";
+
+                ShadersCompiled::compiled = true;
             }
-            break;
-        };
-        case BuildPanel::Flags::R: {
-            // TODO:compile shader should be here.. have a way to compile it first before running the run
-            cmd = build + " 2>&1";
             break;
         };
         }
