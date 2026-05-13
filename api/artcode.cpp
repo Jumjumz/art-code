@@ -1,12 +1,13 @@
 #include "artcode.hpp"
-#include <algorithm>
 #include <fstream>
 
 using DrawCircle = Art::Circle;
 // Circle
 DrawCircle::Circle() {
     // initialize at object creation
-    this->name     = "circle";
+    // TODO:init count should be tracked, if instance is deleted so is the code generated
+    Circle::init_count++;
+    this->name     = "circle_" + ToString(Circle::init_count);
     this->radius   = 0.5f;
     this->position = Vec2{200, 200};
     this->color    = Vec3{0.0f, 0.0f, 0.0f};
@@ -35,16 +36,17 @@ void DrawCircle::write_shader(const string& glsl_code) {
         while (std::getline(read, line)) {
             lines.push_back(line);
         }
-    }
+    };
 
-    // TODO:check for the whole code.. replace code if there are changes
-    if (std::find(lines.begin(), lines.end(), glsl_code) == lines.end()) {
-        // FIXME:reimplement logic, this is wrong
-        if (glsl_code.find(this->name) == string::npos) {
-            lines.insert(lines.begin() + 3, glsl_code);
-        } else {
-            lines.at(3) = glsl_code;
-        }
+    // TODO:should have a check if function name (this->name) has been updated
+    int line_idx = Circle::SHADER_DECLARATIONS_IDX + Circle::init_count;
+    // check if glsl code is inserted or not
+    if (lines[line_idx].find(this->name) == glsl_code.find(this->name)) {
+        // replace if updates code is updated
+        lines.at(static_cast<size_t>(line_idx)) = glsl_code;
+    } else {
+        // insert at fresh creation
+        lines.insert(lines.begin() + line_idx, glsl_code);
     }
 
     // write to file

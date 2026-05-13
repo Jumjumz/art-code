@@ -168,12 +168,7 @@ void Build::write_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 
     write << R"(#version 450
-layout(binding = 0) uniform ArtboardBuffer {
-  mat4 proj;
-  mat4 view;
-  mat4 model;
-  vec2 reso;
-} ubo;
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;} ubo;
 layout(location = 0) in vec2 artboard_pos;
 layout(location = 0) out vec4 frag_color;
 void main() {

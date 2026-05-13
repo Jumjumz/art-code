@@ -51,7 +51,11 @@ namespace Art {
             float  scale;
 
           protected:
-            fs::path shader_file() const {
+            // shader lines of init, idx that contains version and layout keywords 0 -> 3
+            static constexpr int SHADER_DECLARATIONS_IDX = 3;
+            // num of times derived class is initialize
+            static inline int init_count = 0;
+            fs::path          shader_file() const {
                 return fs::canonical("/proc/self/exe").parent_path().parent_path() /
                        "shaders" / "artcode.frag";
             };
