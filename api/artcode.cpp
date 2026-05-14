@@ -38,15 +38,14 @@ void DrawCircle::write_shader(const string& glsl_code) {
         }
     };
 
-    // TODO:should have a check if function name (this->name) has been updated
+    // TODO: add a remove line if sruct instance is deleted/doenst exist
     int line_idx = Circle::SHADER_DECLARATIONS_IDX + Circle::init_count;
-    // check if glsl code is inserted or not
-    if (lines[line_idx].find(this->name) == glsl_code.find(this->name)) {
-        // replace if updates code is updated
-        lines.at(static_cast<size_t>(line_idx)) = glsl_code;
-    } else {
+    if (lines[line_idx].find("void main") != string::npos) {
         // insert at fresh creation
         lines.insert(lines.begin() + line_idx, glsl_code);
+    } else {
+        // replace entire code
+        lines.at(line_idx) = glsl_code;
     }
 
     // write to file
