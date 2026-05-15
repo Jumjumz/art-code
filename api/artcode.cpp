@@ -1,4 +1,5 @@
 #include "artcode.hpp"
+#include <cassert>
 #include <fstream>
 
 using DrawCircle = Art::Circle;
@@ -33,6 +34,8 @@ void DrawCircle::write_shader(const string& glsl_code) {
     {
         std::ifstream read(shader_file());
         string        line;
+        if (!read.is_open())
+            assert("Artcode shader is missing or deleted!");
         while (std::getline(read, line)) {
             lines.push_back(line);
         }

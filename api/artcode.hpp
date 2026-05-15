@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 // Forward declarations
@@ -35,9 +34,11 @@ typedef glm::vec3 Color;
 template <typename to_string> string ToString(const to_string& to_str) {
     return std::to_string(to_str);
 };
-
 // filesystem
 namespace fs = std::filesystem;
+
+inline const fs::path PROJECT_DIR =
+    fs::canonical("/proc/self/exe").parent_path().parent_path();
 
 namespace Art {
     namespace detail {
@@ -55,12 +56,10 @@ namespace Art {
             // shader lines of init, idx that contains version and layout keywords 0 -> 3
             static constexpr int SHADER_DECLARATIONS_IDX = 3;
             // num of times derived class is initialize
-            static inline std::unordered_map<string, int> init_lookup;
-
             static inline int init_count = 0;
-            fs::path          shader_file() const {
-                return fs::canonical("/proc/self/exe").parent_path().parent_path() /
-                       "shaders" / "artcode.frag";
+
+            fs::path shader_file() const {
+                return PROJECT_DIR / "shaders" / "artcode.frag";
             };
             virtual string to_glsl() const                       = 0;
             virtual void   write_shader(const string& glsl_code) = 0;
