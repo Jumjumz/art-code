@@ -1,8 +1,10 @@
 #include "artcode.hpp"
+#include "json.hpp"
 #include <cassert>
 #include <fstream>
 
 using DrawCircle = Art::Circle;
+
 // Circle
 DrawCircle::Circle() {
     // initialize at object creation
@@ -40,9 +42,16 @@ void DrawCircle::write_shader(const string& glsl_code) {
             lines.push_back(line);
         }
     };
+    int line_idx = Circle::SHADER_DECLARATIONS_IDX + Circle::init_count;
+    // only write to shader if there is actual changes
+    if (lines[line_idx] == glsl_code)
+        return;
+
+    Circle::init_lookup[Circle::init_count] = this->name;
+    // track the created instance
+    track_instances();
 
     // TODO: add a remove line if sruct instance is deleted/doenst exist
-    int line_idx = Circle::SHADER_DECLARATIONS_IDX + Circle::init_count;
     if (lines[line_idx].find("void main") != string::npos) {
         // insert at fresh creation
         lines.insert(lines.begin() + line_idx, glsl_code);
@@ -59,5 +68,32 @@ void DrawCircle::write_shader(const string& glsl_code) {
         }
     }
 }
+
+void DrawCircle::track_instances() {
+    const string   key = "instances";
+    nlohmann::json js;
+    fs::path       sln_file;
+    {
+        // search project dir for solution extension
+        const auto itr = std::find_if(
+            fs::directory_iterator(PROJECT_DIR), fs::directory_iterator{},
+            [this](const auto& file) -> bool { return file.path().extension() == ".rcd"; });
+
+        if (itr == fs::directory_iterator()) {
+            assert("Solution file is missing or deleted!");
+        } else {
+            sln_file = PROJECT_DIR / itr->path().filename();
+            std::ifstream read(sln_file);
+            js = nlohmann::json::parse(read);
+        }
+    }
+    // write into file
+    {
+        // replace the entire unorderer map entirely regardless of func name or num of instance
+        js[key] = Circle::init_lookup;
+        std::ofstream write(sln_file);
+        write << js.dump(4);
+    }
+};
 
 void DrawCircle::draw() { write_shader(to_glsl()); };

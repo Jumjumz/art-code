@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // Forward declarations
@@ -13,6 +14,8 @@ struct PenTool;
 struct Triangle;
 struct Square;
 struct Circle;
+
+struct InstanceTracking;
 
 // strings
 typedef std::string string;
@@ -55,15 +58,19 @@ namespace Art {
           protected:
             // shader lines of init, idx that contains version and layout keywords 0 -> 3
             static constexpr int SHADER_DECLARATIONS_IDX = 3;
+
+            static inline std::unordered_map<int, string> init_lookup;
             // num of times derived class is initialize
             static inline int init_count = 0;
 
             fs::path shader_file() const {
                 return PROJECT_DIR / "shaders" / "artcode.frag";
             };
-            virtual string to_glsl() const                       = 0;
-            virtual void   write_shader(const string& glsl_code) = 0;
-            virtual void   draw()                                = 0;
+            virtual string to_glsl() const                              = 0;
+            virtual void   write_shader(const string& glsl_code)        = 0;
+            virtual std::unordered_map<int, string> created_instances() = 0;
+            virtual void                            track_instances()   = 0;
+            virtual void                            draw()              = 0;
         };
     } // namespace detail
 
@@ -78,6 +85,10 @@ namespace Art {
         string to_glsl() const override;
 
         void write_shader(const string& glsl_code) override;
+
+        std::unordered_map<int, string> created_instances() override;
+
+        void track_instances() override;
     };
     // TODO:add others
 
