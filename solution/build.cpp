@@ -117,7 +117,8 @@ void Build::write_solution_file(const fs::path& solution_file) const {
                          },
                          {"sources", {"main.cpp", "components/comp.cpp"}},
                          {"includes", nlohmann::json::array()},
-                         {"shaders", "shaders/artcode.frag"}};
+                         {"shaders", "shaders/artcode.frag"},
+                         {"instances", nlohmann::json::array()}};
 
     // write
     std::ofstream write(solution_file);

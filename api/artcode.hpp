@@ -32,7 +32,10 @@ typedef glm::vec2 Vec2;
 typedef glm::vec3 Vec3;
 typedef glm::vec4 Vec4;
 
-typedef glm::vec3 Color;
+typedef Vec3 Color;
+
+// others
+typedef std::unordered_map<int, string> UMap;
 
 template <typename to_string> string ToString(const to_string& to_str) {
     return std::to_string(to_str);
@@ -43,6 +46,7 @@ namespace fs = std::filesystem;
 inline const fs::path PROJECT_DIR =
     fs::canonical("/proc/self/exe").parent_path().parent_path();
 
+// TODO:redo api design
 namespace Art {
     namespace detail {
         struct IPen {
@@ -59,18 +63,18 @@ namespace Art {
             // shader lines of init, idx that contains version and layout keywords 0 -> 3
             static constexpr int SHADER_DECLARATIONS_IDX = 3;
 
-            static inline std::unordered_map<int, string> init_lookup;
+            static inline UMap init_lookup;
             // num of times derived class is initialize
             static inline int init_count = 0;
 
             fs::path shader_file() const {
                 return PROJECT_DIR / "shaders" / "artcode.frag";
             };
-            virtual string to_glsl() const                              = 0;
-            virtual void   write_shader(const string& glsl_code)        = 0;
-            virtual std::unordered_map<int, string> created_instances() = 0;
-            virtual void                            track_instances()   = 0;
-            virtual void                            draw()              = 0;
+            virtual string to_glsl() const                       = 0;
+            virtual void   write_shader(const string& glsl_code) = 0;
+            virtual UMap   created_instances()                   = 0;
+            virtual void   track_instances()                     = 0;
+            virtual void   draw()                                = 0;
         };
     } // namespace detail
 
@@ -86,7 +90,7 @@ namespace Art {
 
         void write_shader(const string& glsl_code) override;
 
-        std::unordered_map<int, string> created_instances() override;
+        UMap created_instances() override;
 
         void track_instances() override;
     };
