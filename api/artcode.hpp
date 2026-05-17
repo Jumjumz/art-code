@@ -62,6 +62,8 @@ namespace Art {
     struct Circle : detail::IPen {
         Circle();
 
+        ~Circle();
+
         float radius;
 
       private:

@@ -1,6 +1,7 @@
 #include "artcode.hpp"
 #include "json.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <filesystem>
 #include <fstream>
@@ -28,6 +29,12 @@ struct ShapeRegistry {
     }
 
     static std::vector<Art::detail::IPen*> get_classes() { return active_classes; }
+
+    static void delete_registry(Art::detail::IPen* shape) {
+        active_classes.erase(
+            std::remove(active_classes.begin(), active_classes.end(), shape),
+            active_classes.end());
+    }
 
   private:
     static inline std::vector<Art::detail::IPen*> active_classes;
@@ -153,6 +160,8 @@ DrawCircle::Circle() {
     // allocate to the registry
     ShapeRegistry::register_shape(this);
 };
+
+DrawCircle::~Circle() { ShapeRegistry::delete_registry(this); };
 
 string DrawCircle::to_glsl() const {
     string glsl_code = "float " + this->name + "()" + "{";
