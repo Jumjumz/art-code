@@ -65,14 +65,6 @@ void track_instances() {
     write << init_tracking.js.dump(4);
 };
 
-void write_shader(const ArrayString& lines) {
-    // write to file
-    std::ofstream write(shader_file());
-    for (const auto& line : lines) {
-        write << line << "\n";
-    }
-};
-
 ArrayString read_lines() {
     ArrayString lines;
     // reserve 100 lines
@@ -91,21 +83,44 @@ ArrayString read_lines() {
     return lines;
 };
 
+void write_shader(const ArrayString& lines) {
+    // write to file
+    std::ofstream write(shader_file());
+    for (const auto& line : lines) {
+        write << line << "\n";
+    }
+};
+
 void Art::Draw() {
     auto lines = read_lines();
 
     const auto active_classes = ShapeRegistry::get_classes();
+
+    // get previous state of instances created
+    const auto instances = created_instances();
+
+    // check for removed instances, deletes the non existing function in the shader
+    if (instances.size() != active_classes.size()) {
+        for (int i = 0; i < instances.size(); i++) {
+            const int line_idx = SHADER_DECLARATIONS_IDX + i;
+            if (instances.contains(i)) {
+                lines.erase(lines.begin() + line_idx);
+            }
+        }
+    }
+
     // check num of instances
     for (int i = 0; i < active_classes.size(); i++) {
         const auto glsl_code = active_classes[i]->to_glsl();
-        // TODO:before writing, check if func name already exist first
-        // always +1 for precise insert in line 5 for 1st instance
-        const int line_idx = SHADER_DECLARATIONS_IDX + (i + 1);
+        const int  LINE      = i + 1;
+        // assign func name to look
+        init_lookup[LINE] = glsl_code.substr(0, glsl_code.find("()"));
+        // always +1 for precise insert in line 5 for 1st instance and so on
+        const int line_idx = SHADER_DECLARATIONS_IDX + LINE;
         // only write to shader if there is actual changes
         if (lines[line_idx] == glsl_code)
             continue;
 
-        // TODO: add a remove line if sruct instance is deleted/doenst exist
         if (lines[line_idx].find("void main") != string::npos) {
             // insert at fresh creation
             lines.insert(lines.begin() + line_idx, glsl_code);
@@ -116,9 +131,9 @@ void Art::Draw() {
     }
     // write in shader all at once
     write_shader(lines);
-    /*const auto instances = created_instances();
-    for (const auto& [key, val] : instances) {
-    }*/
+
+    // write the new instances
+    track_instances();
 };
 
 using DrawCircle = Art::Circle;
