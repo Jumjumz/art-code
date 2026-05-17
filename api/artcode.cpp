@@ -24,6 +24,8 @@ fs::path shader_file() { return PROJECT_DIR / "shaders" / "artcode.frag"; };
 using NJson = nlohmann::json;
 
 struct ShapeRegistry {
+    ShapeRegistry() { active_classes.reserve(50); }
+
     static void register_shape(Art::detail::IPen* shape) {
         active_classes.push_back(shape);
     }
@@ -128,6 +130,7 @@ void Art::Draw() {
         if (lines[line_idx] == glsl_code)
             continue;
 
+        // TODO:add variables inside the main func to call the created functions
         if (lines[line_idx].find("void main") != string::npos) {
             // insert at fresh creation
             lines.insert(lines.begin() + line_idx, glsl_code);
@@ -148,7 +151,6 @@ using DrawCircle = Art::Circle;
 // Circle
 DrawCircle::Circle() {
     // initialize at object creation
-    // TODO:init count should be tracked, if instance is deleted so is the code generated
     init_count++;
     this->name     = "circle_" + ToString(init_count);
     this->radius   = 0.5f;
