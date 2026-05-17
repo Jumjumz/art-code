@@ -11,8 +11,6 @@ namespace fs = std::filesystem;
 // static variables
 const fs::path PROJECT_DIR = fs::canonical("/proc/self/exe").parent_path().parent_path();
 
-fs::path shader_file() { return PROJECT_DIR / "shaders" / "artcode.frag"; };
-
 // shader lines of init, idx that contains version and layout keywords 0 -> 3
 static constexpr int SHADER_DECLARATIONS_IDX = 3;
 
@@ -20,7 +18,20 @@ static inline UMap init_lookup;
 // num of times derived class is initialize
 static inline int init_count = 0;
 
+fs::path shader_file() { return PROJECT_DIR / "shaders" / "artcode.frag"; };
+
 using NJson = nlohmann::json;
+
+struct ShapeRegistry {
+    static void register_shape(Art::detail::IPen* shape) {
+        active_classes.push_back(shape);
+    }
+
+    static std::vector<Art::detail::IPen*> get_classes() { return active_classes; }
+
+  private:
+    static inline std::vector<Art::detail::IPen*> active_classes;
+};
 
 static struct InstanceTracking {
     const string key = "instances";
@@ -54,7 +65,15 @@ void track_instances() {
     write << init_tracking.js.dump(4);
 };
 
-void write_shader(const string& glsl_code) {
+void write_shader(const ArrayString& lines) {
+    // write to file
+    std::ofstream write(shader_file());
+    for (const auto& line : lines) {
+        write << line << "\n";
+    }
+};
+
+ArrayString read_lines() {
     ArrayString lines;
     // reserve 100 lines
     lines.reserve(100);
@@ -68,43 +87,38 @@ void write_shader(const string& glsl_code) {
             lines.push_back(line);
         }
     };
-    const int line_idx = SHADER_DECLARATIONS_IDX + init_count;
-    // only write to shader if there is actual changes
-    if (lines[line_idx] == glsl_code)
-        return;
 
-    // get function name ie. float circle_1
-    const auto func_name    = glsl_code.find("()");
-    init_lookup[init_count] = glsl_code.substr(0, func_name);
+    return lines;
+};
 
-    // TODO:check instances if it matches the init_lookup
-    const auto instances = created_instances();
-    {
-        const auto it = instances.find(init_count);
-        // key must exist and func name must match
-        if (it != instances.end() && it->second == "") {
+void Art::Draw() {
+    auto lines = read_lines();
+
+    const auto active_classes = ShapeRegistry::get_classes();
+    // check num of instances
+    for (int i = 0; i < active_classes.size(); i++) {
+        const auto glsl_code = active_classes[i]->to_glsl();
+        // TODO:before writing, check if func name already exist first
+        // always +1 for precise insert in line 5 for 1st instance
+        const int line_idx = SHADER_DECLARATIONS_IDX + (i + 1);
+        // only write to shader if there is actual changes
+        if (lines[line_idx] == glsl_code)
+            continue;
+
+        // TODO: add a remove line if sruct instance is deleted/doenst exist
+        if (lines[line_idx].find("void main") != string::npos) {
+            // insert at fresh creation
+            lines.insert(lines.begin() + line_idx, glsl_code);
+        } else {
+            // replace entire code
+            lines.at(line_idx) = glsl_code;
         }
     }
-
-    // TODO: add a remove line if sruct instance is deleted/doenst exist
-    if (lines[line_idx].find("void main") != string::npos) {
-        // insert at fresh creation
-        lines.insert(lines.begin() + line_idx, glsl_code);
-    } else {
-        // replace entire code
-        lines.at(line_idx) = glsl_code;
-    }
-
-    // track the created instance
-    track_instances();
-
-    // write to file
-    {
-        std::ofstream write(shader_file());
-        for (const auto& line : lines) {
-            write << line << "\n";
-        }
-    }
+    // write in shader all at once
+    write_shader(lines);
+    /*const auto instances = created_instances();
+    for (const auto& [key, val] : instances) {
+    }*/
 };
 
 using DrawCircle = Art::Circle;
@@ -120,6 +134,9 @@ DrawCircle::Circle() {
     this->color    = Vec3{0.0f, 0.0f, 0.0f};
     this->stroke   = 1.0f;
     this->scale    = 1.0f;
+
+    // allocate to the registry
+    ShapeRegistry::register_shape(this);
 };
 
 string DrawCircle::to_glsl() const {
@@ -131,5 +148,3 @@ string DrawCircle::to_glsl() const {
 
     return glsl_code;
 };
-
-void DrawCircle::draw() { write_shader(to_glsl()); };

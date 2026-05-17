@@ -14,6 +14,8 @@ struct Triangle;
 struct Square;
 struct Circle;
 
+// shape/class register
+struct ShapeRegistry;
 struct InstanceTracking;
 
 // strings
@@ -53,9 +55,6 @@ namespace Art {
             float  stroke;
             float  scale;
 
-            virtual void draw() = 0;
-
-          protected:
             virtual string to_glsl() const = 0;
         };
     } // namespace detail
@@ -65,13 +64,12 @@ namespace Art {
 
         float radius;
 
-        void draw() override;
-
       private:
         string to_glsl() const override;
     };
     // TODO:add others
 
+    void Draw();
 }; // namespace Art
 
 /* STILL LEARNING THIS SHIT
