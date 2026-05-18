@@ -24,9 +24,10 @@ fs::path shader_file() { return PROJECT_DIR / "shaders" / "artcode.frag"; };
 using NJson = nlohmann::json;
 
 struct ShapeRegistry {
-    ShapeRegistry() { active_classes.reserve(50); }
-
     static void register_shape(Art::detail::IPen* shape) {
+        if (active_classes.size() == 0)
+            active_classes.reserve(20);
+
         active_classes.push_back(shape);
     }
 
@@ -105,15 +106,15 @@ void Art::Draw() {
 
     const auto active_classes = ShapeRegistry::get_classes();
 
-    // get previous state of instances created
-    const auto instances = created_instances();
-
-    // check for removed instances, deletes the non existing function in the shader
-    if (instances.size() != active_classes.size()) {
-        for (int i = 0; i < instances.size(); i++) {
-            const int line_idx = SHADER_DECLARATIONS_IDX + i;
-            if (instances.contains(i)) {
-                lines.erase(lines.begin() + line_idx);
+    {
+        // get previous state of instances created
+        const auto instances = created_instances();
+        // delete all functions
+        if (active_classes.size() < instances.size()) {
+            for (int i = 0; i < instances.size(); i++) {
+                const int line_idx = SHADER_DECLARATIONS_IDX + i;
+                if (instances.contains(i))
+                    lines.erase(lines.begin() + line_idx);
             }
         }
     }
