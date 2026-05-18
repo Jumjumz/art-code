@@ -33,7 +33,7 @@ typedef glm::vec2 Vec2;
 typedef glm::vec3 Vec3;
 typedef glm::vec4 Vec4;
 
-typedef Vec3 Color;
+typedef Vec4 Color;
 
 // others
 typedef std::unordered_map<int, string> UMap;
@@ -55,7 +55,8 @@ namespace Art {
             float  stroke;
             float  scale;
 
-            virtual string to_glsl() const = 0;
+            virtual string to_glsl_func() const = 0;
+            virtual string to_glsl_var() const  = 0;
         };
     } // namespace detail
 
@@ -67,7 +68,8 @@ namespace Art {
         float radius;
 
       private:
-        string to_glsl() const override;
+        string to_glsl_func() const override;
+        string to_glsl_var() const override;
     };
     // TODO:add others
 
