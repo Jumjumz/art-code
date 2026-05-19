@@ -25,23 +25,23 @@ fs::path shader_file() { return PROJECT_DIR / "shaders" / "artcode.frag"; };
 using NJson = nlohmann::json;
 
 struct ShapeRegistry {
-    static void register_shape(Art::detail::IPen* shape) {
+    static void register_shape(detail::IPen* shape) {
         if (active_classes.size() == 0)
             active_classes.reserve(20);
 
         active_classes.push_back(shape);
     }
 
-    static std::vector<Art::detail::IPen*> get_classes() { return active_classes; }
+    static std::vector<detail::IPen*> get_classes() { return active_classes; }
 
-    static void delete_registry(Art::detail::IPen* shape) {
+    static void delete_registry(detail::IPen* shape) {
         active_classes.erase(
             std::remove(active_classes.begin(), active_classes.end(), shape),
             active_classes.end());
     }
 
   private:
-    static inline std::vector<Art::detail::IPen*> active_classes;
+    static inline std::vector<detail::IPen*> active_classes;
 };
 
 struct InstanceTracking {
@@ -102,16 +102,6 @@ void write_shader(const ArrayString& lines) {
     }
 };
 
-void insert_functions(ArrayString* lines, int line_idx, const string& glsl_code_func) {
-    if ((*lines)[line_idx].find("void main") != string::npos) {
-        // insert before main at fresh creation
-        lines->insert(lines->begin() + line_idx, glsl_code_func);
-    } else {
-        // replace entire code
-        lines->at(line_idx) = glsl_code_func;
-    }
-};
-
 string to_glsl_var(const string& name, const Vec4& color) {
     string glsl_code_var  = "float " + name + " = " + name + "();";
     glsl_code_var        += "if (" + name + " < " + "0.0f)" + "{";
@@ -155,7 +145,6 @@ void Art::Draw() {
             continue;
 
         // insert functions before void main
-        // insert_functions(&lines, line_idx, glsl_code_func);
         if (lines[line_idx].find("void main") != string::npos) {
             // insert before main at fresh creation
             lines.insert(lines.begin() + line_idx, glsl_code_func);
@@ -171,11 +160,13 @@ void Art::Draw() {
 
         const auto itr = std::find(lines.begin(), lines.end(), TARGET);
 
-        int idx;
-        if (itr != lines.end()) {
-            // actual line num in shader
-            idx = std::distance(lines.begin(), itr) + 1;
+        if (itr == lines.end()) {
+            assert("Target variable vec4 color not found!");
+            return;
         }
+
+        // actual line num in shader
+        const int idx = std::distance(lines.begin(), itr) + 1;
 
         for (int i = 0; i < active_classes.size(); i++) {
             const int line_idx = idx + i;
@@ -185,8 +176,9 @@ void Art::Draw() {
 
             if (lines[line_idx] == glsl_code_var)
                 continue;
-            // FIXME:this is wrong..
-            if (lines[line_idx].find(glsl_code_var) == string::npos) {
+
+            // FIXME:have a better logic for checking updated code
+            if (lines[line_idx] != glsl_code_var) {
                 lines.insert(lines.begin() + line_idx, glsl_code_var);
             } else {
                 lines.at(line_idx) = glsl_code_var;

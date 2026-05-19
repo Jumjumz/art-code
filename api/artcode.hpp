@@ -42,23 +42,22 @@ template <typename to_string> string ToString(const to_string& to_str) {
     return std::to_string(to_str);
 };
 
-// TODO:redo api design
+namespace detail {
+    struct IPen {
+        virtual ~IPen() = default;
+
+        // must implement
+        string name;
+        Vec2   position;
+        Color  color;
+        float  stroke;
+        float  scale;
+
+        virtual string to_glsl_func() const = 0;
+    };
+} // namespace detail
+
 namespace Art {
-    namespace detail {
-        struct IPen {
-            virtual ~IPen() = default;
-
-            // must implement
-            string name;
-            Vec2   position;
-            Color  color;
-            float  stroke;
-            float  scale;
-
-            virtual string to_glsl_func() const = 0;
-        };
-    } // namespace detail
-
     struct Circle : detail::IPen {
         Circle();
 
