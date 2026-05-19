@@ -56,7 +56,6 @@ namespace Art {
             float  scale;
 
             virtual string to_glsl_func() const = 0;
-            virtual string to_glsl_var() const  = 0;
         };
     } // namespace detail
 
@@ -69,7 +68,6 @@ namespace Art {
 
       private:
         string to_glsl_func() const override;
-        string to_glsl_var() const override;
     };
     // TODO:add others
 

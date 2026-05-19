@@ -5,6 +5,7 @@
 #include <cassert>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 
 // filesystem
 namespace fs = std::filesystem;
@@ -111,6 +112,19 @@ void insert_functions(ArrayString* lines, int line_idx, const string& glsl_code_
     }
 };
 
+string to_glsl_var(const string& name, const Vec4& color) {
+    string glsl_code_var  = "float " + name + " = " + name + "();";
+    glsl_code_var        += "if (" + name + " < " + "0.0f)" + "{";
+    glsl_code_var += "color = vec4(" + ToString(color.r) + "," + ToString(color.g) + "," +
+                     ToString(color.b) + "," + ToString(color.a) + ");}";
+
+    return glsl_code_var;
+};
+
+void insert_variables(ArrayString* lines) {
+    // find this line
+};
+
 void Art::Draw() {
     auto lines = read_lines();
 
@@ -141,8 +155,43 @@ void Art::Draw() {
             continue;
 
         // insert functions before void main
-        insert_functions(&lines, line_idx, glsl_code_func);
-        // TODO:add variables inside the main func to call the created functions
+        // insert_functions(&lines, line_idx, glsl_code_func);
+        if (lines[line_idx].find("void main") != string::npos) {
+            // insert before main at fresh creation
+            lines.insert(lines.begin() + line_idx, glsl_code_func);
+        } else {
+            // replace entire code
+            lines.at(line_idx) = glsl_code_func;
+        }
+    }
+
+    {
+        // find this code in array
+        const string TARGET = "  vec4 color = vec4(1.0f);";
+
+        const auto itr = std::find(lines.begin(), lines.end(), TARGET);
+
+        int idx;
+        if (itr != lines.end()) {
+            // actual line num in shader
+            idx = std::distance(lines.begin(), itr) + 1;
+        }
+
+        for (int i = 0; i < active_classes.size(); i++) {
+            const int line_idx = idx + i;
+            // get current instance of
+            const auto instance      = active_classes[i];
+            const auto glsl_code_var = to_glsl_var(instance->name, instance->color);
+
+            if (lines[line_idx] == glsl_code_var)
+                continue;
+            // FIXME:this is wrong..
+            if (lines[line_idx].find(glsl_code_var) == string::npos) {
+                lines.insert(lines.begin() + line_idx, glsl_code_var);
+            } else {
+                lines.at(line_idx) = glsl_code_var;
+            }
+        }
     }
     // write in shader all at once
     write_shader(lines);
@@ -179,14 +228,4 @@ string DrawCircle::to_glsl_func() const {
     glsl_code_func += "}";
 
     return glsl_code_func;
-};
-
-string DrawCircle::to_glsl_var() const {
-    string glsl_code_var  = "float " + this->name + " = " + this->name + "();";
-    glsl_code_var        += "if (" + this->name + " < " + "0.0f)" + "{";
-    glsl_code_var        += "color = vec4(" + ToString(this->color.r) + "," +
-                     ToString(this->color.g) + "," + ToString(this->color.b) + "," +
-                     ToString(this->color.a) + ")";
-
-    return glsl_code_var;
 };
