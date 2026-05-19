@@ -154,6 +154,7 @@ void Art::Draw() {
         }
     }
 
+    // insert variables in main func
     {
         // find this code in array
         const string TARGET = "  vec4 color = vec4(1.0f);";
@@ -177,8 +178,10 @@ void Art::Draw() {
             if (lines[line_idx] == glsl_code_var)
                 continue;
 
-            // FIXME:have a better logic for checking updated code
-            if (lines[line_idx] != glsl_code_var) {
+            // TODO:remove variables if instance is removed or deleted
+            //  checks for specific line inside code and only insert then
+            if (lines[line_idx] != glsl_code_var &&
+                lines[line_idx].find("  out_color = color;") != string::npos) {
                 lines.insert(lines.begin() + line_idx, glsl_code_var);
             } else {
                 lines.at(line_idx) = glsl_code_var;
