@@ -119,7 +119,6 @@ void Art::Draw() {
     auto lines = read_lines();
 
     const auto active_classes = ShapeRegistry::get_classes();
-
     {
         // get previous state of instances created
         const auto instances = created_instances();
@@ -135,56 +134,55 @@ void Art::Draw() {
 
     // check num of instances
     for (int i = 0; i < active_classes.size(); i++) {
-        const auto glsl_code_func = active_classes[i]->to_glsl_func();
-        // always +1 for precise insert in line 5 for 1st instance and so on
-        const int line_idx = SHADER_DECLARATIONS_IDX + (i + 1);
-        // assign func name to look
-        init_lookup[line_idx] = glsl_code_func.substr(0, glsl_code_func.find("()"));
-        // only write to shader if there is actual changes
-        if (lines[line_idx] == glsl_code_func)
-            continue;
+        const auto instance = active_classes[i];
+        {
+            const auto glsl_code_func = instance->to_glsl_func();
+            // always +1 to insert after the void main
+            const int func_idx = SHADER_DECLARATIONS_IDX + (i + 1);
+            // assign func name to look
+            init_lookup[func_idx] = glsl_code_func.substr(0, glsl_code_func.find("()"));
 
-        // insert functions before void main
-        if (lines[line_idx].find("void main") != string::npos) {
-            // insert before main at fresh creation
-            lines.insert(lines.begin() + line_idx, glsl_code_func);
-        } else {
-            // replace entire code
-            lines.at(line_idx) = glsl_code_func;
-        }
-    }
-
-    // insert variables in main func
-    {
-        // find this code in array
-        const string TARGET = "  vec4 color = vec4(1.0f);";
-
-        const auto itr = std::find(lines.begin(), lines.end(), TARGET);
-
-        if (itr == lines.end()) {
-            assert("Target variable vec4 color not found!");
-            return;
+            // only write to shader if there is actual changes
+            // insert functions before void main
+            if (lines[func_idx] != glsl_code_func) {
+                if (lines[func_idx].find("void main") != string::npos) {
+                    // insert before main at fresh creation
+                    lines.insert(lines.begin() + func_idx, glsl_code_func);
+                } else {
+                    // replace entire code
+                    lines.at(func_idx) = glsl_code_func;
+                }
+            }
         }
 
-        // actual line num in shader
-        const int idx = std::distance(lines.begin(), itr) + 1;
-
-        for (int i = 0; i < active_classes.size(); i++) {
-            const int line_idx = idx + i;
-            // get current instance of
-            const auto instance      = active_classes[i];
+        {
             const auto glsl_code_var = to_glsl_var(instance->name, instance->color);
+            int        idx;
+            {
+                // find this code in lines
+                const string TARGET = "vec4 color = vec4(1.0f);";
 
-            if (lines[line_idx] == glsl_code_var)
+                const auto itr = std::find(lines.begin(), lines.end(), TARGET);
+
+                if (itr == lines.end()) {
+                    assert("Target variable vec4 color not found!");
+                    return;
+                }
+
+                // actual line num in shader
+                idx = std::distance(lines.begin(), itr) + 1;
+            }
+            const int val_idx = idx + i;
+
+            if (lines[val_idx] == glsl_code_var)
                 continue;
 
-            // TODO:remove variables if instance is removed or deleted
             //  checks for specific line inside code and only insert then
-            if (lines[line_idx] != glsl_code_var &&
-                lines[line_idx].find("  out_color = color;") != string::npos) {
-                lines.insert(lines.begin() + line_idx, glsl_code_var);
+            if (lines[val_idx] != glsl_code_var &&
+                lines[val_idx].find("out_color = color;") != string::npos) {
+                lines.insert(lines.begin() + val_idx, glsl_code_var);
             } else {
-                lines.at(line_idx) = glsl_code_var;
+                lines.at(val_idx) = glsl_code_var;
             }
         }
     }
