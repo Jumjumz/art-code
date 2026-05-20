@@ -16,6 +16,9 @@ const fs::path PROJECT_DIR = fs::canonical("/proc/self/exe").parent_path().paren
 // shader lines of init, idx that contains version and layout keywords 0 -> 3
 static constexpr int SHADER_DECLARATIONS_IDX = 3;
 
+// variable inside the shader main func
+const string VAR_TARGET = "vec4 color = vec4(1.0f);";
+
 static inline UMap init_lookup;
 // num of times derived class is initialize
 static inline int init_count = 0;
@@ -111,8 +114,16 @@ string to_glsl_var(const string& name, const Vec4& color) {
     return glsl_code_var;
 };
 
-void insert_variables(ArrayString* lines) {
-    // find this line
+int find_target(const ArrayString& lines) {
+    const auto itr = std::find(lines.begin(), lines.end(), VAR_TARGET);
+
+    if (itr == lines.end()) {
+        assert("Target variable vec4 color not found!");
+        return 0;
+    }
+
+    // actual line num in shader
+    return std::distance(lines.begin(), itr);
 };
 
 void Art::Draw() {
@@ -122,12 +133,18 @@ void Art::Draw() {
     {
         // get previous state of instances created
         const auto instances = created_instances();
-        // delete all functions
+        // delete functions
         if (active_classes.size() < instances.size()) {
             for (int i = 0; i < instances.size(); i++) {
-                const int line_idx = SHADER_DECLARATIONS_IDX + i;
-                if (instances.contains(line_idx))
-                    lines.erase(lines.begin() + line_idx);
+                const int func_key = SHADER_DECLARATIONS_IDX + i;
+                // check if key exists
+                if (instances.contains(func_key)) {
+                    // remove func in lines
+                    lines.erase(lines.begin() + func_key);
+                    // get latest version of lines after a func is removed
+                    const int val_idx = find_target(lines) + i;
+                    lines.erase(lines.begin() + val_idx);
+                }
             }
         }
     }
@@ -137,14 +154,14 @@ void Art::Draw() {
         const auto instance = active_classes[i];
         {
             const auto glsl_code_func = instance->to_glsl_func();
-            // always +1 to insert after the void main
+            // always +1 as arrays are 0 base, this guarantees to insert below the shader declarations
             const int func_idx = SHADER_DECLARATIONS_IDX + (i + 1);
-            // assign func name to look
+            // assign func name to look, saves the index as key, return type and func name
             init_lookup[func_idx] = glsl_code_func.substr(0, glsl_code_func.find("()"));
 
             // only write to shader if there is actual changes
-            // insert functions before void main
             if (lines[func_idx] != glsl_code_func) {
+                // insert functions before void main
                 if (lines[func_idx].find("void main") != string::npos) {
                     // insert before main at fresh creation
                     lines.insert(lines.begin() + func_idx, glsl_code_func);
@@ -157,23 +174,11 @@ void Art::Draw() {
 
         {
             const auto glsl_code_var = to_glsl_var(instance->name, instance->color);
-            int        idx;
-            {
-                // find this code in lines
-                const string TARGET = "vec4 color = vec4(1.0f);";
 
-                const auto itr = std::find(lines.begin(), lines.end(), TARGET);
+            // always +1
+            const int val_idx = find_target(lines) + (i + 1);
 
-                if (itr == lines.end()) {
-                    assert("Target variable vec4 color not found!");
-                    return;
-                }
-
-                // actual line num in shader
-                idx = std::distance(lines.begin(), itr) + 1;
-            }
-            const int val_idx = idx + i;
-
+            // skip if true
             if (lines[val_idx] == glsl_code_var)
                 continue;
 
