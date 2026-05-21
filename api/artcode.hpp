@@ -11,7 +11,7 @@
 struct IPen;
 struct PenTool;
 struct Triangle;
-struct Square;
+struct Rectangle;
 struct Circle;
 
 // shape/class register
@@ -59,11 +59,24 @@ namespace detail {
 
 namespace Art {
     struct Circle : detail::IPen {
+      public:
         Circle();
 
         ~Circle();
 
         float radius;
+
+      private:
+        string to_glsl_func() const override;
+    };
+
+    struct Rectangle : detail::IPen {
+      public:
+        Rectangle();
+
+        ~Rectangle();
+
+        float l, w;
 
       private:
         string to_glsl_func() const override;

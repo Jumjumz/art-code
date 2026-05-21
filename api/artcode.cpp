@@ -56,31 +56,6 @@ struct InstanceTracking {
     static inline fs::path sln_file;
 };
 
-UMap created_instances() {
-    // search project dir for solution extension
-    const auto itr = std::find_if(
-        fs::directory_iterator(PROJECT_DIR), fs::directory_iterator{},
-        [&](const auto& file) -> bool { return file.path().extension() == ".rcd"; });
-
-    if (itr == fs::directory_iterator()) {
-        assert("Cannot find solution file, either not in this project directory or "
-               "deleted!");
-    } else {
-        InstanceTracking::sln_file = PROJECT_DIR / itr->path().filename();
-        std::ifstream read(InstanceTracking::sln_file);
-        InstanceTracking::js = NJson::parse(read);
-    }
-
-    return InstanceTracking::js[InstanceTracking::key].get<UMap>();
-};
-
-void track_instances() {
-    // replace the entire unorderer map entirely regardless of func name or num of instance
-    InstanceTracking::js[InstanceTracking::key] = init_lookup;
-    std::ofstream write(InstanceTracking::sln_file);
-    write << InstanceTracking::js.dump(4);
-};
-
 ArrayString read_lines() {
     ArrayString lines;
     // reserve 100 lines
@@ -126,6 +101,31 @@ int find_target(const ArrayString& lines) {
 
     // actual line num in shader
     return std::distance(lines.begin(), itr);
+};
+
+UMap created_instances() {
+    // search project dir for solution extension
+    const auto itr = std::find_if(
+        fs::directory_iterator(PROJECT_DIR), fs::directory_iterator{},
+        [&](const auto& file) -> bool { return file.path().extension() == ".rcd"; });
+
+    if (itr == fs::directory_iterator()) {
+        assert("Cannot find solution file, either not in this project directory or "
+               "deleted!");
+    } else {
+        InstanceTracking::sln_file = PROJECT_DIR / itr->path().filename();
+        std::ifstream read(InstanceTracking::sln_file);
+        InstanceTracking::js = NJson::parse(read);
+    }
+
+    return InstanceTracking::js[InstanceTracking::key].get<UMap>();
+};
+
+void track_instances() {
+    // replace the entire unorderer map entirely regardless of func name or num of instance
+    InstanceTracking::js[InstanceTracking::key] = init_lookup;
+    std::ofstream write(InstanceTracking::sln_file);
+    write << InstanceTracking::js.dump(4);
 };
 
 void Art::Draw() {
@@ -183,6 +183,8 @@ void Art::Draw() {
             }
         }
 
+        // TODO:put the var in reverse order of instance declaration..
+        //  this will result as the first instance declared to be the first shape in 1st layer
         {
             const auto glsl_code_var = to_glsl_var(instance->name, instance->color);
 
@@ -209,7 +211,8 @@ void Art::Draw() {
     track_instances();
 };
 
-using DrawCircle = Art::Circle;
+using DrawCircle    = Art::Circle;
+using DrawRectangle = Art::Rectangle;
 
 // Circle
 DrawCircle::Circle() {
@@ -235,6 +238,34 @@ string DrawCircle::to_glsl_func() const {
                       ") - " + // vulkan is y inverse
                       ToString(this->radius) + ";";
     glsl_code_func += "}";
+
+    return glsl_code_func;
+};
+
+// Rectangle
+DrawRectangle::Rectangle() {
+    // initialize at object creation
+    init_count++;
+    this->name     = "rectangle_" + ToString(init_count);
+    this->l        = 100.0f;
+    this->w        = 100.0f;
+    this->position = Vec2{200, 200};
+    this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
+    this->stroke   = 1.0f;
+    this->scale    = 1.0f;
+
+    // allocate to the registry
+    ShapeRegistry::register_shape(this);
+};
+
+DrawRectangle::~Rectangle() { ShapeRegistry::delete_registry(this); };
+
+string DrawRectangle::to_glsl_func() const {
+    string glsl_code_func = "float " + this->name + "()" + "{";
+    glsl_code_func += "vec2 d = abs(artboard_pos - vec2(" + ToString(this->position.x) +
+                      "," + ToString(this->position.y) + "))" + "-" + "vec2(" +
+                      ToString(this->w) + "," + ToString(this->l) + ");";
+    glsl_code_func += "return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);}";
 
     return glsl_code_func;
 };
