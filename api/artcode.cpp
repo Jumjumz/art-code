@@ -16,8 +16,10 @@ const fs::path PROJECT_DIR = fs::canonical("/proc/self/exe").parent_path().paren
 // shader lines of init, idx that contains version and layout keywords 0 -> 3
 static constexpr int SHADER_DECLARATIONS_IDX = 3;
 
-// variable inside the shader main func
-const string VAR_TARGET = "vec4 color = vec4(1.0f);";
+// targets for index identification
+const string FUNC_TARGET   = "void main()";
+const string VAR_TARGET    = "vec4 color = vec4(1.0f);";
+const string RETURN_TARGET = "out_color = color;";
 
 static inline UMap init_lookup;
 // num of times derived class is initialize
@@ -130,22 +132,31 @@ void Art::Draw() {
     auto lines = read_lines();
 
     const auto active_classes = ShapeRegistry::get_classes();
+    // only deletes the lines where functions and vars are
     {
-        // get previous state of instances created
         const auto instances = created_instances();
-        // delete functions
         if (active_classes.size() < instances.size()) {
-            for (int i = 0; i < instances.size(); i++) {
-                const int func_key = SHADER_DECLARATIONS_IDX + i;
-                // check if key exists
-                if (instances.contains(func_key)) {
-                    // remove func in lines
-                    lines.erase(lines.begin() + func_key);
-                    // get latest version of lines after a func is removed
-                    const int val_idx = find_target(lines) + i;
-                    lines.erase(lines.begin() + val_idx);
-                }
+            // index of func where it is inserted, +1 as arrays are 0 base
+            const int func_start = SHADER_DECLARATIONS_IDX + 1;
+            int       func_end   = func_start;
+
+            // increment func_end until void main is found
+            while (lines[func_end].find(FUNC_TARGET) == string::npos) {
+                func_end++;
             }
+
+            // delete all functions
+            lines.erase(lines.begin() + func_start, lines.begin() + func_end);
+
+            const int var_start = find_target(lines) + 1;
+            int       var_end   = var_start;
+
+            while (lines[var_end].find(RETURN_TARGET) == string::npos) {
+                var_end++;
+            }
+
+            // delete all variables
+            lines.erase(lines.begin() + var_start, lines.begin() + var_end);
         }
     }
 
@@ -154,7 +165,7 @@ void Art::Draw() {
         const auto instance = active_classes[i];
         {
             const auto glsl_code_func = instance->to_glsl_func();
-            // always +1 as arrays are 0 base, this guarantees to insert below the shader declarations
+            // always +1 as arrays are 0 base, this guarantees to insert below the shader
             const int func_idx = SHADER_DECLARATIONS_IDX + (i + 1);
             // assign func name to look, saves the index as key, return type and func name
             init_lookup[func_idx] = glsl_code_func.substr(0, glsl_code_func.find("()"));
@@ -162,7 +173,7 @@ void Art::Draw() {
             // only write to shader if there is actual changes
             if (lines[func_idx] != glsl_code_func) {
                 // insert functions before void main
-                if (lines[func_idx].find("void main") != string::npos) {
+                if (lines[func_idx].find(FUNC_TARGET) != string::npos) {
                     // insert before main at fresh creation
                     lines.insert(lines.begin() + func_idx, glsl_code_func);
                 } else {
@@ -184,7 +195,7 @@ void Art::Draw() {
 
             //  checks for specific line inside code and only insert then
             if (lines[val_idx] != glsl_code_var &&
-                lines[val_idx].find("out_color = color;") != string::npos) {
+                lines[val_idx].find(RETURN_TARGET) != string::npos) {
                 lines.insert(lines.begin() + val_idx, glsl_code_var);
             } else {
                 lines.at(val_idx) = glsl_code_var;
