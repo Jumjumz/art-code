@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 
 // static variables
 const fs::path PROJECT_DIR = fs::canonical("/proc/self/exe").parent_path().parent_path();
+fs::path       shader_file() { return PROJECT_DIR / "shaders" / "artcode.frag"; };
 
 // shader lines of init, idx that contains version and layout keywords 0 -> 3
 static constexpr int SHADER_DECLARATIONS_IDX = 3;
@@ -24,10 +25,6 @@ const string RETURN_TARGET = "out_color = color;";
 static inline UMap init_lookup;
 // num of times derived class is initialize
 static inline int init_count = 0;
-
-fs::path shader_file() { return PROJECT_DIR / "shaders" / "artcode.frag"; };
-
-using NJson = nlohmann::json;
 
 struct ShapeRegistry {
     static void register_shape(detail::IPen* shape) {
@@ -48,6 +45,8 @@ struct ShapeRegistry {
   private:
     static inline std::vector<detail::IPen*> active_classes;
 };
+
+using NJson = nlohmann::json;
 
 struct InstanceTracking {
     static constexpr string key = "instances";
@@ -243,19 +242,17 @@ void Art::Draw() {
             }
         }
 
+        // FIXME:this doesnt work at fresh shader file (no func, no var inserted)
         // first instance declared to be the first shape in 1st layer
         {
             const auto glsl_code_var = to_glsl_var(instance->name, instance->color);
-            const auto base_idx      = find_target(lines, VAR_TARGET) + 1;
-            const int  val_idx       = base_idx + (active_classes.size() - 1 - i);
+            const auto target_idx    = find_target(lines, VAR_TARGET) + 1;
+            const int  val_idx       = target_idx + (active_classes.size() - 1 - i);
 
-            // skip if true
             if (lines[val_idx] == glsl_code_var)
                 continue;
 
-            //  checks for specific line inside code and only insert then
-            if (lines[val_idx] != glsl_code_var &&
-                lines[val_idx].find(RETURN_TARGET) != string::npos) {
+            if (lines[val_idx].find(RETURN_TARGET) != string::npos) {
                 lines.insert(lines.begin() + val_idx, glsl_code_var);
             } else {
                 lines.at(val_idx) = glsl_code_var;
