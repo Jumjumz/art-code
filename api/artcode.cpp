@@ -91,8 +91,8 @@ string to_glsl_var(const string& name, const Vec4& color) {
     return glsl_code_var;
 };
 
-int find_target(const ArrayString& lines) {
-    const auto itr = std::find(lines.begin(), lines.end(), VAR_TARGET);
+int find_target(const ArrayString& lines, const string& target) {
+    const auto itr = std::find(lines.begin(), lines.end(), target);
 
     if (itr == lines.end()) {
         assert("Target variable vec4 color not found!");
@@ -128,6 +128,66 @@ void track_instances() {
     write << InstanceTracking::js.dump(4);
 };
 
+// instances
+using DrawCircle    = Art::Circle;
+using DrawRectangle = Art::Rectangle;
+
+// Circle
+DrawCircle::Circle() {
+    // initialize at object creation
+    init_count++;
+    this->name     = "circle_" + ToString(init_count);
+    this->radius   = 0.5f;
+    this->position = Vec2{200, 200};
+    this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
+    this->stroke   = 1.0f;
+    this->scale    = 1.0f;
+
+    // allocate to the registry
+    ShapeRegistry::register_shape(this);
+};
+
+DrawCircle::~Circle() { ShapeRegistry::delete_registry(this); };
+
+string DrawCircle::to_glsl_func() const {
+    string glsl_code_func = "float " + this->name + "()" + "{";
+    glsl_code_func += "return length(artboard_pos-vec2(" + ToString(this->position.x) +
+                      "," + ToString(this->position.y) + ")" +
+                      ")-" + // vulkan is y inverse
+                      ToString(this->radius) + ";";
+    glsl_code_func += "}";
+
+    return glsl_code_func;
+};
+
+// Rectangle
+DrawRectangle::Rectangle() {
+    // initialize at object creation
+    init_count++;
+    this->name     = "rectangle_" + ToString(init_count);
+    this->l        = 100.0f;
+    this->w        = 100.0f;
+    this->position = Vec2{200, 200};
+    this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
+    this->stroke   = 1.0f;
+    this->scale    = 1.0f;
+
+    // allocate to the registry
+    ShapeRegistry::register_shape(this);
+};
+
+DrawRectangle::~Rectangle() { ShapeRegistry::delete_registry(this); };
+
+string DrawRectangle::to_glsl_func() const {
+    string glsl_code_func = "float " + this->name + "()" + "{";
+    glsl_code_func += "vec2 d=abs(artboard_pos-vec2(" + ToString(this->position.x) + "," +
+                      ToString(this->position.y) + "))" + "-" + "vec2(" +
+                      ToString(this->w) + "," + ToString(this->l) + ");";
+    glsl_code_func += "return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);}";
+
+    return glsl_code_func;
+};
+
 void Art::Draw() {
     auto lines = read_lines();
 
@@ -148,7 +208,7 @@ void Art::Draw() {
             // delete all functions
             lines.erase(lines.begin() + func_start, lines.begin() + func_end);
 
-            const int var_start = find_target(lines) + 1;
+            const int var_start = find_target(lines, VAR_TARGET) + 1;
             int       var_end   = var_start;
 
             while (lines[var_end].find(RETURN_TARGET) == string::npos) {
@@ -183,13 +243,11 @@ void Art::Draw() {
             }
         }
 
-        // TODO:put the var in reverse order of instance declaration..
-        //  this will result as the first instance declared to be the first shape in 1st layer
+        // first instance declared to be the first shape in 1st layer
         {
             const auto glsl_code_var = to_glsl_var(instance->name, instance->color);
-
-            // always +1
-            const int val_idx = find_target(lines) + (i + 1);
+            const auto base_idx      = find_target(lines, VAR_TARGET) + 1;
+            const int  val_idx       = base_idx + (active_classes.size() - 1 - i);
 
             // skip if true
             if (lines[val_idx] == glsl_code_var)
@@ -209,63 +267,4 @@ void Art::Draw() {
 
     // write the new instances
     track_instances();
-};
-
-using DrawCircle    = Art::Circle;
-using DrawRectangle = Art::Rectangle;
-
-// Circle
-DrawCircle::Circle() {
-    // initialize at object creation
-    init_count++;
-    this->name     = "circle_" + ToString(init_count);
-    this->radius   = 0.5f;
-    this->position = Vec2{200, 200};
-    this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
-    this->stroke   = 1.0f;
-    this->scale    = 1.0f;
-
-    // allocate to the registry
-    ShapeRegistry::register_shape(this);
-};
-
-DrawCircle::~Circle() { ShapeRegistry::delete_registry(this); };
-
-string DrawCircle::to_glsl_func() const {
-    string glsl_code_func = "float " + this->name + "()" + "{";
-    glsl_code_func += "return length(artboard_pos - vec2(" + ToString(this->position.x) +
-                      "," + ToString(this->position.y) + ")" +
-                      ") - " + // vulkan is y inverse
-                      ToString(this->radius) + ";";
-    glsl_code_func += "}";
-
-    return glsl_code_func;
-};
-
-// Rectangle
-DrawRectangle::Rectangle() {
-    // initialize at object creation
-    init_count++;
-    this->name     = "rectangle_" + ToString(init_count);
-    this->l        = 100.0f;
-    this->w        = 100.0f;
-    this->position = Vec2{200, 200};
-    this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
-    this->stroke   = 1.0f;
-    this->scale    = 1.0f;
-
-    // allocate to the registry
-    ShapeRegistry::register_shape(this);
-};
-
-DrawRectangle::~Rectangle() { ShapeRegistry::delete_registry(this); };
-
-string DrawRectangle::to_glsl_func() const {
-    string glsl_code_func = "float " + this->name + "()" + "{";
-    glsl_code_func += "vec2 d = abs(artboard_pos - vec2(" + ToString(this->position.x) +
-                      "," + ToString(this->position.y) + "))" + "-" + "vec2(" +
-                      ToString(this->w) + "," + ToString(this->l) + ");";
-    glsl_code_func += "return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);}";
-
-    return glsl_code_func;
 };
