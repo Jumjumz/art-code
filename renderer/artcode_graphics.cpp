@@ -1,17 +1,17 @@
-#include "vulkan_graphics.hpp"
+#include "artcode_graphics.hpp"
+#include "nav_items.hpp"
 #include <fstream>
 
-VulkanGraphics::VulkanGraphics(const vk::raii::Device& device,
-                               const vk::Format&       image_format)
+ArtcodeGraphics::ArtcodeGraphics(const vk::raii::Device&         device,
+                                 const vk::raii::PipelineLayout& artboard_layout,
+                                 vk::Format&                     image_format)
     : device(device),
-      image_format(image_format) {
-    create_descriptor_set_layout();
-    create_graphics_pipeline();
-};
+      artboard_layout(artboard_layout),
+      image_format(image_format) {};
 
 [[nodiscard]]
 vk::raii::ShaderModule
-VulkanGraphics::create_shader_module(const std::vector<char>& code) const {
+ArtcodeGraphics::create_shader_module(const std::vector<char>& code) const {
     vk::ShaderModuleCreateInfo shader_info{};
     shader_info.codeSize = code.size();
     shader_info.pCode    = reinterpret_cast<const uint32_t*>(code.data());
@@ -21,7 +21,7 @@ VulkanGraphics::create_shader_module(const std::vector<char>& code) const {
     return vert_shader_module;
 };
 
-std::vector<char> VulkanGraphics::read_file(const std::string& file_name) {
+std::vector<char> ArtcodeGraphics::read_file(const std::string& file_name) const {
     std::ifstream file(file_name, std::ios::ate | std::ios::binary);
     if (!file.is_open())
         throw std::runtime_error("Failed to open file!");
@@ -34,23 +34,16 @@ std::vector<char> VulkanGraphics::read_file(const std::string& file_name) {
     return buffer;
 };
 
-void VulkanGraphics::create_descriptor_set_layout() {
-    vk::DescriptorSetLayoutBinding ubo_layout_binding(
-        0, vk::DescriptorType::eUniformBuffer, 1,
-        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, nullptr);
+void ArtcodeGraphics::create_artcode_pipeline() {
+    // get shader project dir
+    {
+        const auto shader_execs = ProjectPath::get_project_path() / "shaders";
+        const auto vert_exec    = shader_execs / "artcode.vert.spv";
+        const auto frag_exec    = shader_execs / "artcode.frag.spv";
 
-    vk::DescriptorSetLayoutCreateInfo descriptor_info{};
-    descriptor_info.bindingCount = 1;
-    descriptor_info.pBindings    = &ubo_layout_binding;
-
-    this->descriptor_set_layout =
-        vk::raii::DescriptorSetLayout{this->device, descriptor_info, nullptr};
-};
-
-void VulkanGraphics::create_graphics_pipeline() {
-    this->vert_shader_module = create_shader_module(read_file("shaders/core.vert.spv"));
-    // uses project shader from api user
-    this->frag_shader_module = create_shader_module(read_file("shaders/core.frag.spv"));
+        this->vert_shader_module = create_shader_module(read_file(vert_exec));
+        this->frag_shader_module = create_shader_module(read_file(frag_exec));
+    }
 
     vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
     vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;
@@ -66,7 +59,7 @@ void VulkanGraphics::create_graphics_pipeline() {
                                                          frag_shader_stage_info};
 
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
-    assembly_info.topology = vk::PrimitiveTopology::eTriangleStrip;
+    assembly_info.topology = vk::PrimitiveTopology::eLineStrip;
 
     std::vector<vk::DynamicState> dynamic_states = {
         vk::DynamicState::eViewport,
@@ -114,13 +107,6 @@ void VulkanGraphics::create_graphics_pipeline() {
     blend_info.attachmentCount = 1;
     blend_info.pAttachments    = &color_attachment;
 
-    vk::PipelineLayoutCreateInfo layout_info{};
-    layout_info.setLayoutCount         = 1;
-    layout_info.pSetLayouts            = &*this->descriptor_set_layout;
-    layout_info.pushConstantRangeCount = 0;
-
-    this->layout = vk::raii::PipelineLayout{this->device, layout_info, nullptr};
-
     vk::PipelineRenderingCreateInfo rendering_info{};
     rendering_info.colorAttachmentCount    = 1;
     rendering_info.pColorAttachmentFormats = &this->image_format;
@@ -137,7 +123,7 @@ void VulkanGraphics::create_graphics_pipeline() {
     pipeline_info.pColorBlendState    = &blend_info;
     pipeline_info.pDynamicState       = &dynamic_state_info;
     pipeline_info.pDepthStencilState  = &stencil_state_info;
-    pipeline_info.layout              = this->layout;
+    pipeline_info.layout              = this->artboard_layout;
     pipeline_info.renderPass          = nullptr;
     pipeline_info.basePipelineHandle  = nullptr;
     pipeline_info.basePipelineIndex   = -1;

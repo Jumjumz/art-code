@@ -26,6 +26,7 @@ CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
       vk_buffers(physical_device, device) {};
 
 // TODO:improve this, result should go somewhere
+// used for new created project
 void CanvasRenderer::compile_shader() {
     nlohmann::json js;
     {
@@ -67,25 +68,30 @@ void CanvasRenderer::compile_shader() {
 };
 
 void CanvasRenderer::set_canvas_pipeline() {
-    this->pipeline =
+    // vulkan graphics pipeline for canvas
+    this->graphics_pipeline =
         std::make_unique<VulkanGraphics>(this->device, this->vk_buffers.image_format);
+    // artboard pipeline
+    this->artcode_pipeline = std::make_unique<ArtcodeGraphics>(
+        this->device, this->graphics_pipeline->layout, this->vk_buffers.image_format);
 };
 
 void CanvasRenderer::set_canvas_commands() {
     this->canvas_commands =
         std::make_unique<VulkanCanvas>(this->device, this->vk_buffers.canvas_uniform_buffer,
-                                       this->pipeline->descriptor_set_layout,
+                                       this->graphics_pipeline->descriptor_set_layout,
                                        this->graphics_family, this->MAX_FRAMES_IN_FLIGHT);
 };
 
+// TODO:update this, only recompile the graphics_pipeline that artcode api uses
 void CanvasRenderer::reload_pipeline() {
     if (ShadersCompiled::compiled) {
-        // reset pipeline
+        // reset graphics_pipeline
         this->device.waitIdle();
-        this->pipeline->graphics_pipeline.clear();
+        this->artcode_pipeline->pipeline.clear();
 
-        // recreate pipeline
-        this->pipeline->create_graphics_pipeline();
+        // recreate graphics_pipeline
+        this->artcode_pipeline->create_artcode_pipeline();
         // reset to false
         ShadersCompiled::compiled = false;
     }
@@ -264,9 +270,10 @@ void CanvasRenderer::record_canvas_command(const uint32_t& current_frame) {
     // render canvas
     cmd.beginRendering(canvas_rendering_info);
 
-    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->pipeline->graphics_pipeline);
+    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->graphics_pipeline->pipeline);
 
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->pipeline->layout, 0,
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                           this->graphics_pipeline->layout, 0,
                            *this->canvas_commands->canvas_descriptor_set[0], nullptr);
 
     cmd.setViewport(

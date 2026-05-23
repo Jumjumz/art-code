@@ -1,5 +1,6 @@
 add_library(renderer
   canvas_renderer.cpp
+  artcode_graphics.cpp
 )
 
 target_include_directories(renderer
