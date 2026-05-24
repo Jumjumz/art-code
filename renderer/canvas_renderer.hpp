@@ -38,6 +38,8 @@ class CanvasRenderer {
 
     void record_canvas_command(const uint32_t& current_frame);
 
+    void record_artcode_command(const uint32_t& current_frame);
+
     void update_canvas(const vk::raii::Device& device);
 
   private:

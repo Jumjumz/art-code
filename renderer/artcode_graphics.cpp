@@ -7,7 +7,9 @@ ArtcodeGraphics::ArtcodeGraphics(const vk::raii::Device&         device,
                                  vk::Format&                     image_format)
     : device(device),
       artboard_layout(artboard_layout),
-      image_format(image_format) {};
+      image_format(image_format) {
+    create_artcode_pipeline();
+};
 
 [[nodiscard]]
 vk::raii::ShaderModule
@@ -24,7 +26,7 @@ ArtcodeGraphics::create_shader_module(const std::vector<char>& code) const {
 std::vector<char> ArtcodeGraphics::read_file(const std::string& file_name) const {
     std::ifstream file(file_name, std::ios::ate | std::ios::binary);
     if (!file.is_open())
-        throw std::runtime_error("Failed to open file!");
+        throw std::runtime_error("Failed to open the artcode shader files! " + file_name);
 
     std::vector<char> buffer(file.tellg());
     file.seekg(0, std::ios::beg);
@@ -59,7 +61,7 @@ void ArtcodeGraphics::create_artcode_pipeline() {
                                                          frag_shader_stage_info};
 
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
-    assembly_info.topology = vk::PrimitiveTopology::eLineStrip;
+    assembly_info.topology = vk::PrimitiveTopology::ePointList;
 
     std::vector<vk::DynamicState> dynamic_states = {
         vk::DynamicState::eViewport,

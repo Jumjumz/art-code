@@ -45,8 +45,13 @@ bool Build::create_project_content() const {
 
         {
             // create files inside respective directories
-            const auto    shader = content_directories[1] / "artcode.frag";
-            std::ofstream shader_file(shader);
+            const std::vector<fs::path> shaders = {
+                content_directories[1] / "artcode.vert",
+                content_directories[1] / "artcode.frag"};
+
+            for (const auto& shader : shaders) {
+                std::ofstream shader_file(shader);
+            }
 
             const auto            components_dir = content_directories[2];
             std::vector<fs::path> comp_files     = {components_dir / "comp.hpp",
@@ -58,8 +63,10 @@ bool Build::create_project_content() const {
             // write comp files
             write_comp_hpp(comp_files[0]);
             write_comp_cpp(comp_files[1]);
+
             // write shader
-            write_shader(shader);
+            write_vert_shader(shaders[0]);
+            write_frag_shader(shaders[1]);
         }
 
         // create config folder
@@ -117,7 +124,7 @@ void Build::write_solution_file(const fs::path& solution_file) const {
                          },
                          {"sources", {"main.cpp", "components/comp.cpp"}},
                          {"includes", nlohmann::json::array()},
-                         {"shaders", "shaders/artcode.frag"},
+                         {"shaders", {"shaders/artcode.vert", "shaders/artcode.frag"}},
                          {"instances", nlohmann::json::array()}};
 
     // write
@@ -165,7 +172,20 @@ class Component {
 };)";
 };
 
-void Build::write_shader(const fs::path& shader) const {
+void Build::write_vert_shader(const fs::path& shader) const {
+    std::ofstream write(shader);
+
+    write << R"(#version 450
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;} ubo;
+layout(location = 0) out vec2 artboard_pos;
+void main() {
+const vec2 positions[4] = vec2[](vec2( 0.0f, 0.0f),vec2( ubo.reso.x, 0.0f),vec2( 0.0f, ubo.reso.y),vec2( ubo.reso.x, ubo.reso.y));
+artboard_pos = positions[gl_VertexIndex];
+gl_Position = ubo.proj * ubo.view * (ubo.model * vec4(artboard_pos, 0.0f, 1.0f));
+})";
+};
+
+void Build::write_frag_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 
     write << R"(#version 450

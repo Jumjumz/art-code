@@ -90,14 +90,34 @@ void BuildPanel::add_includes() const {
     write << js.dump(4);
 };
 
-fs::path BuildPanel::shader_files() const {
+std::vector<fs::path> BuildPanel::shader_files() const {
     const auto     shader_file = ProjectPath::get_solution_file();
     std::ifstream  read(shader_file);
     nlohmann::json js;
     js = nlohmann::json::parse(read);
     read.close();
 
-    return js["shaders"].get<fs::path>();
+    return js["shaders"].get<std::vector<fs::path>>();
+};
+
+// FIXME:this is wrong, glslangValidator only compiles once shader at a time
+std::string BuildPanel::compile_shaders() const {
+    std::string cmd;
+    fs::path    shader_dir;
+    fs::path    shader_out;
+    for (const auto& shader : shader_files()) {
+        shader_dir += shader.parent_path();
+        shader_out += shader_dir / (shader.filename().string() + ".spv");
+    }
+    // cd to shader dir first
+    cmd += "cd " + ProjectPath::get_project_path().string() + " && ";
+    // compile
+    cmd += "glslangValidator -V ";
+    cmd += shader_dir.string() + " -o "; // shader in cmd
+    cmd += shader_out.string();          // shader out cmd
+    cmd += " 2>&1";
+
+    return cmd;
 };
 
 std::string BuildPanel::executable_files() const {
@@ -161,22 +181,9 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) const {
             cmd  = build + " 2>&1";
             cmd += " && ";
             // executing runtime compile shaders
-            {
-                const auto shaders    = shader_files();
-                const auto shader_dir = shaders.parent_path();
-                const auto shader_out =
-                    shader_dir / (shaders.filename().string() + ".spv");
+            cmd += compile_shaders();
 
-                // cd to shader dir first
-                cmd += "cd " + project_dir.string() + " && ";
-                // compile
-                cmd += "glslangValidator -V ";
-                cmd += shaders.string() + " -o "; // shader in cmd
-                cmd += shader_out.string();       // shader out cmd
-                cmd += " 2>&1";
-
-                ShadersCompiled::compiled = true;
-            }
+            ShadersCompiled::compiled = true;
             break;
         };
         }

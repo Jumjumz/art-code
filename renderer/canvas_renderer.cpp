@@ -35,38 +35,47 @@ void CanvasRenderer::compile_shader() {
         js = nlohmann::json::parse(read);
     }
 
-    std::string cmd;
+    std::string result;
     {
         const auto project_dir = ProjectPath::get_project_path();
-        const auto shaders     = js["shaders"].get<std::filesystem::path>();
-        const auto shader_dir  = shaders.parent_path();
-        const auto shader_out  = shader_dir / (shaders.filename().string() + ".spv");
+        const auto shaders     = js["shaders"].get<std::vector<std::filesystem::path>>();
+        for (const auto& shader : shaders) {
+            const auto shader_dir = shader.parent_path();
+            const auto shader_in  = shader_dir / shader.filename();
+            const auto shader_out = shader_dir / (shader.filename().string() + ".spv");
 
-        // cd to shader dir first
-        cmd += "cd " + project_dir.string() + " && ";
-        // compile
-        cmd += "glslangValidator -V ";
-        cmd += shaders.string() + " -o "; // shader in cmd
-        cmd += shader_out.string();       // shader out cmd
-        cmd += " 2>&1";
-    }
+            // cd to shader dir first
+            std::string cmd = "cd " + project_dir.string() + " && ";
+            // compile
+            cmd += "glslangValidator -V ";
+            cmd += shader_in.string() + " -o "; // shader in cmd
+            cmd += shader_out;                  // shader out cmd
+            cmd += " 2>&1";
 
-    std::string result;
-    FILE*       pipe = popen(cmd.c_str(), "r");
-    if (!pipe) {
-        result = "Failed to run the command. Error occured somewhere";
-        return;
-    }
+            FILE* pipe = popen(cmd.c_str(), "r");
+            if (!pipe) {
+                result = "Failed to run the command. Error occured somewhere";
+                return;
+            }
 
-    // temporary buffer to read chunks of result
-    char buffer[128];
+            // temporary buffer to read chunks of result
+            char buffer[128];
 
-    // append buffer to result
-    while (fgets(buffer, sizeof(buffer), pipe)) {
-        result += buffer;
+            // append buffer to result
+            while (fgets(buffer, sizeof(buffer), pipe)) {
+                result += buffer;
+            }
+
+            int exit_code = pclose(pipe);
+            if (exit_code != 0) {
+                result += "\nShader compilation failed: " + shader.filename().string();
+                return;
+            }
+        }
     }
 };
 
+// FIXME:artboard doesnt display
 void CanvasRenderer::set_canvas_pipeline() {
     // vulkan graphics pipeline for canvas
     this->graphics_pipeline =
@@ -285,6 +294,66 @@ void CanvasRenderer::record_canvas_command(const uint32_t& current_frame) {
                                                        this->vk_buffers.extent.height}});
 
     cmd.draw(4, 1, 0, 0);
+
+    cmd.endRendering();
+
+    transition_image(
+        this->vk_buffers.images, cmd, vk::ImageLayout::eColorAttachmentOptimal,
+        vk::ImageLayout::eShaderReadOnlyOptimal, vk::AccessFlagBits2::eColorAttachmentWrite,
+        {}, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::PipelineStageFlagBits2::eBottomOfPipe, vk::ImageAspectFlagBits::eColor);
+
+    cmd.end();
+};
+
+void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
+    auto& cmd = this->canvas_commands->canvas_command_buffers[current_frame];
+
+    // render
+    cmd.begin({});
+
+    transition_image(this->vk_buffers.images, cmd, vk::ImageLayout::eUndefined,
+                     vk::ImageLayout::eColorAttachmentOptimal, {},
+                     vk::AccessFlagBits2::eColorAttachmentWrite,
+                     vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                     vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                     vk::ImageAspectFlagBits::eColor);
+
+    // prepare to render canvas
+    vk::RenderingAttachmentInfo canvas_attachement_info{};
+    canvas_attachement_info.imageView   = this->vk_buffers.image_views;
+    canvas_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+    canvas_attachement_info.loadOp      = vk::AttachmentLoadOp::eClear;
+    canvas_attachement_info.storeOp     = vk::AttachmentStoreOp::eStore;
+    canvas_attachement_info.clearValue  = this->clear_color;
+
+    vk::RenderingInfo canvas_rendering_info{};
+    canvas_rendering_info.renderArea.offset = this->offset;
+    canvas_rendering_info.renderArea.extent =
+        vk::Extent2D{this->vk_buffers.extent.width, this->vk_buffers.extent.height};
+    canvas_rendering_info.layerCount           = 1;
+    canvas_rendering_info.colorAttachmentCount = 1;
+    canvas_rendering_info.pColorAttachments    = &canvas_attachement_info;
+
+    // render canvas
+    cmd.beginRendering(canvas_rendering_info);
+
+    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->pipeline);
+
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                           this->graphics_pipeline->layout, 0,
+                           *this->canvas_commands->canvas_descriptor_set[0], nullptr);
+
+    cmd.setViewport(
+        0, vk::Viewport{0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),
+                        static_cast<float>(this->vk_buffers.extent.height), 0.0f, 1.0f});
+
+    cmd.setScissor(
+        0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
+                                                       this->vk_buffers.extent.height}});
+
+    // TODO:use extent width and height and ppi to create points in artboard
+    cmd.draw(100000, 1, 0, 0);
 
     cmd.endRendering();
 

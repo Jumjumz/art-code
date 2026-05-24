@@ -29,6 +29,8 @@ void Application::loop() {
                 this->canvas.canvas_setup(this->ui_manager.artboard_size,
                                           this->ui_manager.show_main_ui);
                 this->canvas.record_canvas_command(this->current_frame);
+                // artcode command
+                this->canvas.record_artcode_command(this->current_frame);
             }
 
             // records canvas and runs parallel with the main thread

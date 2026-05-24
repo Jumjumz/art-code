@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -20,11 +21,13 @@ class BuildPanel {
 
     std::string executable_files() const;
 
-    fs::path shader_files() const;
+    std::vector<fs::path> shader_files() const;
 
     void add_includes() const;
 
     void compile();
+
+    std::string compile_shaders() const;
 
     // C for compile, R for Run
     enum class Flags { C, R };
