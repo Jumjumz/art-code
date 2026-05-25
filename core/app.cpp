@@ -98,9 +98,9 @@ void Application::loop() {
             lock.unlock();
 
             buffers.push_back(
-                this->canvas.canvas_commands->canvas_command_buffers[this->current_frame]);
+                *this->canvas.canvas_commands->canvas_command_buffers[this->current_frame]);
             buffers.push_back(
-                this->canvas.artcode_commands->artcode_command_buffers[this->current_frame]);
+                *this->canvas.artcode_commands->artcode_command_buffers[this->current_frame]);
         } else {
             record_imgui_command();
         }

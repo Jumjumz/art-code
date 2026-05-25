@@ -96,7 +96,6 @@ void CanvasRenderer::set_canvas_commands() {
         this->MAX_FRAMES_IN_FLIGHT);
 };
 
-// TODO:update this, only recompile the graphics_pipeline that artcode api uses
 void CanvasRenderer::reload_pipeline() {
     if (ShadersCompiled::compiled) {
         // reset graphics_pipeline

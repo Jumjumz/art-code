@@ -61,7 +61,7 @@ void ArtcodeGraphics::create_artcode_pipeline() {
                                                          frag_shader_stage_info};
 
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
-    assembly_info.topology = vk::PrimitiveTopology::ePointList;
+    assembly_info.topology = vk::PrimitiveTopology::eLineList;
 
     std::vector<vk::DynamicState> dynamic_states = {
         vk::DynamicState::eViewport,

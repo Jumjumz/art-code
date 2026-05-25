@@ -32,5 +32,5 @@ class BuildPanel {
 
     std::string create_cmd(const BuildPanel::Flags& flag);
 
-    void execute(const std::string& cmd);
+    int execute(const std::string& cmd);
 };
