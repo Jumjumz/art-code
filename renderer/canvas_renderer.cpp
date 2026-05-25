@@ -75,7 +75,6 @@ void CanvasRenderer::compile_shader() {
     }
 };
 
-// FIXME:artboard doesnt display
 void CanvasRenderer::set_canvas_pipeline() {
     // vulkan graphics pipeline for canvas
     this->graphics_pipeline =
@@ -90,6 +89,11 @@ void CanvasRenderer::set_canvas_commands() {
         std::make_unique<VulkanCanvas>(this->device, this->vk_buffers.canvas_uniform_buffer,
                                        this->graphics_pipeline->descriptor_set_layout,
                                        this->graphics_family, this->MAX_FRAMES_IN_FLIGHT);
+    // artcode commands
+    this->artcode_commands = std::make_unique<ArtcodeCommands>(
+        this->device, this->vk_buffers.canvas_uniform_buffer,
+        this->graphics_pipeline->descriptor_set_layout, this->graphics_family,
+        this->MAX_FRAMES_IN_FLIGHT);
 };
 
 // TODO:update this, only recompile the graphics_pipeline that artcode api uses
@@ -297,52 +301,39 @@ void CanvasRenderer::record_canvas_command(const uint32_t& current_frame) {
 
     cmd.endRendering();
 
-    transition_image(
-        this->vk_buffers.images, cmd, vk::ImageLayout::eColorAttachmentOptimal,
-        vk::ImageLayout::eShaderReadOnlyOptimal, vk::AccessFlagBits2::eColorAttachmentWrite,
-        {}, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-        vk::PipelineStageFlagBits2::eBottomOfPipe, vk::ImageAspectFlagBits::eColor);
-
     cmd.end();
 };
 
 void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
-    auto& cmd = this->canvas_commands->canvas_command_buffers[current_frame];
+    auto& cmd = this->artcode_commands->artcode_command_buffers[current_frame];
 
     // render
     cmd.begin({});
 
-    transition_image(this->vk_buffers.images, cmd, vk::ImageLayout::eUndefined,
-                     vk::ImageLayout::eColorAttachmentOptimal, {},
-                     vk::AccessFlagBits2::eColorAttachmentWrite,
-                     vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-                     vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-                     vk::ImageAspectFlagBits::eColor);
-
     // prepare to render canvas
-    vk::RenderingAttachmentInfo canvas_attachement_info{};
-    canvas_attachement_info.imageView   = this->vk_buffers.image_views;
-    canvas_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-    canvas_attachement_info.loadOp      = vk::AttachmentLoadOp::eClear;
-    canvas_attachement_info.storeOp     = vk::AttachmentStoreOp::eStore;
-    canvas_attachement_info.clearValue  = this->clear_color;
+    vk::RenderingAttachmentInfo artcode_attachement_info{};
+    artcode_attachement_info.imageView   = this->vk_buffers.image_views;
+    artcode_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+    artcode_attachement_info.loadOp      = vk::AttachmentLoadOp::eLoad;
+    artcode_attachement_info.storeOp     = vk::AttachmentStoreOp::eStore;
+    artcode_attachement_info.clearValue  = this->clear_color;
 
-    vk::RenderingInfo canvas_rendering_info{};
-    canvas_rendering_info.renderArea.offset = this->offset;
-    canvas_rendering_info.renderArea.extent =
+    vk::RenderingInfo artcode_rendering_info{};
+    artcode_rendering_info.renderArea.offset = this->offset;
+    artcode_rendering_info.renderArea.extent =
         vk::Extent2D{this->vk_buffers.extent.width, this->vk_buffers.extent.height};
-    canvas_rendering_info.layerCount           = 1;
-    canvas_rendering_info.colorAttachmentCount = 1;
-    canvas_rendering_info.pColorAttachments    = &canvas_attachement_info;
+    artcode_rendering_info.layerCount           = 1;
+    artcode_rendering_info.colorAttachmentCount = 1;
+    artcode_rendering_info.pColorAttachments    = &artcode_attachement_info;
 
     // render canvas
-    cmd.beginRendering(canvas_rendering_info);
+    cmd.beginRendering(artcode_rendering_info);
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->pipeline);
 
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                            this->graphics_pipeline->layout, 0,
-                           *this->canvas_commands->canvas_descriptor_set[0], nullptr);
+                           *this->artcode_commands->artcode_descriptor_set[0], nullptr);
 
     cmd.setViewport(
         0, vk::Viewport{0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),
@@ -353,7 +344,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
                                                        this->vk_buffers.extent.height}});
 
     // TODO:use extent width and height and ppi to create points in artboard
-    cmd.draw(100000, 1, 0, 0);
+    cmd.draw(10000, 1, 0, 0);
 
     cmd.endRendering();
 

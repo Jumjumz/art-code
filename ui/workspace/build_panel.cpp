@@ -31,14 +31,12 @@ void BuildPanel::render() {
             }
 
             if (action == "Run") {
-                if (!this->project_compiled) {
+                if (!this->project_compiled)
                     compile();
-                }
 
                 // 0 = compilation success
                 if (ExecuteResult::get_exit_code() == 0) {
-                    const auto cmd = create_cmd(BuildPanel::Flags::R);
-                    execute(cmd);
+                    create_cmd(BuildPanel::Flags::R);
                     this->project_compiled = false;
                 }
             }
@@ -100,26 +98,6 @@ std::vector<fs::path> BuildPanel::shader_files() const {
     return js["shaders"].get<std::vector<fs::path>>();
 };
 
-// FIXME:this is wrong, glslangValidator only compiles once shader at a time
-std::string BuildPanel::compile_shaders() const {
-    std::string cmd;
-    fs::path    shader_dir;
-    fs::path    shader_out;
-    for (const auto& shader : shader_files()) {
-        shader_dir += shader.parent_path();
-        shader_out += shader_dir / (shader.filename().string() + ".spv");
-    }
-    // cd to shader dir first
-    cmd += "cd " + ProjectPath::get_project_path().string() + " && ";
-    // compile
-    cmd += "glslangValidator -V ";
-    cmd += shader_dir.string() + " -o "; // shader in cmd
-    cmd += shader_out.string();          // shader out cmd
-    cmd += " 2>&1";
-
-    return cmd;
-};
-
 std::string BuildPanel::executable_files() const {
     // read solution file
     std::vector<std::string> executables;
@@ -147,7 +125,7 @@ std::string BuildPanel::executable_files() const {
     return source;
 };
 
-std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) const {
+std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
     std::string cmd;
     // execute and use gcc compiler
     {
@@ -181,7 +159,22 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) const {
             cmd  = build + " 2>&1";
             cmd += " && ";
             // executing runtime compile shaders
-            cmd += compile_shaders();
+            for (const auto& shader : shader_files()) {
+                const auto shader_dir = shader.parent_path();
+                const auto shader_in  = shader_dir / shader.filename();
+                const auto shader_out =
+                    shader_dir / (shader.filename().string() + ".spv");
+
+                // cd to shader dir first
+                std::string shader_cmd = cmd + "cd " + project_dir.string() + " && ";
+                // compile
+                shader_cmd += "glslangValidator -V ";
+                shader_cmd += shader_in.string() + " -o "; // shader in cmd
+                shader_cmd += shader_out;                  // shader out cmd
+                shader_cmd += " 2>&1";
+
+                execute(shader_cmd);
+            }
 
             ShadersCompiled::compiled = true;
             break;

@@ -1,0 +1,80 @@
+#include "artcode_commands.hpp"
+#include "vk_types.hpp"
+
+ArtcodeCommands::ArtcodeCommands(const vk::raii::Device&              device,
+                                 const vk::raii::Buffer&              uniform_buffer,
+                                 const vk::raii::DescriptorSetLayout& descriptor_set,
+                                 const int&                           graphics_family,
+                                 const int& MAX_FRAMES_IN_FLIGHT)
+    : device(device),
+      uniform_buffer(uniform_buffer),
+      descriptor_set(descriptor_set),
+      graphics_family(graphics_family),
+      MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT) {
+    artcode_create_command_pool();
+    artcode_create_command_buffer();
+    artcode_create_descriptor_pool();
+    artcode_create_descriptor_set();
+};
+
+void ArtcodeCommands::artcode_create_command_pool() {
+    vk::CommandPoolCreateInfo pool_info{};
+    pool_info.flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+    pool_info.queueFamilyIndex = static_cast<uint32_t>(this->graphics_family);
+
+    this->artcode_command_pool = vk::raii::CommandPool{this->device, pool_info, nullptr};
+};
+
+void ArtcodeCommands::artcode_create_command_buffer() {
+    vk::CommandBufferAllocateInfo alloc_info{};
+    alloc_info.level              = vk::CommandBufferLevel::ePrimary;
+    alloc_info.commandPool        = this->artcode_command_pool;
+    alloc_info.commandBufferCount = this->MAX_FRAMES_IN_FLIGHT;
+
+    this->artcode_command_buffers = vk::raii::CommandBuffers{
+        this->device,
+        alloc_info,
+    };
+};
+
+void ArtcodeCommands::artcode_create_descriptor_pool() {
+    vk::DescriptorPoolSize poolSize(vk::DescriptorType::eUniformBuffer,
+                                    this->MAX_FRAMES_IN_FLIGHT);
+
+    vk::DescriptorPoolCreateInfo poolInfo{};
+    poolInfo.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
+    poolInfo.maxSets       = this->MAX_FRAMES_IN_FLIGHT;
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes    = &poolSize;
+
+    this->artcode_descriptor_pool =
+        vk::raii::DescriptorPool{this->device, poolInfo, nullptr};
+};
+
+void ArtcodeCommands::artcode_create_descriptor_set() {
+    std::vector<vk::DescriptorSetLayout> layouts(this->MAX_FRAMES_IN_FLIGHT,
+                                                 *this->descriptor_set);
+
+    vk::DescriptorSetAllocateInfo set_alloc_info{};
+    set_alloc_info.descriptorPool     = *this->artcode_descriptor_pool;
+    set_alloc_info.descriptorSetCount = static_cast<uint32_t>(layouts.size());
+    set_alloc_info.pSetLayouts        = layouts.data();
+
+    this->artcode_descriptor_set.clear();
+    this->artcode_descriptor_set = this->device.allocateDescriptorSets(set_alloc_info);
+
+    vk::DescriptorBufferInfo buffer_info{};
+    buffer_info.buffer = *this->uniform_buffer;
+    buffer_info.offset = 0;
+    buffer_info.range  = sizeof(ArtboardBuffer);
+
+    vk::WriteDescriptorSet write_desc_set{};
+    write_desc_set.dstSet          = this->artcode_descriptor_set[0];
+    write_desc_set.dstBinding      = 0;
+    write_desc_set.dstArrayElement = 0;
+    write_desc_set.descriptorCount = 1;
+    write_desc_set.descriptorType  = vk::DescriptorType::eUniformBuffer;
+    write_desc_set.pBufferInfo     = &buffer_info;
+
+    this->device.updateDescriptorSets(write_desc_set, {});
+};

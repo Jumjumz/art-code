@@ -78,7 +78,7 @@ void Application::loop() {
         reset_buffers();
         std::vector<vk::CommandBuffer> buffers;
         // pre allocate
-        buffers.reserve(2);
+        buffers.reserve(3);
 
         if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
             // signal canvas thread to start recording
@@ -99,6 +99,8 @@ void Application::loop() {
 
             buffers.push_back(
                 this->canvas.canvas_commands->canvas_command_buffers[this->current_frame]);
+            buffers.push_back(
+                this->canvas.artcode_commands->artcode_command_buffers[this->current_frame]);
         } else {
             record_imgui_command();
         }
@@ -173,6 +175,7 @@ void Application::reset_buffers() {
     // resets all command buffers
     if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
         this->canvas.canvas_commands->canvas_command_buffers[this->current_frame].reset();
+        this->canvas.artcode_commands->artcode_command_buffers[this->current_frame].reset();
     }
     this->commands.imgui_command_buffers[this->current_frame].reset();
 };
@@ -187,7 +190,7 @@ void Application::submit_buffers(const std::vector<vk::CommandBuffer>& command_b
     submit_info.pWaitSemaphores =
         &*this->commands.available_semaphores[this->current_frame];
     submit_info.pWaitDstStageMask    = &destination_stage_mask;
-    submit_info.commandBufferCount   = command_buffers.size() == 1 ? 1 : 2;
+    submit_info.commandBufferCount   = command_buffers.size() == 1 ? 1 : 3;
     submit_info.pCommandBuffers      = command_buffers.data();
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores =

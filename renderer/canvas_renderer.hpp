@@ -1,5 +1,6 @@
 #pragma once
 
+#include "artcode_commands.hpp"
 #include "artcode_graphics.hpp"
 #include "imgui_impl_glfw.h"
 #include "vulkan_buffers.hpp"
@@ -19,7 +20,9 @@ class CanvasRenderer {
 
     std::unique_ptr<VulkanGraphics>  graphics_pipeline;
     std::unique_ptr<ArtcodeGraphics> artcode_pipeline;
+
     std::unique_ptr<VulkanCanvas>    canvas_commands;
+    std::unique_ptr<ArtcodeCommands> artcode_commands;
 
     bool vulkan_init = true;
 

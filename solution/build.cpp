@@ -172,6 +172,7 @@ class Component {
 };)";
 };
 
+// TODO:this is for testing, replace this
 void Build::write_vert_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 
@@ -193,7 +194,7 @@ layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 
 layout(location = 0) in vec2 artboard_pos;
 layout(location = 0) out vec4 frag_color;
 void main() {
-vec4 color = vec4(1.0f);
+vec4 color = vec4(0.0f);
 frag_color = color;
 })";
 };
