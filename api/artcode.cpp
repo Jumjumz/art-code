@@ -127,9 +127,10 @@ void track_instances() {
     write << InstanceTracking::js.dump(4);
 };
 
-// instances
-using DrawCircle    = Art::Circle;
-using DrawRectangle = Art::Rectangle;
+// TODO:update to use the vert shader
+//  instances
+using DrawCircle = Art::Circle;
+using DrawQuad   = Art::Quad;
 
 // Circle
 DrawCircle::Circle() {
@@ -159,11 +160,11 @@ string DrawCircle::to_glsl_func() const {
     return glsl_code_func;
 };
 
-// Rectangle
-DrawRectangle::Rectangle() {
+// Quad
+DrawQuad::Quad() {
     // initialize at object creation
     init_count++;
-    this->name     = "rectangle_" + ToString(init_count);
+    this->name     = "quad_" + ToString(init_count);
     this->l        = 100.0f;
     this->w        = 100.0f;
     this->position = Vec2{200, 200};
@@ -175,9 +176,9 @@ DrawRectangle::Rectangle() {
     ShapeRegistry::register_shape(this);
 };
 
-DrawRectangle::~Rectangle() { ShapeRegistry::delete_registry(this); };
+DrawQuad::~Quad() { ShapeRegistry::delete_registry(this); };
 
-string DrawRectangle::to_glsl_func() const {
+string DrawQuad::to_glsl_func() const {
     string glsl_code_func = "float " + this->name + "()" + "{";
     glsl_code_func += "vec2 d=abs(artboard_pos-vec2(" + ToString(this->position.x) + "," +
                       ToString(this->position.y) + "))" + "-" + "vec2(" +

@@ -79,7 +79,7 @@ void CanvasRenderer::set_canvas_pipeline() {
     // vulkan graphics pipeline for canvas
     this->graphics_pipeline =
         std::make_unique<VulkanGraphics>(this->device, this->vk_buffers.image_format);
-    // artboard pipeline
+    // artcode pipeline
     this->artcode_pipeline = std::make_unique<ArtcodeGraphics>(
         this->device, this->graphics_pipeline->layout, this->vk_buffers.image_format);
 };

@@ -11,7 +11,7 @@
 struct IPen;
 struct PenTool;
 struct Triangle;
-struct Rectangle;
+struct Quad;
 struct Circle;
 
 // shape/class register
@@ -70,11 +70,11 @@ namespace Art {
         string to_glsl_func() const override;
     };
 
-    struct Rectangle : detail::IPen {
+    struct Quad : detail::IPen {
       public:
-        Rectangle();
+        Quad();
 
-        ~Rectangle();
+        ~Quad();
 
         float l, w;
 
