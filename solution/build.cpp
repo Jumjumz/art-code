@@ -181,6 +181,7 @@ layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 
 layout(location = 0) out vec2 artboard_pos;
 void main() {
 artboard_pos = positions[gl_VertexIndex];
+artboard_pos.y = ubo.reso.y - artboard_pos.y;
 gl_Position = ubo.proj * ubo.view * (ubo.model * vec4(artboard_pos, 0.0f, 1.0f));
 })";
 };

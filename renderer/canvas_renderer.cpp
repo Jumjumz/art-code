@@ -216,23 +216,25 @@ void CanvasRenderer::canvas_setup(const glm::vec3& artboard_size, bool show_main
 
     // identity matrix
     glm::mat4 view = glm::mat4(1.0f);
+    {
+        // get canvas center
+        const float center_x = this->vk_buffers.extent.width / 2.0f;
+        const float center_y = this->vk_buffers.extent.height / 2.0f;
 
-    // get canvas center
-    const float center_x = this->vk_buffers.extent.width / 2.0f;
-    const float center_y = this->vk_buffers.extent.height / 2.0f;
+        // translate to center
+        view = glm::translate(view, glm::vec3(center_x, center_y, 0.0f));
 
-    // translate to center
-    view = glm::translate(view, glm::vec3(center_x, center_y, 0.0f));
+        // scale to center
+        view =
+            glm::scale(view, glm::vec3(CanvasRenderer::zoom, CanvasRenderer::zoom, 1.0f));
 
-    // scale to center
-    view = glm::scale(view, glm::vec3(CanvasRenderer::zoom, CanvasRenderer::zoom, 1.0f));
+        // tanslate back
+        view = glm::translate(view, glm::vec3(-center_x, -center_y, 0.0f));
 
-    // tanslate back
-    view = glm::translate(view, glm::vec3(-center_x, -center_y, 0.0f));
-
-    // translate to the panning position
-    view = glm::translate(
-        view, glm::vec3(CanvasRenderer::panning.x, CanvasRenderer::panning.y, 0.0f));
+        // translate to the panning position
+        view = glm::translate(
+            view, glm::vec3(CanvasRenderer::panning.x, CanvasRenderer::panning.y, 0.0f));
+    }
 
     const auto width  = artboard_size.x;
     const auto height = artboard_size.y;

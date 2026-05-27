@@ -3,7 +3,6 @@
 #include <glm/glm.hpp>
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 // Forward declarations
@@ -35,25 +34,15 @@ typedef glm::vec4 Vec4;
 
 typedef Vec4 Color;
 
-// others
-typedef std::unordered_map<int, string> UMap;
-
-template <typename to_string> string ToString(const to_string& to_str) {
-    return std::to_string(to_str);
-};
-
 namespace detail {
     struct IPen {
         virtual ~IPen() = default;
 
         // must implement
-        string name;
-        Vec2   position;
-        Color  color;
-        float  stroke;
-        float  scale;
-
-        virtual string to_glsl_func() const = 0;
+        Vec2  position;
+        Color color;
+        float stroke;
+        float scale;
     };
 } // namespace detail
 
@@ -67,7 +56,6 @@ namespace Art {
         float radius;
 
       private:
-        string to_glsl_func() const override;
     };
 
     struct Quad : detail::IPen {
@@ -79,7 +67,6 @@ namespace Art {
         float l, w;
 
       private:
-        string to_glsl_func() const override;
     };
     // TODO:add others
 
