@@ -36,7 +36,8 @@ void BuildPanel::render() {
 
                 // 0 = compilation success
                 if (ExecuteResult::get_exit_code() == 0) {
-                    create_cmd(BuildPanel::Flags::R);
+                    const auto result = create_cmd(BuildPanel::Flags::R);
+                    execute(result);
                     this->project_compiled = false;
                 }
             }
@@ -156,27 +157,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
             break;
         };
         case BuildPanel::Flags::R: {
-            cmd  = build + " 2>&1";
-            cmd += " && ";
-            // executing runtime compile shaders
-            for (const auto& shader : shader_files()) {
-                const auto shader_dir = shader.parent_path();
-                const auto shader_in  = shader_dir / shader.filename();
-                const auto shader_out =
-                    shader_dir / (shader.filename().string() + ".spv");
-
-                // cd to shader dir first
-                std::string shader_cmd = cmd + "cd " + project_dir.string() + " && ";
-                // compile
-                shader_cmd += "glslangValidator -V ";
-                shader_cmd += shader_in.string() + " -o "; // shader in cmd
-                shader_cmd += shader_out;                  // shader out cmd
-                shader_cmd += " 2>&1";
-
-                int exit = execute(shader_cmd);
-                if (exit != 0)
-                    break;
-            }
+            cmd = build + " 2>&1";
 
             ShadersCompiled::compiled = true;
             break;
@@ -188,15 +169,14 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
 };
 
 // TODO:add progress bar/indicator when executing this function
-int BuildPanel::execute(const std::string& cmd) {
+void BuildPanel::execute(const std::string& cmd) {
     std::string result;
     FILE*       pipe = popen(cmd.c_str(), "r");
     if (!pipe) {
-        int return_err_code = -1;
-        result              = "Failed to run the command. Error occured somewhere";
+        result = "Failed to run the command. Error occured somewhere";
         ExecuteResult::set_result(result);
-        ExecuteResult::set_exit_code(return_err_code);
-        return return_err_code;
+        ExecuteResult::set_exit_code(-1);
+        return;
     }
 
     // temporary buffer to read chunks of result
@@ -207,10 +187,7 @@ int BuildPanel::execute(const std::string& cmd) {
         result += buffer;
     }
 
-    int exit_code = pclose(pipe);
     // set global variables
-    ExecuteResult::set_exit_code(exit_code);
+    ExecuteResult::set_exit_code(pclose(pipe));
     ExecuteResult::set_result(result);
-
-    return exit_code;
 };
