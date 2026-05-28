@@ -1,16 +1,25 @@
 #pragma once
 
 #include "artcode.hpp"
+#include <algorithm>
 
 struct ArtcodeInstance {
   public:
-    static inline void set_vertices(const ArrayVec2& vertices) {
-        ArtcodeInstance::vertices = vertices;
+    static inline void register_instance(detail::IPen* instance) {
+        ArtcodeInstance::instance.push_back(instance);
     }
-    static inline ArrayVec2 get_vertices() { return ArtcodeInstance::vertices; }
 
-    static inline void delete_vertices() { ArtcodeInstance::vertices.clear(); }
+    static inline std::vector<detail::IPen*> get_instance() {
+        return ArtcodeInstance::instance;
+    }
+
+    static inline void delete_instance(detail::IPen* instance) {
+        // iterator
+        const auto it = std::remove(ArtcodeInstance::instance.begin(),
+                                    ArtcodeInstance::instance.end(), instance);
+        ArtcodeInstance::instance.erase(it, ArtcodeInstance::instance.end());
+    }
 
   private:
-    static inline ArrayVec2 vertices;
+    static inline std::vector<detail::IPen*> instance;
 };

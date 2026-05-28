@@ -23,6 +23,10 @@ typedef std::vector<glm::vec1> ArrayVec1;
 typedef std::vector<glm::vec2> ArrayVec2;
 typedef std::vector<glm::vec3> ArrayVec3;
 typedef std::vector<glm::vec4> ArrayVec4;
+typedef std::vector<u8>        ArrayU8;
+typedef std::vector<u16>       ArrayU16;
+typedef std::vector<u32>       ArrayU32;
+typedef std::vector<u64>       ArrayU64;
 
 // glm data types
 typedef glm::vec1 Vec1;
@@ -42,7 +46,8 @@ namespace detail {
         float stroke;
         float scale;
 
-        virtual void generate_vertices() = 0;
+        virtual ArrayVec2 generate_vertices() = 0;
+        virtual ArrayU32  generate_indices()  = 0;
     };
 } // namespace detail
 
@@ -57,7 +62,9 @@ namespace Art {
 
       private:
         static constexpr u32 num_vert = 4;
-        void                 generate_vertices() override;
+
+        ArrayVec2 generate_vertices() override;
+        ArrayU32  generate_indices() override;
     };
 
     struct Circle : detail::IPen {
@@ -70,7 +77,9 @@ namespace Art {
 
       private:
         static constexpr u32 num_vert = 8;
-        void                 generate_vertices() override;
+
+        ArrayVec2 generate_vertices() override;
+        ArrayU32  generate_indices() override;
     };
     // TODO:add others
 

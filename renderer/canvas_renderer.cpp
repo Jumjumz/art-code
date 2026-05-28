@@ -1,4 +1,5 @@
 #include "canvas_renderer.hpp"
+#include "artcode_instance.hpp"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
 #include "json.hpp"
@@ -332,6 +333,10 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->pipeline);
 
+    // TODO:add vert and index buffer
+    // cmd.bindVertexBuffers(0, , {0});
+    // cmd.bindIndexBuffer(, 0, vk::IndexType::eUint32);
+
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                            this->graphics_pipeline->layout, 0,
                            *this->artcode_commands->artcode_descriptor_set[0], nullptr);
@@ -344,8 +349,9 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
-    // TODO:use extent width and height and ppi to create points in artboard
-    cmd.draw(10000, 1, 0, 0);
+    for (const auto instance : ArtcodeInstance::get_instance()) {
+        cmd.drawIndexed(instance->generate_indices().size(), 1, 0, 0, 0);
+    }
 
     cmd.endRendering();
 
