@@ -5,26 +5,24 @@
 #include <string>
 #include <vector>
 
-// Forward declarations
-// artcode
-struct IPen;
-struct PenTool;
-struct Triangle;
-struct Quad;
-struct Circle;
-
-// shape/class register
-struct ShapeRegistry;
-struct InstanceTracking;
-
 // strings
 typedef std::string string;
 
+// unsinged int
+typedef uint8_t  u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
 // Arrays
-typedef std::vector<int>    ArrayInt;
-typedef std::vector<float>  ArrayFloat;
-typedef std::vector<double> ArrayDouble;
-typedef std::vector<string> ArrayString;
+typedef std::vector<int>       ArrayInt;
+typedef std::vector<float>     ArrayFloat;
+typedef std::vector<double>    ArrayDouble;
+typedef std::vector<string>    ArrayString;
+typedef std::vector<glm::vec1> ArrayVec1;
+typedef std::vector<glm::vec2> ArrayVec2;
+typedef std::vector<glm::vec3> ArrayVec3;
+typedef std::vector<glm::vec4> ArrayVec4;
 
 // glm data types
 typedef glm::vec1 Vec1;
@@ -43,21 +41,12 @@ namespace detail {
         Color color;
         float stroke;
         float scale;
+
+        virtual void generate_vertices() = 0;
     };
 } // namespace detail
 
 namespace Art {
-    struct Circle : detail::IPen {
-      public:
-        Circle();
-
-        ~Circle();
-
-        float radius;
-
-      private:
-    };
-
     struct Quad : detail::IPen {
       public:
         Quad();
@@ -67,6 +56,21 @@ namespace Art {
         float l, w;
 
       private:
+        static constexpr u32 num_vert = 4;
+        void                 generate_vertices() override;
+    };
+
+    struct Circle : detail::IPen {
+      public:
+        Circle();
+
+        ~Circle();
+
+        float radius;
+
+      private:
+        static constexpr u32 num_vert = 8;
+        void                 generate_vertices() override;
     };
     // TODO:add others
 

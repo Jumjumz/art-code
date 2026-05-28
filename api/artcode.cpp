@@ -1,32 +1,11 @@
 #include "artcode.hpp"
+#include "artcode_instance.hpp"
 
-#include <algorithm>
 #include <cassert>
 // num of times derived class is initialize
 static inline int init_count = 0;
 
 // TODO:backend change, code generation will be removed
-struct ShapeRegistry {
-    static void register_shape(detail::IPen* shape) {
-        if (active_instances.size() == 0)
-            active_instances.reserve(20);
-
-        active_instances.push_back(shape);
-    }
-
-    static std::vector<detail::IPen*> get_classes() { return active_instances; }
-
-    static void delete_registry(detail::IPen* shape) {
-        active_instances.erase(
-            std::remove(active_instances.begin(), active_instances.end(), shape),
-            active_instances.end());
-    }
-
-  private:
-    static inline std::vector<detail::IPen*> active_instances;
-};
-
-//  instances
 using DrawQuad   = Art::Quad;
 using DrawCircle = Art::Circle;
 
@@ -40,12 +19,15 @@ DrawQuad::Quad() {
     this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
     this->stroke   = 1.0f;
     this->scale    = 1.0f;
-
-    // allocate to the registry
-    ShapeRegistry::register_shape(this);
 };
 
-DrawQuad::~Quad() { ShapeRegistry::delete_registry(this); };
+DrawQuad::~Quad() { ArtcodeInstance::delete_vertices(); };
+
+void DrawQuad::generate_vertices() {
+    ArtcodeInstance::set_vertices({this->position, this->position + Vec2{this->w, 0.0f},
+                                   this->position + Vec2{this->w, this->l},
+                                   this->position + Vec2{0.0f, this->l}});
+};
 
 // Circle
 DrawCircle::Circle() {
@@ -56,11 +38,8 @@ DrawCircle::Circle() {
     this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
     this->stroke   = 1.0f;
     this->scale    = 1.0f;
-
-    // allocate to the registry
-    ShapeRegistry::register_shape(this);
 };
 
-DrawCircle::~Circle() { ShapeRegistry::delete_registry(this); };
+DrawCircle::~Circle() { ArtcodeInstance::delete_vertices(); };
 
 void Art::Draw() {};
