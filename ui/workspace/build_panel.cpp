@@ -152,6 +152,12 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
                 cmd += "-lapi ";
                 cmd += "-Wl,-rpath," + api_dir.string() + " ";
                 cmd += "-o " + build + " 2>&1";
+                // static lib
+                /*cmd += "g++ -std=c++20 " + executables;
+                // compile main with artcode shared lib
+                cmd += "-I" + api_dir.string() + " ";
+                cmd += api_dir.string() + "/libapi.a ";
+                cmd += "-o " + build + " 2>&1"; */
             }
             break;
         };

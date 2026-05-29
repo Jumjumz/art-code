@@ -51,10 +51,10 @@ class Application {
 
     UIManager ui_manager;
 
-    CanvasRenderer canvas{this->ctx.physical_device, this->ctx.device,
-                          this->ctx.family_indices.graphics_family,
-                          Application::MAX_FRAMES_IN_FLIGHT,
-                          &this->swapchain.resources.extent.width};
+    CanvasRenderer canvas{
+        this->ctx.physical_device,         this->ctx.device,
+        this->ctx.graphics_queue,          this->ctx.family_indices.graphics_family,
+        Application::MAX_FRAMES_IN_FLIGHT, &this->swapchain.resources.extent.width};
 
     // multi  threading
     std::mutex              canvas_mutex;

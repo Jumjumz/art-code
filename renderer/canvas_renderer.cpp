@@ -10,6 +10,7 @@
 #include <fstream>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <iostream>
 
 // definition
 float     CanvasRenderer::zoom           = 1;
@@ -17,10 +18,13 @@ glm::vec2 CanvasRenderer::panning        = {0.0f, 0.0f};
 glm::vec2 CanvasRenderer::mouse_last_pos = {0.0f, 0.0f};
 
 CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
-                               const vk::raii::Device& device, const int& graphics_family,
+                               const vk::raii::Device&         device,
+                               const vk::raii::Queue&          graphics_queue,
+                               const int&                      graphics_family,
                                const int& MAX_FRAMES_IN_FLIGHT, const uint32_t* app_width)
     : physical_device(physical_device),
       device(device),
+      graphics_queue(graphics_queue),
       graphics_family(graphics_family),
       MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT),
       app_width(app_width),
@@ -95,6 +99,10 @@ void CanvasRenderer::set_canvas_commands() {
         this->device, this->vk_buffers.canvas_uniform_buffer,
         this->graphics_pipeline->descriptor_set_layout, this->graphics_family,
         this->MAX_FRAMES_IN_FLIGHT);
+    // vert and index buffer
+    this->artcode_buffer = std::make_unique<ArtcodeBuffer>(
+        this->physical_device, this->device, this->graphics_queue,
+        this->artcode_commands->artcode_command_pool);
 };
 
 void CanvasRenderer::reload_pipeline() {
@@ -333,10 +341,6 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->pipeline);
 
-    // TODO:add vert and index buffer
-    // cmd.bindVertexBuffers(0, , {0});
-    // cmd.bindIndexBuffer(, 0, vk::IndexType::eUint32);
-
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                            this->graphics_pipeline->layout, 0,
                            *this->artcode_commands->artcode_descriptor_set[0], nullptr);
@@ -349,8 +353,20 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
+    // FIXME:this loop doenst run as instance is emprty
     for (const auto instance : ArtcodeInstance::get_instance()) {
-        cmd.drawIndexed(instance->generate_indices().size(), 1, 0, 0, 0);
+        std::cout << &instance << std::endl;
+        const auto vertex  = instance->generate_vertices();
+        const auto indices = instance->generate_indices();
+
+        // create vertex buffer for each instance or shape
+        this->artcode_buffer->create_vertex_buffer(vertex);
+        this->artcode_buffer->create_index_buffer(indices);
+
+        cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffer, {0});
+        cmd.bindIndexBuffer(*this->artcode_buffer->index_buffer, 0, vk::IndexType::eUint32);
+
+        cmd.drawIndexed(indices.size(), 1, 0, 0, 0);
     }
 
     cmd.endRendering();

@@ -2,6 +2,7 @@
 #include "artcode_instance.hpp"
 
 #include <cassert>
+#include <iostream>
 // num of times derived class is initialize
 static inline int init_count = 0;
 
@@ -50,4 +51,20 @@ DrawCircle::Circle() {
 
 DrawCircle::~Circle() { ArtcodeInstance::delete_instance(this); };
 
-void Art::Draw() {};
+ArrayVec2 DrawCircle::generate_vertices() {
+    // TODO:add proper vert position for circle
+    return {this->position, this->position + Vec2{0.0f, 0.0f},
+            this->position + Vec2{0.0f, 0.0f}, this->position + Vec2{0.0f, 0.0f}};
+};
+
+// TODO:update to correct index connection
+ArrayU32 DrawCircle::generate_indices() { return {0, 1, 2, 0, 2, 3}; };
+
+void Art::Draw() {
+    for (const auto instance : ArtcodeInstance::get_instance()) {
+        std::cout << &instance << std::endl;
+
+        instance->generate_vertices();
+        instance->generate_indices();
+    }
+};

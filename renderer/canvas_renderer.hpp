@@ -1,5 +1,6 @@
 #pragma once
 
+#include "artcode_buffer.hpp"
 #include "artcode_commands.hpp"
 #include "artcode_graphics.hpp"
 #include "imgui_impl_glfw.h"
@@ -13,13 +14,15 @@
 class CanvasRenderer {
   public:
     CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
-                   const vk::raii::Device& device, const int& graphics_family,
-                   const int& MAX_FRAMES_IN_FLIGHT, const uint32_t* app_width);
+                   const vk::raii::Device& device, const vk::raii::Queue& graphics_queue,
+                   const int& graphics_family, const int& MAX_FRAMES_IN_FLIGHT,
+                   const uint32_t* app_width);
 
     VulkanBuffers vk_buffers;
 
     std::unique_ptr<VulkanGraphics>  graphics_pipeline;
     std::unique_ptr<ArtcodeGraphics> artcode_pipeline;
+    std::unique_ptr<ArtcodeBuffer>   artcode_buffer;
 
     std::unique_ptr<VulkanCanvas>    canvas_commands;
     std::unique_ptr<ArtcodeCommands> artcode_commands;
@@ -48,6 +51,7 @@ class CanvasRenderer {
   private:
     const vk::raii::PhysicalDevice& physical_device;
     const vk::raii::Device&         device;
+    const vk::raii::Queue&          graphics_queue;
 
     const int &graphics_family, &MAX_FRAMES_IN_FLIGHT;
 

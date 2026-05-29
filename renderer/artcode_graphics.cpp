@@ -1,4 +1,5 @@
 #include "artcode_graphics.hpp"
+#include "artcode_instance.hpp"
 #include "nav_items.hpp"
 #include <fstream>
 
@@ -72,9 +73,16 @@ void ArtcodeGraphics::create_artcode_pipeline() {
     dynamic_state_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
     dynamic_state_info.pDynamicStates    = dynamic_states.data();
 
+    // vert and index bindings
+    const auto binding_desc   = Vertex::getBindingDescription();
+    const auto attribute_desc = Vertex::getAttributeDescription();
+
     vk::PipelineVertexInputStateCreateInfo vertex_info{};
-    vertex_info.vertexBindingDescriptionCount   = 0;
-    vertex_info.vertexAttributeDescriptionCount = 0;
+    vertex_info.vertexBindingDescriptionCount = 1;
+    vertex_info.vertexAttributeDescriptionCount =
+        static_cast<uint32_t>(attribute_desc.size());
+    vertex_info.pVertexBindingDescriptions   = &binding_desc;
+    vertex_info.pVertexAttributeDescriptions = attribute_desc.data();
 
     vk::PipelineViewportStateCreateInfo viewport_state_info{};
     viewport_state_info.pViewports    = nullptr; // use dynamic viewport state
