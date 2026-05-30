@@ -10,7 +10,6 @@
 #include <fstream>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
-#include <iostream>
 
 // definition
 float     CanvasRenderer::zoom           = 1;
@@ -355,7 +354,6 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
 
     // FIXME:this loop doenst run as instance is emprty
     for (const auto instance : ArtcodeInstance::get_instance()) {
-        std::cout << &instance << std::endl;
         const auto vertex  = instance->generate_vertices();
         const auto indices = instance->generate_indices();
 
