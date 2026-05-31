@@ -10,6 +10,7 @@
 #include <fstream>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <iostream>
 
 // definition
 float     CanvasRenderer::zoom           = 1;
@@ -27,7 +28,10 @@ CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
       graphics_family(graphics_family),
       MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT),
       app_width(app_width),
-      vk_buffers(physical_device, device) {};
+      vk_buffers(physical_device, device) {
+    // initialize shared memory for artcode
+    Shared::Memory::load_shared_memory();
+};
 
 // TODO:improve this, result should go somewhere
 // used for new created project
@@ -352,21 +356,33 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
-    // FIXME:this loop doenst run as instance is emprty
-    for (const auto instance : ArtcodeInstance::get_instance()) {
-        const auto vertex  = instance->generate_vertices();
-        const auto indices = instance->generate_indices();
+    // FIXME:this doesnt run...
+    {
+        // declared static, if not causes stack overflow, ran out of stack space LMAO
+        static const auto instance  = Shared::Memory::get_instance();
+        const auto        inst_size = instance.size;
+        for (size_t i = 0; i < inst_size; i++) {
+            const auto inst_vertex  = Shared::Memory::get_vertex(i);
+            const auto inst_indices = Shared::Memory::get_index(i);
+            {
+                const std::vector<Vec2> vertex(inst_vertex.element,
+                                               inst_vertex.element + inst_vertex.size);
+                const std::vector<u32>  indices(inst_indices.element,
+                                                inst_indices.element + inst_indices.size);
+                std::cout << "vert size " << vertex.size() << std::endl;
+                std::cout << "ind size " << indices.size() << std::endl;
+                // create vertex buffer for each instance or shape
+                this->artcode_buffer->create_vertex_buffer(vertex);
+                this->artcode_buffer->create_index_buffer(indices);
+            }
 
-        // create vertex buffer for each instance or shape
-        this->artcode_buffer->create_vertex_buffer(vertex);
-        this->artcode_buffer->create_index_buffer(indices);
+            cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffer, {0});
+            cmd.bindIndexBuffer(*this->artcode_buffer->index_buffer, 0,
+                                vk::IndexType::eUint32);
 
-        cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffer, {0});
-        cmd.bindIndexBuffer(*this->artcode_buffer->index_buffer, 0, vk::IndexType::eUint32);
-
-        cmd.drawIndexed(indices.size(), 1, 0, 0, 0);
+            cmd.drawIndexed(inst_indices.size, 1, 0, 0, 0);
+        }
     }
-
     cmd.endRendering();
 
     transition_image(

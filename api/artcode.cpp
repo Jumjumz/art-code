@@ -1,8 +1,6 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
 
-#include <cassert>
-#include <iostream>
 // num of times derived class is initialize
 static inline int init_count = 0;
 
@@ -22,10 +20,10 @@ DrawQuad::Quad() {
     this->scale    = 1.0f;
 
     // register instance
-    ArtcodeInstance::register_instance(this);
+    Shared::Memory::register_instance(generate_vertices(), generate_indices());
 };
 
-DrawQuad::~Quad() { ArtcodeInstance::delete_instance(this); };
+DrawQuad::~Quad(){};
 
 ArrayVec2 DrawQuad::generate_vertices() {
     //  quad coordinates and size
@@ -46,10 +44,10 @@ DrawCircle::Circle() {
     this->scale    = 1.0f;
 
     // register instance
-    ArtcodeInstance::register_instance(this);
+    Shared::Memory::register_instance(generate_vertices(), generate_indices());
 };
 
-DrawCircle::~Circle() { ArtcodeInstance::delete_instance(this); };
+DrawCircle::~Circle(){};
 
 ArrayVec2 DrawCircle::generate_vertices() {
     // TODO:add proper vert position for circle
@@ -60,11 +58,4 @@ ArrayVec2 DrawCircle::generate_vertices() {
 // TODO:update to correct index connection
 ArrayU32 DrawCircle::generate_indices() { return {0, 1, 2, 0, 2, 3}; };
 
-void Art::Draw() {
-    for (const auto instance : ArtcodeInstance::get_instance()) {
-        std::cout << &instance << std::endl;
-
-        instance->generate_vertices();
-        instance->generate_indices();
-    }
-};
+void Art::Draw() {};

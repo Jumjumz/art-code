@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <glm/glm.hpp>
+#include <iostream>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <vulkan/vulkan_raii.hpp>
@@ -30,29 +31,32 @@ struct Vertex {
 typedef detail::IPen ArtInstance;
 
 struct Vert {
-    Vec2 element;
+    size_t size;
+    Vec2   element[999];
 };
 
 struct Indx {
-    u32 element;
+    size_t size;
+    u32    element[9999];
 };
 
 // TODO:create shared memory for api and app
 namespace Shared {
     struct Instance {
-        Vert vertex[999];
-        Indx index[9999];
+        Vert vertex;
+        Indx index;
     };
 
     struct Region {
-        size_t           count = 0;
+        size_t           size = 0;
         Shared::Instance instance[500];
     };
 
     struct Memory {
-        static Shared::Region* region;
+        static inline Shared::Region* region;
 
-        static void init() {
+        static void load_shared_memory() {
+            // uses POSIX functions
             int fd = shm_open("/artcode_instances", O_CREAT | O_RDWR, 0666);
             ftruncate(fd, sizeof(Shared::Region));
 
@@ -61,9 +65,11 @@ namespace Shared {
 
             close(fd);
 
+            std::memset(region, 0, sizeof(Shared::Region));
+
             // clear on first init
-            if (region->count < 0 || region->count >= 500)
-                region->count = 0;
+            if (region->size < 0 || region->size >= 500)
+                Shared::Memory::reset_instance();
         }
 
         static void cleanup() {
@@ -71,57 +77,35 @@ namespace Shared {
             shm_unlink("/artcode_instances");
         }
 
-        static void register_instance(const size_t count, const ArrayVec2& vertex,
-                                      const ArrayU32 index) {
+        // FIXME:this segfaults
+        static void register_instance(const ArrayVec2& vertex, const ArrayU32 index) {
             // max num of instances
-            if (region->count >= 500)
+            if (region->size >= 500 || !region)
                 return;
 
-            region->count = count;
             // insert vertex
             for (const auto& vert : vertex) {
-                region->instance->vertex->element = vert;
+                region->instance->vertex.element[region->instance->vertex.size++] = vert;
             }
             // insert indices
             for (const auto& idx : index) {
-                region->instance->index->element = idx;
+                region->instance->index.element[region->instance->index.size++] = idx;
             }
+            region->size++;
         }
 
         static Region get_instance() { return *region; }
 
-        static Vert get_vertex() { return region->instance->vertex[region->count]; }
+        static size_t get_intance_size() { return region->size; }
 
-        static Indx get_index() { return region->instance->index[region->count]; }
+        static Vert get_vertex(size_t idx) { return region->instance[idx].vertex; }
+
+        static Indx get_index(size_t idx) { return region->instance[idx].index; }
 
         static void reset_instance() {
-            region->count = 0;
+            region->size = 0;
             std::fill(std::begin(region->instance), std::end(region->instance),
                       Shared::Instance{});
         }
     };
 } // namespace Shared
-
-struct ArtcodeInstance {
-  public:
-    static inline void register_instance(ArtInstance* instance) {
-        if (ArtcodeInstance::instance.size() == 0)
-            ArtcodeInstance::instance.reserve(20);
-
-        ArtcodeInstance::instance.push_back(instance);
-    }
-
-    static inline std::vector<ArtInstance*> get_instance() {
-        return ArtcodeInstance::instance;
-    }
-
-    static inline void delete_instance(ArtInstance* instance) {
-        // iterator
-        const auto it = std::remove(ArtcodeInstance::instance.begin(),
-                                    ArtcodeInstance::instance.end(), instance);
-        ArtcodeInstance::instance.erase(it, ArtcodeInstance::instance.end());
-    }
-
-  private:
-    static inline std::vector<ArtInstance*> instance;
-};

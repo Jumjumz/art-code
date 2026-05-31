@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include "artcode_instance.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "nav_items.hpp"
@@ -329,6 +330,8 @@ void Application::cleanup() {
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+    // cleanup shared memory from artcode vert and index
+    Shared::Memory::cleanup();
 
     clean_swapchain();
 
