@@ -81,8 +81,10 @@ void Application::loop() {
 
         reset_buffers();
         std::vector<vk::CommandBuffer> buffers;
-        // pre allocate
-        buffers.reserve(3);
+
+        // pre allocate once
+        if (buffers.size() == 0)
+            buffers.reserve(3);
 
         if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
             // signal canvas thread to start recording

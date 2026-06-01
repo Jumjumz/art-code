@@ -122,13 +122,13 @@ void CanvasRenderer::reload_pipeline() {
 };
 
 void CanvasRenderer::update_artcode_buffers() {
-    const auto inst_size = Shared::Memory::get_intance_size();
-    if (inst_size == 0)
+    this->inst_size = Shared::Memory::get_intance_size();
+    if (this->inst_size == 0)
         return;
     // wait gpu to finish using old buffers
     this->device.waitIdle();
 
-    for (size_t i = 0; i < inst_size; i++) {
+    for (size_t i = 0; i < this->inst_size; i++) {
         const auto inst_vertex  = Shared::Memory::get_vertex(i);
         const auto inst_indices = Shared::Memory::get_index(i);
 
@@ -136,9 +136,12 @@ void CanvasRenderer::update_artcode_buffers() {
                                        inst_vertex.element + inst_vertex.size);
         const std::vector<u32>  indices(inst_indices.element,
                                         inst_indices.element + inst_indices.size);
+        // assign to use across the class
+        this->indices = indices;
+
         // create vertex buffer for each instance or shape
         this->artcode_buffer->create_vertex_buffer(vertex);
-        this->artcode_buffer->create_index_buffer(indices);
+        this->artcode_buffer->create_index_buffer(this->indices);
     }
 };
 
@@ -356,7 +359,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
     // render
     cmd.begin({});
 
-    // prepare to render canvas
+    // prepare to render artcode
     vk::RenderingAttachmentInfo artcode_attachement_info{};
     artcode_attachement_info.imageView   = this->vk_buffers.image_views;
     artcode_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
@@ -388,18 +391,14 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
     cmd.setScissor(
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
-    // TODO:update this
-    const auto inst_size = Shared::Memory::get_intance_size();
-    for (size_t i = 0; i < inst_size; i++) {
-        const auto inst_indices = Shared::Memory::get_index(i);
 
-        const std::vector<u32> indices(inst_indices.element,
-                                       inst_indices.element + inst_indices.size);
-
+    // FIXME:get instance size is increasing double per compilation
+    // doesnt render anything still
+    for (size_t i = 0; i < this->inst_size; i++) {
         cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffer, {0});
         cmd.bindIndexBuffer(*this->artcode_buffer->index_buffer, 0, vk::IndexType::eUint32);
 
-        cmd.drawIndexed(indices.size(), 1, 0, 0, 0);
+        cmd.drawIndexed(this->indices.size(), 1, 0, 0, 0);
     }
 
     cmd.endRendering();

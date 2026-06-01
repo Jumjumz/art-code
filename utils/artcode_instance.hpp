@@ -73,7 +73,7 @@ namespace Shared {
             close(fd);
 
             if (first_init)
-                std::memset(region, 0, sizeof(Shared::Region));
+                Shared::Memory::reset_instance();
         }
 
         static void cleanup() {
@@ -102,5 +102,7 @@ namespace Shared {
         static Vert get_vertex(size_t idx) { return region->instance[idx].vertex; }
 
         static Indx get_index(size_t idx) { return region->instance[idx].index; }
+
+        static void reset_instance() { std::memset(region, 0, sizeof(Shared::Region)); }
     };
 } // namespace Shared
