@@ -56,20 +56,27 @@ namespace Shared {
         static inline Shared::Region* region;
 
         static void load_shared_memory() {
-            // uses POSIX functions
-            int fd = shm_open("/artcode_instances", O_CREAT | O_RDWR, 0666);
-            ftruncate(fd, sizeof(Shared::Region));
+            // uses POSIX functions, returns -1 cuz of O_EXCL if process exists
+            int fd = shm_open("/artcode_instances", O_CREAT | O_EXCL | O_RDWR, 0666);
+            const bool first_init = fd != -1;
 
+            // immidiate close if fd already exist
+            if (!first_init) {
+                fd = shm_open("/artcode_instances", O_RDWR, 0666);
+            } else {
+                const auto result = ftruncate(fd, sizeof(Shared::Region));
+                if (result == -1) {
+                    std::cerr << "truncate failed!" << std::endl;
+                    return;
+                }
+            }
             region = (Shared::Region*)mmap(nullptr, sizeof(Shared::Region),
                                            PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
             close(fd);
 
-            std::memset(region, 0, sizeof(Shared::Region));
-
-            // clear on first init
-            if (region->size < 0 || region->size >= 500)
-                Shared::Memory::reset_instance();
+            if (first_init)
+                std::memset(region, 0, sizeof(Shared::Region));
         }
 
         static void cleanup() {
@@ -77,19 +84,18 @@ namespace Shared {
             shm_unlink("/artcode_instances");
         }
 
-        // FIXME:this segfaults
         static void register_instance(const ArrayVec2& vertex, const ArrayU32 index) {
-            // max num of instances
-            if (region->size >= 500 || !region)
+            if (region->size > 500 || !region)
                 return;
 
+            auto& inst = region->instance[region->size];
             // insert vertex
             for (const auto& vert : vertex) {
-                region->instance->vertex.element[region->instance->vertex.size++] = vert;
+                region->instance->vertex.element[inst.vertex.size++] = vert;
             }
             // insert indices
             for (const auto& idx : index) {
-                region->instance->index.element[region->instance->index.size++] = idx;
+                region->instance->index.element[inst.index.size++] = idx;
             }
             region->size++;
         }
