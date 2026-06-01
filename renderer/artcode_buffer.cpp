@@ -10,7 +10,7 @@ ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
       cmd_pool(cmd_pool) {};
 
 void ArtcodeBuffer::create_vertex_buffer(const std::vector<glm::vec2>& vertex) {
-    const vk::DeviceSize buffer_size = sizeof(vertex[0]) * vertex.size();
+    vk::DeviceSize buffer_size = sizeof(vertex[0]) * vertex.size();
 
     vk::BufferCreateInfo staging_info{};
     staging_info.size        = buffer_size;
@@ -23,7 +23,7 @@ void ArtcodeBuffer::create_vertex_buffer(const std::vector<glm::vec2>& vertex) {
 
     vk::MemoryAllocateInfo mem_alloc_staging_info{};
     mem_alloc_staging_info.allocationSize  = mem_req_staging.size;
-    mem_alloc_staging_info.memoryTypeIndex = findMemoryType(
+    mem_alloc_staging_info.memoryTypeIndex = find_memory_type(
         mem_req_staging.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
                                             vk::MemoryPropertyFlagBits::eHostCoherent);
 
@@ -49,13 +49,13 @@ void ArtcodeBuffer::create_vertex_buffer(const std::vector<glm::vec2>& vertex) {
     vk::MemoryAllocateInfo mem_alloc_info{};
     mem_alloc_info.allocationSize = mem_req.size;
     mem_alloc_info.memoryTypeIndex =
-        findMemoryType(mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        find_memory_type(mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
     this->vertex_memory = vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr};
 
     this->vertex_buffer.bindMemory(*this->vertex_memory, 0);
 
-    copyBuffer(staging_buffer, this->vertex_buffer, staging_info.size);
+    copy_buffer(staging_buffer, this->vertex_buffer, staging_info.size);
 };
 
 void ArtcodeBuffer::create_index_buffer(const std::vector<uint32_t>& indices) {
@@ -64,26 +64,26 @@ void ArtcodeBuffer::create_index_buffer(const std::vector<uint32_t>& indices) {
     vk::raii::Buffer       staging_buffer({});
     vk::raii::DeviceMemory staging_buffer_mem({});
 
-    createBuffer(buffer_size, vk::BufferUsageFlagBits::eTransferSrc,
-                 vk::MemoryPropertyFlagBits::eHostVisible |
-                     vk::MemoryPropertyFlagBits::eHostCoherent,
-                 staging_buffer, staging_buffer_mem);
+    create_buffer(buffer_size, vk::BufferUsageFlagBits::eTransferSrc,
+                  vk::MemoryPropertyFlagBits::eHostVisible |
+                      vk::MemoryPropertyFlagBits::eHostCoherent,
+                  staging_buffer, staging_buffer_mem);
 
-    void* data = staging_buffer_mem.mapMemory(0, 0);
-    memcpy(data, indices.data(), static_cast<size_t>(0));
+    void* data = staging_buffer_mem.mapMemory(0, buffer_size);
+    memcpy(data, indices.data(), static_cast<size_t>(buffer_size));
 
     staging_buffer_mem.unmapMemory();
 
-    createBuffer(
+    create_buffer(
         buffer_size,
         vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
         vk::MemoryPropertyFlagBits::eDeviceLocal, this->index_buffer, this->index_memory);
 
-    copyBuffer(staging_buffer, this->index_buffer, buffer_size);
+    copy_buffer(staging_buffer, this->index_buffer, buffer_size);
 };
 
-uint32_t ArtcodeBuffer::findMemoryType(uint32_t                type_filter,
-                                       vk::MemoryPropertyFlags properties) {
+uint32_t ArtcodeBuffer::find_memory_type(uint32_t                type_filter,
+                                         vk::MemoryPropertyFlags properties) {
     vk::PhysicalDeviceMemoryProperties mem_properties =
         this->phys_device.getMemoryProperties();
 
@@ -96,10 +96,10 @@ uint32_t ArtcodeBuffer::findMemoryType(uint32_t                type_filter,
     throw std::runtime_error("Failed to find suitable memory type!");
 };
 
-void ArtcodeBuffer::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
-                                 vk::MemoryPropertyFlags properties,
-                                 vk::raii::Buffer&       buffer,
-                                 vk::raii::DeviceMemory& buffer_memory) {
+void ArtcodeBuffer::create_buffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
+                                  vk::MemoryPropertyFlags properties,
+                                  vk::raii::Buffer&       buffer,
+                                  vk::raii::DeviceMemory& buffer_memory) {
     vk::BufferCreateInfo buffer_info{};
     buffer_info.size        = size;
     buffer_info.usage       = usage;
@@ -112,15 +112,15 @@ void ArtcodeBuffer::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage
     vk::MemoryAllocateInfo mem_alloc_staging_info{};
     mem_alloc_staging_info.allocationSize = mem_req.size;
     mem_alloc_staging_info.memoryTypeIndex =
-        findMemoryType(mem_req.memoryTypeBits, properties);
+        find_memory_type(mem_req.memoryTypeBits, properties);
 
     buffer_memory = vk::raii::DeviceMemory{this->device, mem_alloc_staging_info, nullptr};
 
     buffer.bindMemory(*buffer_memory, 0);
 };
 
-void ArtcodeBuffer::copyBuffer(vk::raii::Buffer& src_buffer, vk::raii::Buffer& dst_buffer,
-                               vk::DeviceSize size) {
+void ArtcodeBuffer::copy_buffer(vk::raii::Buffer& src_buffer,
+                                vk::raii::Buffer& dst_buffer, vk::DeviceSize size) {
     vk::CommandBufferAllocateInfo cmd_alloc_info{};
     cmd_alloc_info.commandPool        = this->cmd_pool;
     cmd_alloc_info.level              = vk::CommandBufferLevel::ePrimary;

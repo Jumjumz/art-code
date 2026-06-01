@@ -30,8 +30,9 @@ void Application::loop() {
                 this->canvas.canvas_setup(this->ui_manager.artboard_size,
                                           this->ui_manager.show_main_ui);
                 this->canvas.record_canvas_command(this->current_frame);
-                // artcode command
-                this->canvas.record_artcode_command(this->current_frame);
+                if (this->canvas.buffer_exist())
+                    // artcode command
+                    this->canvas.record_artcode_command(this->current_frame);
             }
 
             // records canvas and runs parallel with the main thread
@@ -64,6 +65,8 @@ void Application::loop() {
         // update canvas and texture first
         if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
             this->canvas.reload_pipeline();
+            // update artcode buffer
+            this->canvas.update_artcode_buffers();
             this->canvas.update_canvas(this->ctx.device);
         }
 
@@ -100,8 +103,9 @@ void Application::loop() {
 
             buffers.push_back(
                 *this->canvas.canvas_commands->canvas_command_buffers[this->current_frame]);
-            buffers.push_back(
-                *this->canvas.artcode_commands->artcode_command_buffers[this->current_frame]);
+            if (this->canvas.buffer_exist())
+                buffers.push_back(*this->canvas.artcode_commands
+                                       ->artcode_command_buffers[this->current_frame]);
         } else {
             record_imgui_command();
         }
@@ -176,7 +180,8 @@ void Application::reset_buffers() {
     // resets all command buffers
     if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
         this->canvas.canvas_commands->canvas_command_buffers[this->current_frame].reset();
-        this->canvas.artcode_commands->artcode_command_buffers[this->current_frame].reset();
+        if (this->canvas.buffer_exist())
+            this->canvas.artcode_commands->artcode_command_buffers[this->current_frame].reset();
     }
     this->commands.imgui_command_buffers[this->current_frame].reset();
 };
@@ -191,7 +196,7 @@ void Application::submit_buffers(const std::vector<vk::CommandBuffer>& command_b
     submit_info.pWaitSemaphores =
         &*this->commands.available_semaphores[this->current_frame];
     submit_info.pWaitDstStageMask    = &destination_stage_mask;
-    submit_info.commandBufferCount   = command_buffers.size() == 1 ? 1 : 3;
+    submit_info.commandBufferCount   = static_cast<uint32_t>(command_buffers.size());
     submit_info.pCommandBuffers      = command_buffers.data();
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores =

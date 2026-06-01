@@ -10,6 +10,7 @@
 #include <fstream>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <vulkan/vulkan_core.h>
 
 // definition
 float     CanvasRenderer::zoom           = 1;
@@ -118,6 +119,31 @@ void CanvasRenderer::reload_pipeline() {
         // reset to false
         ShadersCompiled::compiled = false;
     }
+};
+
+void CanvasRenderer::update_artcode_buffers() {
+    const auto inst_size = Shared::Memory::get_intance_size();
+    if (inst_size == 0)
+        return;
+    // wait gpu to finish using old buffers
+    this->device.waitIdle();
+
+    for (size_t i = 0; i < inst_size; i++) {
+        const auto inst_vertex  = Shared::Memory::get_vertex(i);
+        const auto inst_indices = Shared::Memory::get_index(i);
+
+        const std::vector<Vec2> vertex(inst_vertex.element,
+                                       inst_vertex.element + inst_vertex.size);
+        const std::vector<u32>  indices(inst_indices.element,
+                                        inst_indices.element + inst_indices.size);
+        // create vertex buffer for each instance or shape
+        this->artcode_buffer->create_vertex_buffer(vertex);
+        this->artcode_buffer->create_index_buffer(indices);
+    }
+};
+
+bool CanvasRenderer::buffer_exist() const {
+    return *this->artcode_buffer->vertex_buffer && *this->artcode_buffer->index_buffer;
 };
 
 void CanvasRenderer::workspace_events(GLFWwindow* app_window) {
@@ -313,12 +339,20 @@ void CanvasRenderer::record_canvas_command(const uint32_t& current_frame) {
 
     cmd.endRendering();
 
+    // has its own transition if artcode command function is not running
+    if (!buffer_exist())
+        transition_image(
+            this->vk_buffers.images, cmd, vk::ImageLayout::eColorAttachmentOptimal,
+            vk::ImageLayout::eShaderReadOnlyOptimal,
+            vk::AccessFlagBits2::eColorAttachmentWrite, {},
+            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+            vk::PipelineStageFlagBits2::eBottomOfPipe, vk::ImageAspectFlagBits::eColor);
+
     cmd.end();
 };
 
 void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
     auto& cmd = this->artcode_commands->artcode_command_buffers[current_frame];
-
     // render
     cmd.begin({});
 
@@ -354,28 +388,20 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
     cmd.setScissor(
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
-    // FIXME:validations errors that crashes the program
-    {
-        const auto inst_size = Shared::Memory::get_intance_size();
-        for (size_t i = 0; i < inst_size; i++) {
-            const auto inst_vertex  = Shared::Memory::get_vertex(i);
-            const auto inst_indices = Shared::Memory::get_index(i);
+    // TODO:update this
+    const auto inst_size = Shared::Memory::get_intance_size();
+    for (size_t i = 0; i < inst_size; i++) {
+        const auto inst_indices = Shared::Memory::get_index(i);
 
-            const std::vector<Vec2> vertex(inst_vertex.element,
-                                           inst_vertex.element + inst_vertex.size);
-            const std::vector<u32>  indices(inst_indices.element,
-                                            inst_indices.element + inst_indices.size);
-            // create vertex buffer for each instance or shape
-            this->artcode_buffer->create_vertex_buffer(vertex);
-            this->artcode_buffer->create_index_buffer(indices);
+        const std::vector<u32> indices(inst_indices.element,
+                                       inst_indices.element + inst_indices.size);
 
-            cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffer, {0});
-            cmd.bindIndexBuffer(*this->artcode_buffer->index_buffer, 0,
-                                vk::IndexType::eUint32);
+        cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffer, {0});
+        cmd.bindIndexBuffer(*this->artcode_buffer->index_buffer, 0, vk::IndexType::eUint32);
 
-            cmd.drawIndexed(indices.size(), 1, 0, 0, 0);
-        }
+        cmd.drawIndexed(indices.size(), 1, 0, 0, 0);
     }
+
     cmd.endRendering();
 
     transition_image(

@@ -24,12 +24,12 @@ class ArtcodeBuffer {
     const vk::raii::Queue&          graphics_queue;
     const vk::raii::CommandPool&    cmd_pool;
 
-    uint32_t findMemoryType(uint32_t type_filter, vk::MemoryPropertyFlags properties);
+    uint32_t find_memory_type(uint32_t type_filter, vk::MemoryPropertyFlags properties);
 
-    void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
-                      vk::MemoryPropertyFlags properties, vk::raii::Buffer& buffer,
-                      vk::raii::DeviceMemory& buffer_memory);
+    void create_buffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
+                       vk::MemoryPropertyFlags properties, vk::raii::Buffer& buffer,
+                       vk::raii::DeviceMemory& buffer_memory);
 
-    void copyBuffer(vk::raii::Buffer& src_buffer, vk::raii::Buffer& dst_buffer,
-                    vk::DeviceSize size);
+    void copy_buffer(vk::raii::Buffer& src_buffer, vk::raii::Buffer& dst_buffer,
+                     vk::DeviceSize size);
 };

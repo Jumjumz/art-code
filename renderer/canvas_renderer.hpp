@@ -38,6 +38,10 @@ class CanvasRenderer {
 
     void reload_pipeline();
 
+    void update_artcode_buffers();
+
+    bool buffer_exist() const;
+
     void workspace_events(GLFWwindow* app_window);
 
     void canvas_setup(const glm::vec3& artboard_size, bool show_main_ui);

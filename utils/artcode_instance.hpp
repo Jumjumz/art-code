@@ -1,7 +1,6 @@
 #pragma once
 
 #include "artcode.hpp"
-#include <algorithm>
 #include <cstdio>
 #include <fcntl.h>
 #include <glm/glm.hpp>
@@ -40,7 +39,6 @@ struct Indx {
     u32    element[9999];
 };
 
-// TODO:create shared memory for api and app
 namespace Shared {
     struct Instance {
         Vert vertex;
@@ -59,7 +57,6 @@ namespace Shared {
             // uses POSIX functions, returns -1 cuz of O_EXCL if process exists
             int fd = shm_open("/artcode_instances", O_CREAT | O_EXCL | O_RDWR, 0666);
             const bool first_init = fd != -1;
-
             // immidiate close if fd already exist
             if (!first_init) {
                 fd = shm_open("/artcode_instances", O_RDWR, 0666);
@@ -100,18 +97,10 @@ namespace Shared {
             region->size++;
         }
 
-        static Region get_instance() { return *region; }
-
         static size_t get_intance_size() { return region->size; }
 
         static Vert get_vertex(size_t idx) { return region->instance[idx].vertex; }
 
         static Indx get_index(size_t idx) { return region->instance[idx].index; }
-
-        static void reset_instance() {
-            region->size = 0;
-            std::fill(std::begin(region->instance), std::end(region->instance),
-                      Shared::Instance{});
-        }
     };
 } // namespace Shared
