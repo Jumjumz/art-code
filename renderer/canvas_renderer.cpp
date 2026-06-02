@@ -122,13 +122,13 @@ void CanvasRenderer::reload_pipeline() {
 };
 
 void CanvasRenderer::update_artcode_buffers() {
-    this->inst_size = Shared::Memory::get_intance_size();
-    if (this->inst_size == 0)
+    const auto inst_size = Shared::Memory::get_intance_size();
+    if (inst_size == 0)
         return;
     // wait gpu to finish using old buffers
     this->device.waitIdle();
 
-    for (size_t i = 0; i < this->inst_size; i++) {
+    for (size_t i = 0; i < inst_size; i++) {
         const auto inst_vertex  = Shared::Memory::get_vertex(i);
         const auto inst_indices = Shared::Memory::get_index(i);
 
@@ -137,11 +137,11 @@ void CanvasRenderer::update_artcode_buffers() {
         const std::vector<u32>  indices(inst_indices.element,
                                         inst_indices.element + inst_indices.size);
         // assign to use across the class
-        this->indices = indices;
+        this->indices.push_back(indices);
 
         // create vertex buffer for each instance or shape
         this->artcode_buffer->create_vertex_buffer(vertex);
-        this->artcode_buffer->create_index_buffer(this->indices);
+        this->artcode_buffer->create_index_buffer(indices);
     }
 };
 
@@ -281,7 +281,7 @@ void CanvasRenderer::canvas_setup(const glm::vec3& artboard_size, bool show_main
 
     ArtboardBuffer a_ubo{
         .proj = glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
-                           (float)this->vk_buffers.extent.height, 0.0f, -1.0f, 0.0f),
+                           (float)this->vk_buffers.extent.height, 0.0f, -1.0f, 1.0f),
         .view = view,
         .model =
             glm::translate(glm::mat4(1.0f),
@@ -394,11 +394,11 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
 
     // FIXME:get instance size is increasing double per compilation
     // doesnt render anything still
-    for (size_t i = 0; i < this->inst_size; i++) {
+    for (size_t i = 0; i < this->indices.size(); i++) {
         cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffer, {0});
         cmd.bindIndexBuffer(*this->artcode_buffer->index_buffer, 0, vk::IndexType::eUint32);
 
-        cmd.drawIndexed(this->indices.size(), 1, 0, 0, 0);
+        cmd.drawIndexed(this->indices[i].size(), 1, 0, 0, 0);
     }
 
     cmd.endRendering();

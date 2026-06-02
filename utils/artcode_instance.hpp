@@ -10,19 +10,16 @@
 #include <vulkan/vulkan_raii.hpp>
 
 struct Vertex {
-    glm::vec3 pos;
-    glm::vec3 color;
+    Vec2 pos;
 
     static vk::VertexInputBindingDescription getBindingDescription() {
         return {0, sizeof(Vertex), vk::VertexInputRate::eVertex};
     };
 
-    static std::array<vk::VertexInputAttributeDescription, 2> getAttributeDescription() {
+    static std::array<vk::VertexInputAttributeDescription, 1> getAttributeDescription() {
         return {
-            vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32B32Sfloat,
+            vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32Sfloat,
                                                 offsetof(Vertex, pos)},
-            vk::VertexInputAttributeDescription{1, 0, vk::Format::eR32G32B32Sfloat,
-                                                offsetof(Vertex, color)},
         };
     };
 };
@@ -88,11 +85,11 @@ namespace Shared {
             auto& inst = region->instance[region->size];
             // insert vertex
             for (const auto& vert : vertex) {
-                region->instance->vertex.element[inst.vertex.size++] = vert;
+                inst.vertex.element[inst.vertex.size++] = vert;
             }
             // insert indices
             for (const auto& idx : index) {
-                region->instance->index.element[inst.index.size++] = idx;
+                inst.index.element[inst.index.size++] = idx;
             }
             region->size++;
         }

@@ -9,6 +9,7 @@ ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
       graphics_queue(graphics_queue),
       cmd_pool(cmd_pool) {};
 
+// TODO:make the vertex buffer per fram alloc, includeing the index
 void ArtcodeBuffer::create_vertex_buffer(const std::vector<glm::vec2>& vertex) {
     vk::DeviceSize buffer_size = sizeof(vertex[0]) * vertex.size();
 

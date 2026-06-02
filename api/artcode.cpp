@@ -1,6 +1,5 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
-#include <iostream>
 
 // num of times derived class is initialize
 static inline int init_count = 0;
@@ -50,8 +49,6 @@ DrawQuad::~Quad() {
 
 ArrayVec2 DrawQuad::generate_vertices() {
     //  quad coordinates and size
-    std::cout << this->position.x << " : " << this->position.y << std::endl;
-    std::cout << this->l << " : " << this->w << std::endl;
     return ArrayVec2{this->position, this->position + Vec2{this->w, 0.0f},
                      this->position + Vec2{this->w, this->l},
                      this->position + Vec2{0.0f, this->l}};
