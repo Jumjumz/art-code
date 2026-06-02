@@ -178,9 +178,10 @@ void Build::write_vert_shader(const fs::path& shader) const {
 
     write << R"(#version 450
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;} ubo;
+layout(location = 0) in vec2 in_pos;
 layout(location = 0) out vec2 artboard_pos;
 void main() {
-artboard_pos = positions[gl_VertexIndex];
+artboard_pos = in_pos;
 artboard_pos.y = ubo.reso.y - artboard_pos.y;
 gl_Position = ubo.proj * ubo.view * (ubo.model * vec4(artboard_pos, 0.0f, 1.0f));
 })";
