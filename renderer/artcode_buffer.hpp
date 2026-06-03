@@ -9,14 +9,17 @@ class ArtcodeBuffer {
     ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
                   const vk::raii::Device& device, const vk::raii::Queue& graphics_queue,
                   const vk::raii::CommandPool& cmd_pool);
-    vk::raii::Buffer       vertex_buffer = nullptr;
-    vk::raii::DeviceMemory vertex_memory = nullptr;
+    std::vector<vk::raii::Buffer>       vertex_buffers;
+    std::vector<vk::raii::DeviceMemory> vertex_memories;
 
-    vk::raii::Buffer       index_buffer = nullptr;
-    vk::raii::DeviceMemory index_memory = nullptr;
+    std::vector<vk::raii::Buffer>       index_buffers;
+    std::vector<vk::raii::DeviceMemory> index_memories;
 
-    void create_vertex_buffer(const std::vector<glm::vec2>& vertex);
-    void create_index_buffer(const std::vector<uint32_t>& indices);
+    std::vector<std::vector<glm::vec2>> int_vertex;
+    std::vector<std::vector<uint32_t>>  int_index;
+
+    void create_vertex_buffer();
+    void create_index_buffer();
 
   private:
     const vk::raii::PhysicalDevice& phys_device;
@@ -25,10 +28,6 @@ class ArtcodeBuffer {
     const vk::raii::CommandPool&    cmd_pool;
 
     uint32_t find_memory_type(uint32_t type_filter, vk::MemoryPropertyFlags properties);
-
-    void create_buffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
-                       vk::MemoryPropertyFlags properties, vk::raii::Buffer& buffer,
-                       vk::raii::DeviceMemory& buffer_memory);
 
     void copy_buffer(vk::raii::Buffer& src_buffer, vk::raii::Buffer& dst_buffer,
                      vk::DeviceSize size);

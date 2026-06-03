@@ -109,24 +109,24 @@ void CanvasRenderer::set_canvas_commands() {
 };
 
 void CanvasRenderer::reload_pipeline() {
-    if (ShadersCompiled::compiled) {
-        // reset graphics_pipeline
-        this->device.waitIdle();
-        this->artcode_pipeline->pipeline.clear();
+    // reset graphics_pipeline
+    this->device.waitIdle();
+    this->artcode_pipeline->pipeline.clear();
 
-        // recreate graphics_pipeline
-        this->artcode_pipeline->create_artcode_pipeline();
-        // reset to false
-        ShadersCompiled::compiled = false;
-    }
+    // recreate graphics_pipeline
+    this->artcode_pipeline->create_artcode_pipeline();
 };
 
 void CanvasRenderer::update_artcode_buffers() {
     const auto inst_size = Shared::Memory::get_intance_size();
-    if (inst_size == 0)
-        return;
     // wait gpu to finish using old buffers
     this->device.waitIdle();
+
+    // clear the vectors for vertex, indices and its buffers
+    this->artcode_buffer->int_vertex.clear();
+    this->artcode_buffer->vertex_buffers.clear();
+    this->artcode_buffer->int_index.clear();
+    this->artcode_buffer->index_buffers.clear();
 
     for (size_t i = 0; i < inst_size; i++) {
         const auto inst_vertex  = Shared::Memory::get_vertex(i);
@@ -136,17 +136,25 @@ void CanvasRenderer::update_artcode_buffers() {
                                        inst_vertex.element + inst_vertex.size);
         const std::vector<u32>  indices(inst_indices.element,
                                         inst_indices.element + inst_indices.size);
-        // assign to use across the class
-        this->indices.push_back(indices);
 
-        // create vertex buffer for each instance or shape
-        this->artcode_buffer->create_vertex_buffer(vertex);
-        this->artcode_buffer->create_index_buffer(indices);
+        this->artcode_buffer->int_vertex.push_back(vertex);
+        this->artcode_buffer->int_index.push_back(indices);
     }
+    // clean/reset instance
+    Shared::Memory::reset_instance();
+
+    // create vertex buffer for each instance or shape
+    this->artcode_buffer->create_vertex_buffer();
+    this->artcode_buffer->create_index_buffer();
 };
 
+// this is used only for checking if both buffer exist to push the artcode command buffers in render loop
 bool CanvasRenderer::buffer_exist() const {
-    return *this->artcode_buffer->vertex_buffer && *this->artcode_buffer->index_buffer;
+    if (!this->artcode_buffer->vertex_buffers.empty() &&
+        !this->artcode_buffer->index_buffers.empty())
+        return true;
+
+    return false;
 };
 
 void CanvasRenderer::workspace_events(GLFWwindow* app_window) {
@@ -392,13 +400,12 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
-    // FIXME:get instance size is increasing double per compilation
-    // doesnt render anything still
-    for (size_t i = 0; i < this->indices.size(); i++) {
-        cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffer, {0});
-        cmd.bindIndexBuffer(*this->artcode_buffer->index_buffer, 0, vk::IndexType::eUint32);
+    for (size_t i = 0; i < this->artcode_buffer->int_index.size(); i++) {
+        cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[i], {0});
+        cmd.bindIndexBuffer(*this->artcode_buffer->index_buffers[i], 0,
+                            vk::IndexType::eUint32);
 
-        cmd.drawIndexed(this->indices[i].size(), 1, 0, 0, 0);
+        cmd.drawIndexed(this->artcode_buffer->int_index[i].size(), 1, 0, 0, 0);
     }
 
     cmd.endRendering();

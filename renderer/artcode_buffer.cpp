@@ -9,79 +9,112 @@ ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
       graphics_queue(graphics_queue),
       cmd_pool(cmd_pool) {};
 
-// TODO:make the vertex buffer per fram alloc, includeing the index
-void ArtcodeBuffer::create_vertex_buffer(const std::vector<glm::vec2>& vertex) {
-    vk::DeviceSize buffer_size = sizeof(vertex[0]) * vertex.size();
+void ArtcodeBuffer::create_vertex_buffer() {
+    for (size_t i = 0; i < this->int_vertex.size(); i++) {
+        const auto vertex = this->int_vertex[i];
 
-    vk::BufferCreateInfo staging_info{};
-    staging_info.size        = buffer_size;
-    staging_info.usage       = vk::BufferUsageFlagBits::eTransferSrc;
-    staging_info.sharingMode = vk::SharingMode::eExclusive;
+        vk::DeviceSize buffer_size = sizeof(vertex[0]) * vertex.size();
 
-    vk::raii::Buffer staging_buffer{this->device, staging_info, nullptr};
+        vk::BufferCreateInfo staging_info{};
+        staging_info.size        = buffer_size;
+        staging_info.usage       = vk::BufferUsageFlagBits::eTransferSrc;
+        staging_info.sharingMode = vk::SharingMode::eExclusive;
 
-    vk::MemoryRequirements mem_req_staging = staging_buffer.getMemoryRequirements();
+        vk::raii::Buffer staging_buffer{this->device, staging_info, nullptr};
 
-    vk::MemoryAllocateInfo mem_alloc_staging_info{};
-    mem_alloc_staging_info.allocationSize  = mem_req_staging.size;
-    mem_alloc_staging_info.memoryTypeIndex = find_memory_type(
-        mem_req_staging.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
-                                            vk::MemoryPropertyFlagBits::eHostCoherent);
+        vk::MemoryRequirements mem_req_staging = staging_buffer.getMemoryRequirements();
 
-    vk::raii::DeviceMemory staging_buffer_mem{this->device, mem_alloc_staging_info,
-                                              nullptr};
+        vk::MemoryAllocateInfo mem_alloc_info{};
+        mem_alloc_info.allocationSize  = mem_req_staging.size;
+        mem_alloc_info.memoryTypeIndex = find_memory_type(
+            mem_req_staging.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
+                                                vk::MemoryPropertyFlagBits::eHostCoherent);
 
-    staging_buffer.bindMemory(staging_buffer_mem, 0);
+        vk::raii::DeviceMemory staging_buffer_mem{this->device, mem_alloc_info, nullptr};
 
-    void* data_staging = staging_buffer_mem.mapMemory(0, staging_info.size);
-    memcpy(data_staging, vertex.data(), static_cast<size_t>(staging_info.size));
+        staging_buffer.bindMemory(staging_buffer_mem, 0);
 
-    staging_buffer_mem.unmapMemory();
+        void* data_staging = staging_buffer_mem.mapMemory(0, staging_info.size);
+        memcpy(data_staging, vertex.data(), static_cast<size_t>(staging_info.size));
 
-    vk::BufferCreateInfo buffer_info{};
-    buffer_info.size = buffer_size;
-    buffer_info.usage =
-        vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst;
-    buffer_info.sharingMode = vk::SharingMode::eExclusive;
+        staging_buffer_mem.unmapMemory();
 
-    this->vertex_buffer = vk::raii::Buffer{this->device, buffer_info, nullptr};
+        vk::BufferCreateInfo buffer_info{};
+        buffer_info.size  = buffer_size;
+        buffer_info.usage = vk::BufferUsageFlagBits::eVertexBuffer |
+                            vk::BufferUsageFlagBits::eTransferDst;
+        buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
-    vk::MemoryRequirements mem_req = this->vertex_buffer.getMemoryRequirements();
-    vk::MemoryAllocateInfo mem_alloc_info{};
-    mem_alloc_info.allocationSize = mem_req.size;
-    mem_alloc_info.memoryTypeIndex =
-        find_memory_type(mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        this->vertex_buffers.push_back(vk::raii::Buffer{this->device, buffer_info, nullptr});
 
-    this->vertex_memory = vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr};
+        // use current buffer
+        vk::MemoryRequirements mem_req = this->vertex_buffers[i].getMemoryRequirements();
 
-    this->vertex_buffer.bindMemory(*this->vertex_memory, 0);
+        mem_alloc_info.allocationSize  = mem_req.size;
+        mem_alloc_info.memoryTypeIndex = find_memory_type(
+            mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-    copy_buffer(staging_buffer, this->vertex_buffer, staging_info.size);
+        this->vertex_memories.push_back(
+            vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr});
+
+        this->vertex_buffers[i].bindMemory(*this->vertex_memories[i], 0);
+
+        copy_buffer(staging_buffer, this->vertex_buffers[i], staging_info.size);
+    }
 };
 
-void ArtcodeBuffer::create_index_buffer(const std::vector<uint32_t>& indices) {
-    const vk::DeviceSize buffer_size = sizeof(indices[0]) * indices.size();
+void ArtcodeBuffer::create_index_buffer() {
+    for (size_t i = 0; i < this->int_index.size(); i++) {
+        const auto indices = this->int_index[i];
 
-    vk::raii::Buffer       staging_buffer({});
-    vk::raii::DeviceMemory staging_buffer_mem({});
+        const vk::DeviceSize buffer_size = sizeof(indices[0]) * indices.size();
 
-    create_buffer(buffer_size, vk::BufferUsageFlagBits::eTransferSrc,
-                  vk::MemoryPropertyFlagBits::eHostVisible |
-                      vk::MemoryPropertyFlagBits::eHostCoherent,
-                  staging_buffer, staging_buffer_mem);
+        vk::BufferCreateInfo staging_info{};
+        staging_info.size        = buffer_size;
+        staging_info.usage       = vk::BufferUsageFlagBits::eTransferSrc;
+        staging_info.sharingMode = vk::SharingMode::eExclusive;
 
-    void* data = staging_buffer_mem.mapMemory(0, buffer_size);
-    memcpy(data, indices.data(), static_cast<size_t>(buffer_size));
+        vk::raii::Buffer staging_buffer{this->device, staging_info, nullptr};
 
-    staging_buffer_mem.unmapMemory();
+        vk::MemoryRequirements mem_req_staging = staging_buffer.getMemoryRequirements();
 
-    create_buffer(
-        buffer_size,
-        vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-        vk::MemoryPropertyFlagBits::eDeviceLocal, this->index_buffer, this->index_memory);
+        vk::MemoryAllocateInfo mem_alloc_info{};
+        mem_alloc_info.allocationSize  = mem_req_staging.size;
+        mem_alloc_info.memoryTypeIndex = find_memory_type(
+            mem_req_staging.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
+                                                vk::MemoryPropertyFlagBits::eHostCoherent);
 
-    copy_buffer(staging_buffer, this->index_buffer, buffer_size);
-};
+        vk::raii::DeviceMemory staging_buffer_mem{this->device, mem_alloc_info, nullptr};
+
+        staging_buffer.bindMemory(staging_buffer_mem, 0);
+
+        void* data = staging_buffer_mem.mapMemory(0, staging_info.size);
+        memcpy(data, indices.data(), static_cast<size_t>(staging_info.size));
+
+        staging_buffer_mem.unmapMemory();
+
+        vk::BufferCreateInfo buffer_info{};
+        buffer_info.size = buffer_size;
+        buffer_info.usage =
+            vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst;
+        buffer_info.sharingMode = vk::SharingMode::eExclusive;
+
+        this->index_buffers.push_back(vk::raii::Buffer{this->device, buffer_info, nullptr});
+
+        // use current buffer
+        vk::MemoryRequirements mem_req = this->index_buffers[i].getMemoryRequirements();
+        mem_alloc_info.allocationSize  = mem_req.size;
+        mem_alloc_info.memoryTypeIndex = find_memory_type(
+            mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+        this->index_memories.push_back(
+            vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr});
+
+        this->index_buffers[i].bindMemory(*this->index_memories[i], 0);
+
+        copy_buffer(staging_buffer, this->index_buffers[i], staging_info.size);
+    }
+}
 
 uint32_t ArtcodeBuffer::find_memory_type(uint32_t                type_filter,
                                          vk::MemoryPropertyFlags properties) {
@@ -95,29 +128,6 @@ uint32_t ArtcodeBuffer::find_memory_type(uint32_t                type_filter,
     }
 
     throw std::runtime_error("Failed to find suitable memory type!");
-};
-
-void ArtcodeBuffer::create_buffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
-                                  vk::MemoryPropertyFlags properties,
-                                  vk::raii::Buffer&       buffer,
-                                  vk::raii::DeviceMemory& buffer_memory) {
-    vk::BufferCreateInfo buffer_info{};
-    buffer_info.size        = size;
-    buffer_info.usage       = usage;
-    buffer_info.sharingMode = vk::SharingMode::eExclusive;
-
-    buffer = vk::raii::Buffer{this->device, buffer_info, nullptr};
-
-    vk::MemoryRequirements mem_req = buffer.getMemoryRequirements();
-
-    vk::MemoryAllocateInfo mem_alloc_staging_info{};
-    mem_alloc_staging_info.allocationSize = mem_req.size;
-    mem_alloc_staging_info.memoryTypeIndex =
-        find_memory_type(mem_req.memoryTypeBits, properties);
-
-    buffer_memory = vk::raii::DeviceMemory{this->device, mem_alloc_staging_info, nullptr};
-
-    buffer.bindMemory(*buffer_memory, 0);
 };
 
 void ArtcodeBuffer::copy_buffer(vk::raii::Buffer& src_buffer,

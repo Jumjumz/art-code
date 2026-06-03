@@ -72,8 +72,6 @@ class CanvasRenderer {
     bool spacebar_pressed   = false;
     bool left_click_pressed = false;
 
-    std::vector<std::vector<uint32_t>> indices;
-
     const vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
     const vk::Offset2D        offset      = {0, 0};
 

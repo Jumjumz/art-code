@@ -3,6 +3,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "nav_items.hpp"
+#include "vk_types.hpp"
 
 Application::Application() {};
 
@@ -64,9 +65,13 @@ void Application::loop() {
 
         // update canvas and texture first
         if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
-            this->canvas.reload_pipeline();
-            // update artcode buffer
-            this->canvas.update_artcode_buffers();
+            if (ShadersCompiled::compiled) {
+                this->canvas.reload_pipeline();
+                // update artcode buffer
+                this->canvas.update_artcode_buffers();
+
+                ShadersCompiled::compiled = false;
+            }
             this->canvas.update_canvas(this->ctx.device);
         }
 
