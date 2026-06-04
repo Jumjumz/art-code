@@ -14,20 +14,6 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-// Arrays
-typedef std::vector<int>       ArrayInt;
-typedef std::vector<float>     ArrayFloat;
-typedef std::vector<double>    ArrayDouble;
-typedef std::vector<string>    ArrayString;
-typedef std::vector<glm::vec1> ArrayVec1;
-typedef std::vector<glm::vec2> ArrayVec2;
-typedef std::vector<glm::vec3> ArrayVec3;
-typedef std::vector<glm::vec4> ArrayVec4;
-typedef std::vector<u8>        ArrayU8;
-typedef std::vector<u16>       ArrayU16;
-typedef std::vector<u32>       ArrayU32;
-typedef std::vector<u64>       ArrayU64;
-
 // glm data types
 typedef glm::vec1 Vec1;
 typedef glm::vec2 Vec2;
@@ -35,6 +21,19 @@ typedef glm::vec3 Vec3;
 typedef glm::vec4 Vec4;
 
 typedef Vec4 Color;
+// Arrays
+typedef std::vector<int>    ArrayInt;
+typedef std::vector<float>  ArrayFloat;
+typedef std::vector<double> ArrayDouble;
+typedef std::vector<string> ArrayString;
+typedef std::vector<Vec1>   ArrayVec1;
+typedef std::vector<Vec2>   ArrayVec2;
+typedef std::vector<Vec3>   ArrayVec3;
+typedef std::vector<Vec4>   ArrayVec4;
+typedef std::vector<u8>     ArrayU8;
+typedef std::vector<u16>    ArrayU16;
+typedef std::vector<u32>    ArrayU32;
+typedef std::vector<u64>    ArrayU64;
 
 namespace detail {
     struct IPen {
@@ -61,8 +60,6 @@ namespace Art {
         float l, w;
 
       private:
-        static constexpr u32 num_vert = 4;
-
         ArrayVec2 generate_vertices() override;
         ArrayU32  generate_indices() override;
     };
@@ -76,8 +73,22 @@ namespace Art {
         float radius;
 
       private:
-        static constexpr u32 num_vert = 8;
+        // num of triangles to make a circle, also defines the smoothness
+        static constexpr int SEGMENTS = 32;
 
+        ArrayVec2 generate_vertices() override;
+        ArrayU32  generate_indices() override;
+    };
+
+    struct Triangle : detail::IPen {
+      public:
+        Triangle();
+
+        ~Triangle();
+
+        float size;
+
+      private:
         ArrayVec2 generate_vertices() override;
         ArrayU32  generate_indices() override;
     };

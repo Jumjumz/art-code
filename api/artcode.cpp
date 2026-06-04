@@ -1,5 +1,6 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
+#include <cmath>
 
 struct ShapeRegistry {
     static void register_shape(detail::IPen* shape) {
@@ -20,8 +21,9 @@ struct ShapeRegistry {
     static inline std::vector<detail::IPen*> instances;
 };
 
-using DrawQuad   = Art::Quad;
-using DrawCircle = Art::Circle;
+using DrawQuad     = Art::Quad;
+using DrawCircle   = Art::Circle;
+using DrawTriangle = Art::Triangle;
 
 // Quad
 DrawQuad::Quad() {
@@ -44,11 +46,11 @@ ArrayVec2 DrawQuad::generate_vertices() {
                      this->position + Vec2{0.0f, this->l}};
 };
 
-ArrayU32 DrawQuad::generate_indices() { return ArrayU32{0, 1, 2, 0, 2, 3}; };
+ArrayU32 DrawQuad::generate_indices() { return ArrayU32{0, 1, 1, 2, 2, 3, 0, 3}; };
 
 // Circle
 DrawCircle::Circle() {
-    this->radius   = 0.5f;
+    this->radius   = 100.f;
     this->position = Vec2{200, 200};
     this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
     this->stroke   = 1.0f;
@@ -60,13 +62,52 @@ DrawCircle::Circle() {
 DrawCircle::~Circle() { ShapeRegistry::delete_registry(this); };
 
 ArrayVec2 DrawCircle::generate_vertices() {
-    // TODO:add proper vert position for circle
-    return ArrayVec2{this->position, this->position + Vec2{0.0f, 0.0f},
-                     this->position + Vec2{0.0f, 0.0f}, this->position + Vec2{0.0f, 0.0f}};
+    ArrayVec2 vertex;
+
+    for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
+        float angle = i * 2.0f * M_PI / DrawCircle::SEGMENTS;
+
+        vertex.push_back(Vec2{this->position.x + cos(angle) * this->radius,
+                              this->position.y + sin(angle) * this->radius});
+    }
+    return vertex;
 };
 
-// TODO:update to correct index connection
-ArrayU32 DrawCircle::generate_indices() { return ArrayU32{0, 1, 2, 0, 2, 3}; };
+ArrayU32 DrawCircle::generate_indices() {
+    ArrayU32 indices;
+
+    for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
+        indices.push_back(i);
+        indices.push_back((i + 1) % DrawCircle::SEGMENTS);
+    }
+    return indices;
+};
+
+// Triangle
+DrawTriangle::Triangle() {
+    this->size     = 100.0f;
+    this->position = Vec2{200, 200};
+    this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
+    this->stroke   = 1.0f;
+    this->scale    = 1.0f;
+
+    ShapeRegistry::register_shape(this);
+};
+
+DrawTriangle::~Triangle() { ShapeRegistry::delete_registry(this); };
+
+ArrayVec2 DrawTriangle::generate_vertices() {
+    ArrayVec2 vertex;
+
+    for (int i = 0; i < 3; i++) {
+        float angle = i * 2.0f * M_PI / 3.0f - M_PI / 2.0f;
+        vertex.push_back(Vec2{this->position.x + cos(angle) * this->size,
+                              this->position.y + sin(angle) * this->size});
+    }
+    return vertex;
+};
+
+ArrayU32 DrawTriangle::generate_indices() { return ArrayU32{0, 1, 2, 1, 2, 0}; };
 
 void Art::Draw() {
     // load shared memory
