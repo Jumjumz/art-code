@@ -1,22 +1,24 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
 class ArtcodeGraphics {
   public:
-    ArtcodeGraphics(const vk::raii::Device&         device,
-                    const vk::raii::PipelineLayout& artboard_layout,
-                    vk::Format&                     image_format);
+    ArtcodeGraphics(const vk::raii::Device&              device,
+                    const vk::raii::DescriptorSetLayout& artboard_set_layout,
+                    vk::Format&                          image_format);
     // shader module
-    vk::raii::ShaderModule vert_shader_module = nullptr;
-    vk::raii::ShaderModule frag_shader_module = nullptr;
-    vk::raii::Pipeline     pipeline           = nullptr;
+    vk::raii::ShaderModule   vert_shader_module = nullptr;
+    vk::raii::ShaderModule   frag_shader_module = nullptr;
+    vk::raii::Pipeline       pipeline           = nullptr;
+    vk::raii::PipelineLayout layout             = nullptr;
 
     void create_artcode_pipeline();
 
   private:
-    const vk::raii::Device&         device;
-    const vk::raii::PipelineLayout& artboard_layout;
+    const vk::raii::Device&              device;
+    const vk::raii::DescriptorSetLayout& artboard_set_layout;
 
     const vk::Format& image_format;
 

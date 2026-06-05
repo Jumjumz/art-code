@@ -3,6 +3,7 @@
 #include "artcode_buffer.hpp"
 #include "artcode_commands.hpp"
 #include "artcode_graphics.hpp"
+#include "artcode_instance.hpp"
 #include "imgui_impl_glfw.h"
 #include "vulkan_buffers.hpp"
 #include "vulkan_canvas.hpp"
@@ -71,6 +72,8 @@ class CanvasRenderer {
     bool ctrl_pressed       = false;
     bool spacebar_pressed   = false;
     bool left_click_pressed = false;
+
+    std::vector<PushConstants> push_constants;
 
     const vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
     const vk::Offset2D        offset      = {0, 0};

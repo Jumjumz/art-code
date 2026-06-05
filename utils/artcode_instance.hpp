@@ -24,8 +24,6 @@ struct Vertex {
     };
 };
 
-typedef detail::IPen ArtInstance;
-
 struct Vert {
     size_t size;
     Vec2   element[999];
@@ -36,10 +34,17 @@ struct Indx {
     u32    element[9999];
 };
 
+struct PushConstants {
+    Color color;
+    float stroke;
+    bool  fill;
+};
+
 namespace Shared {
     struct Instance {
-        Vert vertex;
-        Indx index;
+        Vert          vertex;
+        Indx          index;
+        PushConstants constants;
     };
 
     struct Region {
@@ -78,7 +83,8 @@ namespace Shared {
             shm_unlink("/artcode_instances");
         }
 
-        static void register_instance(const ArrayVec2& vertex, const ArrayU32 index) {
+        static void register_instance(const ArrayVec2& vertex, const ArrayU32 index,
+                                      const PushConstants& push_constans) {
             if (region->size > 500 || !region)
                 return;
 
@@ -91,6 +97,7 @@ namespace Shared {
             for (const auto& idx : index) {
                 inst.index.element[inst.index.size++] = idx;
             }
+            inst.constants = push_constans;
             region->size++;
         }
 
@@ -99,6 +106,10 @@ namespace Shared {
         static Vert get_vertex(size_t idx) { return region->instance[idx].vertex; }
 
         static Indx get_index(size_t idx) { return region->instance[idx].index; }
+
+        static Color get_color(size_t idx) {
+            return region->instance[idx].constants.color;
+        }
 
         static void reset_instance() { std::memset(region, 0, sizeof(Shared::Region)); }
     };

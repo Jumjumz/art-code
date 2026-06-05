@@ -1,5 +1,4 @@
 #include "canvas_renderer.hpp"
-#include "artcode_instance.hpp"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
 #include "json.hpp"
@@ -10,7 +9,6 @@
 #include <fstream>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
-#include <vulkan/vulkan_core.h>
 
 // definition
 float     CanvasRenderer::zoom           = 1;
@@ -89,7 +87,8 @@ void CanvasRenderer::set_canvas_pipeline() {
         std::make_unique<VulkanGraphics>(this->device, this->vk_buffers.image_format);
     // artcode pipeline
     this->artcode_pipeline = std::make_unique<ArtcodeGraphics>(
-        this->device, this->graphics_pipeline->layout, this->vk_buffers.image_format);
+        this->device, this->graphics_pipeline->descriptor_set_layout,
+        this->vk_buffers.image_format);
 };
 
 void CanvasRenderer::set_canvas_commands() {
@@ -127,15 +126,20 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->vertex_buffers.clear();
     this->artcode_buffer->int_index.clear();
     this->artcode_buffer->index_buffers.clear();
+    // clear color
+    this->push_constants.clear();
 
     for (size_t i = 0; i < inst_size; i++) {
         const auto inst_vertex  = Shared::Memory::get_vertex(i);
         const auto inst_indices = Shared::Memory::get_index(i);
+        const auto inst_colors  = Shared::Memory::get_color(i);
 
         const std::vector<Vec2> vertex(inst_vertex.element,
                                        inst_vertex.element + inst_vertex.size);
         const std::vector<u32>  indices(inst_indices.element,
                                         inst_indices.element + inst_indices.size);
+
+        this->push_constants.push_back({.color = inst_colors});
 
         this->artcode_buffer->int_vertex.push_back(vertex);
         this->artcode_buffer->int_index.push_back(indices);
@@ -388,9 +392,8 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->pipeline);
 
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                           this->graphics_pipeline->layout, 0,
-                           *this->artcode_commands->artcode_descriptor_set[0], nullptr);
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->layout,
+                           0, *this->artcode_commands->artcode_descriptor_set[0], nullptr);
 
     cmd.setViewport(
         0, vk::Viewport{0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),
@@ -400,12 +403,22 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
-    for (size_t i = 0; i < this->artcode_buffer->int_index.size(); i++) {
-        cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[i], {0});
-        cmd.bindIndexBuffer(*this->artcode_buffer->index_buffers[i], 0,
+    const auto& inst_index = this->artcode_buffer->int_index;
+    // loop in reverse, this makes the firnst instance declared to occupy the first layer
+    for (size_t i = inst_index.size(); i > 0; i--) {
+        // include 0, still uses size_t, maybe int is better
+        auto idx = i - 1;
+        {
+            PushConstants cons = this->push_constants[idx];
+
+            cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
+                                             vk::ShaderStageFlagBits::eFragment, 0, cons);
+        }
+        cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[idx], {0});
+        cmd.bindIndexBuffer(*this->artcode_buffer->index_buffers[idx], 0,
                             vk::IndexType::eUint32);
 
-        cmd.drawIndexed(this->artcode_buffer->int_index[i].size(), 1, 0, 0, 0);
+        cmd.drawIndexed(inst_index[idx].size(), 1, 0, 0, 0);
     }
 
     cmd.endRendering();

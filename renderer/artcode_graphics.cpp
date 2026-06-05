@@ -3,11 +3,11 @@
 #include "nav_items.hpp"
 #include <fstream>
 
-ArtcodeGraphics::ArtcodeGraphics(const vk::raii::Device&         device,
-                                 const vk::raii::PipelineLayout& artboard_layout,
-                                 vk::Format&                     image_format)
+ArtcodeGraphics::ArtcodeGraphics(const vk::raii::Device&              device,
+                                 const vk::raii::DescriptorSetLayout& artboard_set_layout,
+                                 vk::Format&                          image_format)
     : device(device),
-      artboard_layout(artboard_layout),
+      artboard_set_layout(artboard_set_layout),
       image_format(image_format) {
     create_artcode_pipeline();
 };
@@ -121,6 +121,20 @@ void ArtcodeGraphics::create_artcode_pipeline() {
     rendering_info.colorAttachmentCount    = 1;
     rendering_info.pColorAttachmentFormats = &this->image_format;
 
+    // push contstants for color
+    vk::PushConstantRange constant_range{};
+    constant_range.stageFlags = vk::ShaderStageFlagBits::eFragment;
+    constant_range.offset     = 0;
+    constant_range.size       = sizeof(PushConstants);
+
+    vk::PipelineLayoutCreateInfo layout_info{};
+    layout_info.setLayoutCount         = 1;
+    layout_info.pSetLayouts            = &*this->artboard_set_layout;
+    layout_info.pushConstantRangeCount = 1;
+    layout_info.pPushConstantRanges    = &constant_range;
+
+    this->layout = vk::raii::PipelineLayout{this->device, layout_info, nullptr};
+
     vk::GraphicsPipelineCreateInfo pipeline_info{};
     pipeline_info.stageCount          = 2;
     pipeline_info.pStages             = shader_stages;
@@ -133,7 +147,7 @@ void ArtcodeGraphics::create_artcode_pipeline() {
     pipeline_info.pColorBlendState    = &blend_info;
     pipeline_info.pDynamicState       = &dynamic_state_info;
     pipeline_info.pDepthStencilState  = &stencil_state_info;
-    pipeline_info.layout              = this->artboard_layout;
+    pipeline_info.layout              = this->layout;
     pipeline_info.renderPass          = nullptr;
     pipeline_info.basePipelineHandle  = nullptr;
     pipeline_info.basePipelineIndex   = -1;
