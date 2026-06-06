@@ -18,8 +18,8 @@ bool Build::create_project_content() const {
     const std::vector<fs::path> content_directories = {
         this->project_directory / "build", this->project_directory / "shaders",
         this->project_directory / "components"};
-    const auto file_name = this->project_directory.filename().string() + this->sln_ext;
-    const auto solution_path = this->project_directory / file_name;
+    const auto& file_name = this->project_directory.filename().string() + this->sln_ext;
+    const auto& solution_path = this->project_directory / file_name;
 
     // create sub directories
     if (!fs::exists(solution_path)) {
@@ -56,7 +56,7 @@ bool Build::create_project_content() const {
             const auto            components_dir = content_directories[2];
             std::vector<fs::path> comp_files     = {components_dir / "comp.hpp",
                                                     components_dir / "comp.cpp"};
-            for (const auto comp : components_dir) {
+            for (const auto& comp : components_dir) {
                 std::ofstream file(comp);
             }
 
@@ -172,7 +172,6 @@ class Component {
 };)";
 };
 
-// TODO:this is for testing, replace this
 void Build::write_vert_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 

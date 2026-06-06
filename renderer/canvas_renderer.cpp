@@ -130,16 +130,16 @@ void CanvasRenderer::update_artcode_buffers() {
     this->push_constants.clear();
 
     for (size_t i = 0; i < inst_size; i++) {
-        const auto inst_vertex  = Shared::Memory::get_vertex(i);
-        const auto inst_indices = Shared::Memory::get_index(i);
-        const auto inst_colors  = Shared::Memory::get_color(i);
+        const auto& inst_vertex    = Shared::Memory::get_vertex(i);
+        const auto& inst_indices   = Shared::Memory::get_index(i);
+        const auto& inst_constants = Shared::Memory::get_constants(i);
 
         const std::vector<Vec2> vertex(inst_vertex.element,
                                        inst_vertex.element + inst_vertex.size);
         const std::vector<u32>  indices(inst_indices.element,
                                         inst_indices.element + inst_indices.size);
 
-        this->push_constants.push_back({.color = inst_colors});
+        this->push_constants.push_back(inst_constants);
 
         this->artcode_buffer->int_vertex.push_back(vertex);
         this->artcode_buffer->int_index.push_back(indices);
@@ -403,6 +403,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
+    // TODO:might add a another draw call to render filled shapes with new topology, probably triangle list or strip
     const auto& inst_index = this->artcode_buffer->int_index;
     // loop in reverse, this makes the firnst instance declared to occupy the first layer
     for (size_t i = inst_index.size(); i > 0; i--) {
@@ -464,8 +465,8 @@ void CanvasRenderer::update_canvas(const vk::raii::Device& device) {
     const auto canvas = ImGui::FindWindowByName("##canvas-begin");
 
     if (canvas) {
-        const auto width  = static_cast<uint32_t>(canvas->Size.x);
-        const auto height = static_cast<uint32_t>(canvas->Size.y);
+        const auto& width  = static_cast<uint32_t>(canvas->Size.x);
+        const auto& height = static_cast<uint32_t>(canvas->Size.y);
 
         if (width != this->vk_buffers.extent.width ||
             height != this->vk_buffers.extent.height) {

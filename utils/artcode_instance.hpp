@@ -37,7 +37,7 @@ struct Indx {
 struct PushConstants {
     Color color;
     float stroke;
-    bool  fill;
+    int   fill;
 };
 
 namespace Shared {
@@ -63,7 +63,7 @@ namespace Shared {
             if (!first_init) {
                 fd = shm_open("/artcode_instances", O_RDWR, 0666);
             } else {
-                const auto result = ftruncate(fd, sizeof(Shared::Region));
+                const auto& result = ftruncate(fd, sizeof(Shared::Region));
                 if (result == -1) {
                     std::cerr << "truncate failed!" << std::endl;
                     return;
@@ -107,8 +107,8 @@ namespace Shared {
 
         static Indx get_index(size_t idx) { return region->instance[idx].index; }
 
-        static Color get_color(size_t idx) {
-            return region->instance[idx].constants.color;
+        static PushConstants get_constants(size_t idx) {
+            return region->instance[idx].constants;
         }
 
         static void reset_instance() { std::memset(region, 0, sizeof(Shared::Region)); }
