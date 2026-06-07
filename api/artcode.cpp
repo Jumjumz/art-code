@@ -77,6 +77,7 @@ ArrayU32 DrawCircle::generate_indices() {
     ArrayU32 indices;
 
     for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
+        indices.push_back(0);
         indices.push_back(i);
         indices.push_back((i + 1) % DrawCircle::SEGMENTS);
     }

@@ -1,6 +1,5 @@
 #include "vulkan_commands.hpp"
 
-// TODO:move the canvas related funcitons to its own class
 VulkanCommands::VulkanCommands(const vk::raii::Device&       device,
                                const std::vector<vk::Image>& images,
                                const int& graphics_family, const int& MAX_FRAMES_IN_FLIGHT)

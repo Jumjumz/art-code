@@ -36,4 +36,6 @@ class Build {
     void write_vert_shader(const fs::path& shader) const;
 
     void write_frag_shader(const fs::path& shader) const;
+
+    void write_geometry_shader(const fs::path& shader) const;
 };

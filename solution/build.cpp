@@ -47,15 +47,17 @@ bool Build::create_project_content() const {
             // create files inside respective directories
             const std::vector<fs::path> shaders = {
                 content_directories[1] / "artcode.vert",
-                content_directories[1] / "artcode.frag"};
+                content_directories[1] / "artcode.frag",
+                content_directories[1] / "artcode.geom",
+            };
 
             for (const auto& shader : shaders) {
                 std::ofstream shader_file(shader);
             }
+            const auto components_dir = content_directories[2];
 
-            const auto            components_dir = content_directories[2];
-            std::vector<fs::path> comp_files     = {components_dir / "comp.hpp",
-                                                    components_dir / "comp.cpp"};
+            std::vector<fs::path> comp_files = {components_dir / "comp.hpp",
+                                                components_dir / "comp.cpp"};
             for (const auto& comp : components_dir) {
                 std::ofstream file(comp);
             }
@@ -67,6 +69,7 @@ bool Build::create_project_content() const {
             // write shader
             write_vert_shader(shaders[0]);
             write_frag_shader(shaders[1]);
+            write_geometry_shader(shaders[2]);
         }
 
         // create config folder
@@ -114,18 +117,19 @@ void Build::create_config_dir() const {
 
 void Build::write_solution_file(const fs::path& solution_file) const {
     // init json
-    nlohmann::json js = {{"project_path", solution_file.parent_path()},
-                         {"solution_file", solution_file.filename()},
-                         {
-                             "artboard_size",
-                             {{"width", this->artboard_size.x},
-                              {"height", this->artboard_size.y},
-                              {"ppi", this->artboard_size.z}},
-                         },
-                         {"sources", {"main.cpp", "components/comp.cpp"}},
-                         {"includes", nlohmann::json::array()},
-                         {"shaders", {"shaders/artcode.vert", "shaders/artcode.frag"}},
-                         {"instances", nlohmann::json::array()}};
+    nlohmann::json js = {
+        {"project_path", solution_file.parent_path()},
+        {"solution_file", solution_file.filename()},
+        {
+            "artboard_size",
+            {{"width", this->artboard_size.x},
+             {"height", this->artboard_size.y},
+             {"ppi", this->artboard_size.z}},
+        },
+        {"sources", {"main.cpp", "components/comp.cpp"}},
+        {"includes", nlohmann::json::array()},
+        {"shaders",
+         {"shaders/artcode.vert", "shaders/artcode.frag", "shaders/artcode.geom"}}};
 
     // write
     std::ofstream write(solution_file);
@@ -178,10 +182,11 @@ void Build::write_vert_shader(const fs::path& shader) const {
     write << R"(#version 450
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;} ubo;
 layout(location = 0) in vec2 in_pos;
+layout(location = 0 out vec2 art_pos;
 void main() {
-vec2 artboard_pos = in_pos;
-artboard_pos.y = ubo.reso.y - artboard_pos.y;
-gl_Position = ubo.proj * ubo.view * (ubo.model * vec4(artboard_pos, 0.0f, 1.0f));
+art_pos = in_pos;
+art_pos.y = ubo.reso.y - art_pos.y;
+gl_Position = ubo.proj * ubo.view * (ubo.model * vec4(art_pos, 0.0f, 1.0f));
 })";
 };
 
@@ -190,9 +195,23 @@ void Build::write_frag_shader(const fs::path& shader) const {
 
     write << R"(#version 450
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;} ubo;
-layout(push_constant) uniform PushConstants {vec4 color; float stroke;} constant;
+layout(push_constant) uniform PushConstants {vec4 color; float stroke; int fill;} constant;
 layout(location = 0) out vec4 frag_color;
 void main() {
 frag_color = constant.color;
+})";
+};
+
+void Build::write_geometry_shader(const fs::path& shader) const {
+    std::ofstream write(shader);
+
+    write << R"(#version 450
+layout(triangles) in;
+layout(triangle_strip, max_vertices=3) out;
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;} ubo;
+layout(location = 0) in vec2 art_pos[];
+layout(location = 1) out vec3 edge_dist;
+void main() {
+EndPrimitive();
 })";
 };

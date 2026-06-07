@@ -3,12 +3,10 @@
 #include "nav_items.hpp"
 #include <fstream>
 
-ArtcodeGraphics::ArtcodeGraphics(const vk::raii::Device&              device,
-                                 const vk::raii::DescriptorSetLayout& artboard_set_layout,
-                                 vk::Format&                          image_format)
+ArtcodeGraphics::ArtcodeGraphics(const vk::raii::Device& device, vk::Format& image_format)
     : device(device),
-      artboard_set_layout(artboard_set_layout),
       image_format(image_format) {
+    create_descriptor_set_layout();
     create_artcode_pipeline();
 };
 
@@ -37,15 +35,32 @@ std::vector<char> ArtcodeGraphics::read_file(const std::string& file_name) const
     return buffer;
 };
 
+void ArtcodeGraphics::create_descriptor_set_layout() {
+    vk::DescriptorSetLayoutBinding ubo_layout_binding(
+        0, vk::DescriptorType::eUniformBuffer, 1,
+        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment |
+            vk::ShaderStageFlagBits::eGeometry,
+        nullptr);
+
+    vk::DescriptorSetLayoutCreateInfo descriptor_info{};
+    descriptor_info.bindingCount = 1;
+    descriptor_info.pBindings    = &ubo_layout_binding;
+
+    this->artcode_set_layout =
+        vk::raii::DescriptorSetLayout{this->device, descriptor_info, nullptr};
+};
+
 void ArtcodeGraphics::create_artcode_pipeline() {
     // get shader project dir
     {
         const auto shader_execs = ProjectPath::get_project_path() / "shaders";
         const auto vert_exec    = shader_execs / "artcode.vert.spv";
         const auto frag_exec    = shader_execs / "artcode.frag.spv";
+        const auto geom_exec    = shader_execs / "artcode.geom.spv";
 
         this->vert_shader_module = create_shader_module(read_file(vert_exec));
         this->frag_shader_module = create_shader_module(read_file(frag_exec));
+        this->geom_shader_module = create_shader_module(read_file(geom_exec));
     }
 
     vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
@@ -58,11 +73,16 @@ void ArtcodeGraphics::create_artcode_pipeline() {
     frag_shader_stage_info.module = this->frag_shader_module;
     frag_shader_stage_info.pName  = "main";
 
-    vk::PipelineShaderStageCreateInfo shader_stages[] = {vert_shader_stage_info,
-                                                         frag_shader_stage_info};
+    vk::PipelineShaderStageCreateInfo geom_shader_stage_info{};
+    geom_shader_stage_info.stage  = vk::ShaderStageFlagBits::eGeometry;
+    geom_shader_stage_info.module = this->geom_shader_module;
+    geom_shader_stage_info.pName  = "main";
+
+    vk::PipelineShaderStageCreateInfo shader_stages[] = {
+        vert_shader_stage_info, frag_shader_stage_info, geom_shader_stage_info};
 
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
-    assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
+    assembly_info.topology = vk::PrimitiveTopology::eTriangleStrip;
 
     std::vector<vk::DynamicState> dynamic_states = {
         vk::DynamicState::eViewport,
@@ -129,14 +149,14 @@ void ArtcodeGraphics::create_artcode_pipeline() {
 
     vk::PipelineLayoutCreateInfo layout_info{};
     layout_info.setLayoutCount         = 1;
-    layout_info.pSetLayouts            = &*this->artboard_set_layout;
+    layout_info.pSetLayouts            = &*this->artcode_set_layout;
     layout_info.pushConstantRangeCount = 1;
     layout_info.pPushConstantRanges    = &constant_range;
 
     this->layout = vk::raii::PipelineLayout{this->device, layout_info, nullptr};
 
     vk::GraphicsPipelineCreateInfo pipeline_info{};
-    pipeline_info.stageCount          = 2;
+    pipeline_info.stageCount          = 3;
     pipeline_info.pStages             = shader_stages;
     pipeline_info.pNext               = &rendering_info;
     pipeline_info.pVertexInputState   = &vertex_info;

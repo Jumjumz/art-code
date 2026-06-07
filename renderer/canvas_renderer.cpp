@@ -75,10 +75,10 @@ void CanvasRenderer::compile_shader() {
             int exit_code = pclose(pipe);
             if (exit_code != 0) {
                 result += "\nShader compilation failed: " + shader.filename().string();
-                return;
             }
         }
     }
+    std::cerr << result << std::endl;
 };
 
 void CanvasRenderer::set_canvas_pipeline() {
@@ -86,9 +86,8 @@ void CanvasRenderer::set_canvas_pipeline() {
     this->graphics_pipeline =
         std::make_unique<VulkanGraphics>(this->device, this->vk_buffers.image_format);
     // artcode pipeline
-    this->artcode_pipeline = std::make_unique<ArtcodeGraphics>(
-        this->device, this->graphics_pipeline->descriptor_set_layout,
-        this->vk_buffers.image_format);
+    this->artcode_pipeline =
+        std::make_unique<ArtcodeGraphics>(this->device, this->vk_buffers.image_format);
 };
 
 void CanvasRenderer::set_canvas_commands() {
@@ -99,7 +98,7 @@ void CanvasRenderer::set_canvas_commands() {
     // artcode commands
     this->artcode_commands = std::make_unique<ArtcodeCommands>(
         this->device, this->vk_buffers.canvas_uniform_buffer,
-        this->graphics_pipeline->descriptor_set_layout, this->graphics_family,
+        this->artcode_pipeline->artcode_set_layout, this->graphics_family,
         this->MAX_FRAMES_IN_FLIGHT);
     // vert and index buffer
     this->artcode_buffer = std::make_unique<ArtcodeBuffer>(
@@ -299,7 +298,8 @@ void CanvasRenderer::canvas_setup(const glm::vec3& artboard_size, bool show_main
             glm::translate(glm::mat4(1.0f),
                            glm::vec3((this->vk_buffers.extent.width - width) / 2,
                                      (this->vk_buffers.extent.height - height) / 2, 0.0f)),
-        .reso = {width, height}};
+        .reso     = {width, height},
+        .viewport = {this->vk_buffers.extent.width, this->vk_buffers.extent.height}};
 
     memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
 };
@@ -403,7 +403,6 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
-    // TODO:might add a another draw call to render filled shapes with new topology, probably triangle list or strip
     const auto& inst_index = this->artcode_buffer->int_index;
     // loop in reverse, this makes the firnst instance declared to occupy the first layer
     for (size_t i = inst_index.size(); i > 0; i--) {
