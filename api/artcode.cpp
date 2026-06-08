@@ -46,7 +46,13 @@ ArrayVec2 DrawQuad::generate_vertices() {
                      this->position + Vec2{0.0f, this->l}};
 };
 
-ArrayU32 DrawQuad::generate_indices() { return ArrayU32{0, 1, 2, 2, 3, 0}; };
+ArrayU32 DrawQuad::generate_indices() {
+    if (this->fill) {
+        return ArrayU32{0, 1, 2, 2, 3, 0};
+    } else {
+        return ArrayU32{0, 1, 1, 2, 2, 3, 3, 0};
+    }
+};
 
 // Circle
 DrawCircle::Circle() {
@@ -76,10 +82,17 @@ ArrayVec2 DrawCircle::generate_vertices() {
 ArrayU32 DrawCircle::generate_indices() {
     ArrayU32 indices;
 
-    for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
-        indices.push_back(0);
-        indices.push_back(i);
-        indices.push_back((i + 1) % DrawCircle::SEGMENTS);
+    if (this->fill) {
+        for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
+            indices.push_back(0);
+            indices.push_back(i);
+            indices.push_back((i + 1) % DrawCircle::SEGMENTS);
+        }
+    } else {
+        for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
+            indices.push_back(i);
+            indices.push_back((i + 1) % DrawCircle::SEGMENTS);
+        }
     }
     return indices;
 };

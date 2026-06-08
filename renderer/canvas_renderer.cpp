@@ -109,10 +109,34 @@ void CanvasRenderer::set_canvas_commands() {
 void CanvasRenderer::reload_pipeline() {
     // reset graphics_pipeline
     this->device.waitIdle();
-    this->artcode_pipeline->pipeline_trianglelist.clear();
 
+    bool need_trilist  = false;
+    bool need_linelist = false;
+
+    const auto inst_size = Shared::Memory::get_intance_size();
     // recreate graphics_pipeline
-    this->artcode_pipeline->create_trianglelist_pipeline();
+    for (size_t i = 0; i < inst_size; i++) {
+        const auto cons = Shared::Memory::get_constants(i);
+        if (!cons.fill) {
+            need_linelist = true;
+        } else {
+            need_trilist = true;
+        }
+
+        // early exit if both true
+        if (need_trilist && need_linelist)
+            break;
+    }
+
+    if (need_linelist) {
+        this->artcode_pipeline->pipeline_linelist.clear();
+        this->artcode_pipeline->create_pipeline(Topology::LineList);
+    }
+
+    if (need_trilist) {
+        this->artcode_pipeline->pipeline_trianglelist.clear();
+        this->artcode_pipeline->create_pipeline(Topology::TriangleList);
+    }
 };
 
 void CanvasRenderer::update_artcode_buffers() {
@@ -123,8 +147,10 @@ void CanvasRenderer::update_artcode_buffers() {
     // clear the vectors for vertex, indices and its buffers
     this->artcode_buffer->int_vertex.clear();
     this->artcode_buffer->vertex_buffers.clear();
+    this->artcode_buffer->vertex_memories.clear();
     this->artcode_buffer->int_index.clear();
     this->artcode_buffer->index_buffers.clear();
+    this->artcode_buffer->index_memories.clear();
     // clear color
     this->push_constants.clear();
 
@@ -387,35 +413,38 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
     artcode_rendering_info.colorAttachmentCount = 1;
     artcode_rendering_info.pColorAttachments    = &artcode_attachement_info;
 
+    const auto& inst_index = this->artcode_buffer->int_index;
     // render canvas
     cmd.beginRendering(artcode_rendering_info);
-
-    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
-                     this->artcode_pipeline->pipeline_trianglelist);
-
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->layout,
-                           0, *this->artcode_commands->artcode_descriptor_set[0], nullptr);
-
-    cmd.setViewport(
-        0, vk::Viewport{0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),
-                        static_cast<float>(this->vk_buffers.extent.height), 0.0f, 1.0f});
-
-    cmd.setScissor(
-        0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
-                                                       this->vk_buffers.extent.height}});
-
-    const auto& inst_index = this->artcode_buffer->int_index;
-    // TODO:might need to update this to have 2 draw calls, one for triangle list and for line list
-    //  loop in reverse, this makes the firnst instance declared to occupy the first layer
     for (size_t i = inst_index.size(); i > 0; i--) {
-        // include 0, still uses size_t, maybe int is better
         auto idx = i - 1;
-        {
-            const PushConstants& cons = this->push_constants[idx];
 
-            cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
-                                             vk::ShaderStageFlagBits::eFragment, 0, cons);
+        const PushConstants& cons = this->push_constants[idx];
+
+        if (cons.fill) {
+            cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                             this->artcode_pipeline->pipeline_trianglelist);
+        } else {
+            cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                             this->artcode_pipeline->pipeline_linelist);
         }
+
+        cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                               this->artcode_pipeline->layout, 0,
+                               *this->artcode_commands->artcode_descriptor_set[0], nullptr);
+
+        cmd.setViewport(
+            0,
+            vk::Viewport{0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),
+                         static_cast<float>(this->vk_buffers.extent.height), 0.0f, 1.0f});
+
+        cmd.setScissor(0, vk::Rect2D{vk::Offset2D{0, 0},
+                                     vk::Extent2D{this->vk_buffers.extent.width,
+                                                  this->vk_buffers.extent.height}});
+
+        cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
+                                         vk::ShaderStageFlagBits::eFragment, 0, cons);
+
         cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[idx], {0});
         cmd.bindIndexBuffer(*this->artcode_buffer->index_buffers[idx], 0,
                             vk::IndexType::eUint32);
