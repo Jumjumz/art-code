@@ -180,7 +180,7 @@ void Build::write_vert_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 
     write << R"(#version 450
-layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;} ubo;
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport} ubo;
 layout(location = 0) in vec2 in_pos;
 layout(location = 0 out vec2 art_pos;
 void main() {
@@ -194,9 +194,10 @@ void Build::write_frag_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 
     write << R"(#version 450
-layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;} ubo;
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport} ubo;
 layout(push_constant) uniform PushConstants {vec4 color; float stroke; int fill;} constant;
 layout(location = 0) out vec4 frag_color;
+layout(location = 1) in vec3 edge_dist;
 void main() {
 frag_color = constant.color;
 })";
@@ -208,7 +209,7 @@ void Build::write_geometry_shader(const fs::path& shader) const {
     write << R"(#version 450
 layout(triangles) in;
 layout(triangle_strip, max_vertices=3) out;
-layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;} ubo;
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport} ubo;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 edge_dist;
 void main() {

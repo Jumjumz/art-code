@@ -109,10 +109,10 @@ void CanvasRenderer::set_canvas_commands() {
 void CanvasRenderer::reload_pipeline() {
     // reset graphics_pipeline
     this->device.waitIdle();
-    this->artcode_pipeline->pipeline.clear();
+    this->artcode_pipeline->pipeline_trianglelist.clear();
 
     // recreate graphics_pipeline
-    this->artcode_pipeline->create_artcode_pipeline();
+    this->artcode_pipeline->create_trianglelist_pipeline();
 };
 
 void CanvasRenderer::update_artcode_buffers() {
@@ -390,7 +390,8 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
     // render canvas
     cmd.beginRendering(artcode_rendering_info);
 
-    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->pipeline);
+    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                     this->artcode_pipeline->pipeline_trianglelist);
 
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->layout,
                            0, *this->artcode_commands->artcode_descriptor_set[0], nullptr);
@@ -404,12 +405,13 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
                                                        this->vk_buffers.extent.height}});
 
     const auto& inst_index = this->artcode_buffer->int_index;
-    // loop in reverse, this makes the firnst instance declared to occupy the first layer
+    // TODO:might need to update this to have 2 draw calls, one for triangle list and for line list
+    //  loop in reverse, this makes the firnst instance declared to occupy the first layer
     for (size_t i = inst_index.size(); i > 0; i--) {
         // include 0, still uses size_t, maybe int is better
         auto idx = i - 1;
         {
-            PushConstants cons = this->push_constants[idx];
+            const PushConstants& cons = this->push_constants[idx];
 
             cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
                                              vk::ShaderStageFlagBits::eFragment, 0, cons);
