@@ -7,7 +7,6 @@ ArtcodeGraphics::ArtcodeGraphics(const vk::raii::Device& device, vk::Format& ima
     : device(device),
       image_format(image_format) {
     create_descriptor_set_layout();
-    create_pipeline(Topology::LineList);
 };
 
 [[nodiscard]]
@@ -78,13 +77,11 @@ void ArtcodeGraphics::create_shaders() {
     geom_shader_stage_info.module = this->geom_shader_module;
     geom_shader_stage_info.pName  = "main";
 
-    // TODO:add the geometry shader
+    // TODO:implement geom shader
     this->shader_stages = {vert_shader_stage_info, frag_shader_stage_info};
 };
 
 void ArtcodeGraphics::create_pipeline(Topology topology) {
-    create_shaders();
-
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
     switch (topology) {
     case Topology::TriangleList: {
@@ -97,10 +94,9 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
     }
     }
 
-    std::vector<vk::DynamicState> dynamic_states = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
+    std::vector<vk::DynamicState> dynamic_states = {vk::DynamicState::eViewport,
+                                                    vk::DynamicState::eScissor,
+                                                    vk::DynamicState::eLineWidth};
 
     vk::PipelineDynamicStateCreateInfo dynamic_state_info{};
     dynamic_state_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
@@ -169,7 +165,7 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
     this->layout = vk::raii::PipelineLayout{this->device, layout_info, nullptr};
 
     vk::GraphicsPipelineCreateInfo pipeline_info{};
-    pipeline_info.stageCount          = 2;
+    pipeline_info.stageCount          = this->shader_stages.size();
     pipeline_info.pStages             = this->shader_stages.data();
     pipeline_info.pNext               = &rendering_info;
     pipeline_info.pVertexInputState   = &vertex_info;

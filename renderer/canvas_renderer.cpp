@@ -114,6 +114,9 @@ void CanvasRenderer::reload_pipeline() {
     bool need_linelist = false;
 
     const auto inst_size = Shared::Memory::get_intance_size();
+    // create shaders
+    this->artcode_pipeline->create_shaders();
+
     // recreate graphics_pipeline
     for (size_t i = 0; i < inst_size; i++) {
         const auto cons = Shared::Memory::get_constants(i);
@@ -444,6 +447,9 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
 
         cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
                                          vk::ShaderStageFlagBits::eFragment, 0, cons);
+
+        if (!cons.fill)
+            cmd.setLineWidth(cons.stroke);
 
         cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[idx], {0});
         cmd.bindIndexBuffer(*this->artcode_buffer->index_buffers[idx], 0,

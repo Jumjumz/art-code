@@ -31,7 +31,7 @@ DrawQuad::Quad() {
     this->w        = 100.0f;
     this->position = Vec2{200, 200};
     this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
-    this->stroke   = 0.05f;
+    this->stroke   = 1.0f;
     this->fill     = false;
 
     ShapeRegistry::register_shape(this);
@@ -59,7 +59,7 @@ DrawCircle::Circle() {
     this->radius   = 100.f;
     this->position = Vec2{200, 200};
     this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
-    this->stroke   = 0.05f;
+    this->stroke   = 1.0f;
     this->fill     = false;
 
     ShapeRegistry::register_shape(this);
@@ -131,9 +131,11 @@ void Art::Draw() {
 
         for (const auto& inst : instances) {
             // register vert and idx per instance
-            Shared::Memory::register_instance(
-                inst->generate_vertices(), inst->generate_indices(),
-                {.color = inst->color, .fill = static_cast<int>(inst->fill)});
+            Shared::Memory::register_instance(inst->generate_vertices(),
+                                              inst->generate_indices(),
+                                              {.color  = inst->color,
+                                               .stroke = inst->stroke,
+                                               .fill   = static_cast<int>(inst->fill)});
         }
     }
 };

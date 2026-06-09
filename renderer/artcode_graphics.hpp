@@ -17,6 +17,7 @@ class ArtcodeGraphics {
     std::vector<vk::Pipeline> artcode_pipelines = {*this->pipeline_trianglelist,
                                                    *this->pipeline_linelist};
 
+    void create_shaders();
     void create_pipeline(Topology topology);
 
   private:
@@ -37,6 +38,4 @@ class ArtcodeGraphics {
     vk::raii::ShaderModule create_shader_module(const std::vector<char>& code) const;
 
     void create_descriptor_set_layout();
-
-    void create_shaders();
 };
