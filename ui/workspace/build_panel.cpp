@@ -132,6 +132,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
         const auto        project_dir = ProjectPath::get_project_path();
         const std::string build       = project_dir / "build/artcode";
 
+        // TODO:transfer shader compilation to compile flag
         switch (flag) {
         case BuildPanel::Flags::C: {
             // compile c++ codes

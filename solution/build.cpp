@@ -48,8 +48,8 @@ bool Build::create_project_content() const {
             const std::vector<fs::path> shaders = {
                 content_directories[1] / "artcode.vert",
                 content_directories[1] / "artcode.frag",
-                content_directories[1] / "artcode.geom",
-            };
+                content_directories[1] / "artcode.tri.geom",
+                content_directories[1] / "artcode.line.geom"};
 
             for (const auto& shader : shaders) {
                 std::ofstream shader_file(shader);
@@ -69,7 +69,8 @@ bool Build::create_project_content() const {
             // write shader
             write_vert_shader(shaders[0]);
             write_frag_shader(shaders[1]);
-            write_geometry_shader(shaders[2]);
+            write_trigeom_shader(shaders[2]);
+            write_linegeom_shader(shaders[3]);
         }
 
         // create config folder
@@ -117,19 +118,19 @@ void Build::create_config_dir() const {
 
 void Build::write_solution_file(const fs::path& solution_file) const {
     // init json
-    nlohmann::json js = {
-        {"project_path", solution_file.parent_path()},
-        {"solution_file", solution_file.filename()},
-        {
-            "artboard_size",
-            {{"width", this->artboard_size.x},
-             {"height", this->artboard_size.y},
-             {"ppi", this->artboard_size.z}},
-        },
-        {"sources", {"main.cpp", "components/comp.cpp"}},
-        {"includes", nlohmann::json::array()},
-        {"shaders",
-         {"shaders/artcode.vert", "shaders/artcode.frag", "shaders/artcode.geom"}}};
+    nlohmann::json js = {{"project_path", solution_file.parent_path()},
+                         {"solution_file", solution_file.filename()},
+                         {
+                             "artboard_size",
+                             {{"width", this->artboard_size.x},
+                              {"height", this->artboard_size.y},
+                              {"ppi", this->artboard_size.z}},
+                         },
+                         {"sources", {"main.cpp", "components/comp.cpp"}},
+                         {"includes", nlohmann::json::array()},
+                         {"shaders",
+                          {"shaders/artcode.vert", "shaders/artcode.frag",
+                           "shaders/artcode.tri.geom", "shaders/artcode.line.geom"}}};
 
     // write
     std::ofstream write(solution_file);
@@ -180,11 +181,10 @@ void Build::write_vert_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 
     write << R"(#version 450
-layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport} ubo;
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
 layout(location = 0) in vec2 in_pos;
-layout(location = 0 out vec2 art_pos;
 void main() {
-art_pos = in_pos;
+vec2 art_pos = in_pos;
 art_pos.y = ubo.reso.y - art_pos.y;
 gl_Position = ubo.proj * ubo.view * (ubo.model * vec4(art_pos, 0.0f, 1.0f));
 })";
@@ -194,25 +194,50 @@ void Build::write_frag_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 
     write << R"(#version 450
-layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport} ubo;
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
 layout(push_constant) uniform PushConstants {vec4 color; float stroke; int fill;} constant;
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) in vec3 edge_dist;
 void main() {
-frag_color = constant.color;
+if (constant.fill == 0) {frag_color = constant.color;}
+else if (constant.fill == 1) {frag_color = constant.color;}
+else {discard;}
 })";
 };
 
-void Build::write_geometry_shader(const fs::path& shader) const {
+// triangle list
+void Build::write_trigeom_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 
     write << R"(#version 450
 layout(triangles) in;
 layout(triangle_strip, max_vertices=3) out;
-layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport} ubo;
-layout(location = 0) in vec2 art_pos[];
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
 layout(location = 1) out vec3 edge_dist;
 void main() {
+for (int i = 0; i < gl_in.length(); i++) {
+edge_dist = vec3(0.0, 0.0, 0.0);
+gl_Position = gl_in[i].gl_Position;
+EmitVertex();
+}
+EndPrimitive();
+})";
+};
+
+void Build::write_linegeom_shader(const fs::path& shader) const {
+    std::ofstream write(shader);
+
+    write << R"(#version 450
+layout(lines) in;
+layout(line_strip, max_vertices=2) out;
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
+layout(location = 1) out vec3 edge_dist;
+void main() {
+for (int i = 0; i < gl_in.length(); i++) {
+edge_dist = vec3(0.0, 0.0, 0.0);
+gl_Position = gl_in[i].gl_Position;
+EmitVertex();
+}
 EndPrimitive();
 })";
 };

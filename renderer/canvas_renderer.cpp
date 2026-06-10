@@ -114,9 +114,6 @@ void CanvasRenderer::reload_pipeline() {
     bool need_linelist = false;
 
     const auto inst_size = Shared::Memory::get_intance_size();
-    // create shaders
-    this->artcode_pipeline->create_shaders();
-
     // recreate graphics_pipeline
     for (size_t i = 0; i < inst_size; i++) {
         const auto cons = Shared::Memory::get_constants(i);
@@ -132,12 +129,18 @@ void CanvasRenderer::reload_pipeline() {
     }
 
     if (need_linelist) {
+        this->artcode_pipeline->shader_stages.clear();
         this->artcode_pipeline->pipeline_linelist.clear();
+        // create shaders
+        this->artcode_pipeline->create_shaders(Topology::LineList);
         this->artcode_pipeline->create_pipeline(Topology::LineList);
     }
 
     if (need_trilist) {
+        this->artcode_pipeline->shader_stages.clear();
         this->artcode_pipeline->pipeline_trianglelist.clear();
+        // create shaders
+        this->artcode_pipeline->create_shaders(Topology::TriangleList);
         this->artcode_pipeline->create_pipeline(Topology::TriangleList);
     }
 };

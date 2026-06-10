@@ -49,36 +49,45 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
         vk::raii::DescriptorSetLayout{this->device, descriptor_info, nullptr};
 };
 
-void ArtcodeGraphics::create_shaders() {
-    // get shader project dir
-    {
-        const auto shader_execs = ProjectPath::get_project_path() / "shaders";
-        const auto vert_exec    = shader_execs / "artcode.vert.spv";
-        const auto frag_exec    = shader_execs / "artcode.frag.spv";
-        const auto geom_exec    = shader_execs / "artcode.geom.spv";
+void ArtcodeGraphics::create_shaders(Topology topology) {
+    const auto shader_execs = ProjectPath::get_project_path() / "shaders";
+    const auto vert_exec    = shader_execs / "artcode.vert.spv";
+    const auto frag_exec    = shader_execs / "artcode.frag.spv";
 
-        this->vert_shader_module = create_shader_module(read_file(vert_exec));
-        this->frag_shader_module = create_shader_module(read_file(frag_exec));
-        this->geom_shader_module = create_shader_module(read_file(geom_exec));
-    }
+    this->vert_shader_module = create_shader_module(read_file(vert_exec));
+    this->frag_shader_module = create_shader_module(read_file(frag_exec));
 
     vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
     vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;
     vert_shader_stage_info.module = this->vert_shader_module;
     vert_shader_stage_info.pName  = "main";
 
+    vk::PipelineShaderStageCreateInfo geom_shader_stage_info{};
+    geom_shader_stage_info.stage = vk::ShaderStageFlagBits::eGeometry;
+    switch (topology) {
+    case Topology::TriangleList: {
+        const auto tri_exec           = shader_execs / "artcode.tri.geom.spv";
+        this->geom_shader_module      = create_shader_module(read_file(tri_exec));
+        geom_shader_stage_info.module = this->geom_shader_module;
+        geom_shader_stage_info.pName  = "main";
+        break;
+    }
+    case Topology::LineList: {
+        const auto line_exec          = shader_execs / "artcode.line.geom.spv";
+        this->geom_shader_module      = create_shader_module(read_file(line_exec));
+        geom_shader_stage_info.module = this->geom_shader_module;
+        geom_shader_stage_info.pName  = "main";
+        break;
+    }
+    }
+
     vk::PipelineShaderStageCreateInfo frag_shader_stage_info{};
     frag_shader_stage_info.stage  = vk::ShaderStageFlagBits::eFragment;
     frag_shader_stage_info.module = this->frag_shader_module;
     frag_shader_stage_info.pName  = "main";
 
-    vk::PipelineShaderStageCreateInfo geom_shader_stage_info{};
-    geom_shader_stage_info.stage  = vk::ShaderStageFlagBits::eGeometry;
-    geom_shader_stage_info.module = this->geom_shader_module;
-    geom_shader_stage_info.pName  = "main";
-
-    // TODO:implement geom shader
-    this->shader_stages = {vert_shader_stage_info, frag_shader_stage_info};
+    this->shader_stages = {vert_shader_stage_info, geom_shader_stage_info,
+                           frag_shader_stage_info};
 };
 
 void ArtcodeGraphics::create_pipeline(Topology topology) {

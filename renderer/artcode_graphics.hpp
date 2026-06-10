@@ -14,10 +14,12 @@ class ArtcodeGraphics {
     vk::raii::Pipeline            pipeline_linelist     = nullptr;
     vk::raii::PipelineLayout      layout                = nullptr;
 
+    std::vector<vk::PipelineShaderStageCreateInfo> shader_stages;
+
     std::vector<vk::Pipeline> artcode_pipelines = {*this->pipeline_trianglelist,
                                                    *this->pipeline_linelist};
 
-    void create_shaders();
+    void create_shaders(Topology topology);
     void create_pipeline(Topology topology);
 
   private:
@@ -27,10 +29,8 @@ class ArtcodeGraphics {
 
     // shader module
     vk::raii::ShaderModule vert_shader_module = nullptr;
-    vk::raii::ShaderModule frag_shader_module = nullptr;
     vk::raii::ShaderModule geom_shader_module = nullptr;
-
-    std::vector<vk::PipelineShaderStageCreateInfo> shader_stages;
+    vk::raii::ShaderModule frag_shader_module = nullptr;
 
     std::vector<char> read_file(const std::string& file_name) const;
 
