@@ -195,7 +195,7 @@ void Build::write_frag_shader(const fs::path& shader) const {
 
     write << R"(#version 450
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
-layout(push_constant) uniform PushConstants {vec4 color; float stroke; int fill;} constant;
+layout(push_constant) uniform PushConstants {vec4 color; float stroke; float rotate; int fill;} constant;
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) in vec3 edge_dist;
 void main() {
@@ -213,10 +213,11 @@ void Build::write_trigeom_shader(const fs::path& shader) const {
 layout(triangles) in;
 layout(triangle_strip, max_vertices=3) out;
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
+layout(push_constant) uniform PushConstants {vec4 color; float stroke; float rotate; int fill;} constant;
 layout(location = 1) out vec3 edge_dist;
 void main() {
 for (int i = 0; i < gl_in.length(); i++) {
-edge_dist = vec3(0.0, 0.0, 0.0);
+edge_dist = vec3(1.0, 1.0, 1.0);
 gl_Position = gl_in[i].gl_Position;
 EmitVertex();
 }
@@ -231,10 +232,11 @@ void Build::write_linegeom_shader(const fs::path& shader) const {
 layout(lines) in;
 layout(line_strip, max_vertices=2) out;
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
+layout(push_constant) uniform PushConstants {vec4 color; float stroke; float rotate; int fill;} constant;
 layout(location = 1) out vec3 edge_dist;
 void main() {
 for (int i = 0; i < gl_in.length(); i++) {
-edge_dist = vec3(0.0, 0.0, 0.0);
+edge_dist = vec3(1.0, 1.0, 1.0);
 gl_Position = gl_in[i].gl_Position;
 EmitVertex();
 }

@@ -132,10 +132,10 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
         const auto        project_dir = ProjectPath::get_project_path();
         const std::string build       = project_dir / "build/artcode";
 
-        // TODO:transfer shader compilation to compile flag
+        // TODO:might need to move the shader compilation to compile
         switch (flag) {
         case BuildPanel::Flags::C: {
-            // compile c++ codes
+            // compile user codes
             {
                 const auto executables = executable_files();
                 // change to project dir before compiling

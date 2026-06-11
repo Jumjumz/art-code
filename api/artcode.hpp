@@ -43,6 +43,7 @@ namespace detail {
         Vec2  position;
         Color color;
         float stroke;
+        float rotate;
         bool  fill;
 
         virtual ArrayVec2 generate_vertices() = 0;

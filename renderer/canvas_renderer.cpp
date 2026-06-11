@@ -449,10 +449,11 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
                                                   this->vk_buffers.extent.height}});
 
         cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
-                                         vk::ShaderStageFlagBits::eFragment, 0, cons);
+                                         vk::ShaderStageFlagBits::eGeometry |
+                                             vk::ShaderStageFlagBits::eFragment,
+                                         0, cons);
 
-        if (!cons.fill)
-            cmd.setLineWidth(cons.stroke);
+        cmd.setLineWidth(cons.stroke);
 
         cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[idx], {0});
         cmd.bindIndexBuffer(*this->artcode_buffer->index_buffers[idx], 0,

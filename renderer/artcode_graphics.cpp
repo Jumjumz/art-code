@@ -161,9 +161,10 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
 
     // push contstants for color
     vk::PushConstantRange constant_range{};
-    constant_range.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    constant_range.offset     = 0;
-    constant_range.size       = sizeof(PushConstants);
+    constant_range.stageFlags =
+        vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eGeometry;
+    constant_range.offset = 0;
+    constant_range.size   = sizeof(PushConstants);
 
     vk::PipelineLayoutCreateInfo layout_info{};
     layout_info.setLayoutCount         = 1;
