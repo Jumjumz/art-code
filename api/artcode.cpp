@@ -32,6 +32,7 @@ DrawQuad::Quad() {
     this->position = Vec2{200, 200};
     this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
     this->stroke   = 1.0f;
+    this->rotate   = 0.0f;
     this->fill     = false;
 
     ShapeRegistry::register_shape(this);
@@ -61,6 +62,7 @@ DrawCircle::Circle() {
     this->position = Vec2{200, 200};
     this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
     this->stroke   = 1.0f;
+    this->rotate   = 0.0f;
     this->fill     = false;
 
     ShapeRegistry::register_shape(this);
@@ -105,6 +107,7 @@ DrawTriangle::Triangle() {
     this->position = Vec2{200, 200};
     this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
     this->stroke   = 1.0f;
+    this->rotate   = 0.0f;
     this->fill     = false;
 
     ShapeRegistry::register_shape(this);

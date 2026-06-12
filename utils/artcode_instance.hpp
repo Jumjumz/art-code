@@ -112,6 +112,10 @@ namespace Shared {
             return region->instance[idx].constants;
         }
 
-        static void reset_instance() { std::memset(region, 0, sizeof(Shared::Region)); }
+        static void reset_instance() {
+            region->size = 0;
+            std::fill(std::begin(region->instance), std::end(region->instance),
+                      Shared::Instance{});
+        }
     };
 } // namespace Shared
