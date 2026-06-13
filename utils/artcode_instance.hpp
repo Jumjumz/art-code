@@ -36,6 +36,7 @@ struct Indx {
 
 struct PushConstants {
     Color color;
+    Vec2  center;
     float stroke;
     float rotate;
     int   fill;

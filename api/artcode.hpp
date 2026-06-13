@@ -48,6 +48,15 @@ namespace detail {
 
         virtual ArrayVec2 generate_vertices() = 0;
         virtual ArrayU32  generate_indices()  = 0;
+
+        // centroid vertices
+        Vec2 get_center() {
+            Vec2 center = {0.0f, 0.0f};
+            for (const auto& v : this->generate_vertices()) {
+                center += v;
+            }
+            return center /= float(this->generate_vertices().size());
+        };
     };
 } // namespace detail
 

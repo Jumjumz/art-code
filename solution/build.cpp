@@ -198,7 +198,7 @@ void Build::write_frag_shader(const fs::path& shader) const {
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
 layout(push_constant) uniform PushConstants {vec4 color; float stroke; float rotate; int fill;} constant;
 layout(location = 0) out vec4 frag_color;
-layout(location = 1) in vec3 edge_dist;
+layout(location = 1) in vec3 data;
 void main() {
 if (constant.fill == 0) {frag_color = constant.color;}
 else if (constant.fill == 1) {frag_color = constant.color;}
@@ -216,12 +216,29 @@ layout(triangle_strip, max_vertices=3) out;
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
 layout(push_constant) uniform PushConstants {vec4 color; float stroke; float rotate; int fill;} constant;
 layout(location = 0) in vec2 art_pos[];
-layout(location = 1) out vec3 edge_dist;
+layout(location = 1) out vec3 data;
+vec2 rotate(vec2 pos) {
+const float PI = 3.14159265359;
+float radian = constant.rotate * (PI / 180.0f);
+float s = sin(radian);
+float c = cos(radian);
+vec2 center = constant.center;
+center.y = ubo.reso.y - center.y;
+pos -= center;
+vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
+return rotated + center; }
 void main() {
 for (int i = 0; i < gl_in.length(); i++) {
-edge_dist = vec3(1.0f);
+if (constant.rotate != 0 || constant.rotate != 0.0f) {
+vec2 pos = art_pos[i];
+vec2 rotate = rotate(pos);
+gl_Position = ubo.proj * ubo.view * ubo.model * vec4(rotate, 0.0f, 1.0f);
+data = vec3(1.0f);
+EmitVertex();}
+else {
+data = vec3(1.0f);
 gl_Position = gl_in[i].gl_Position;
-EmitVertex();
+EmitVertex();}
 }
 EndPrimitive();
 })";
@@ -236,12 +253,29 @@ layout(line_strip, max_vertices=2) out;
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
 layout(push_constant) uniform PushConstants {vec4 color; float stroke; float rotate; int fill;} constant;
 layout(location = 0) in vec2 art_pos[];
-layout(location = 1) out vec3 edge_dist;
+layout(location = 1) out vec3 data;
+vec2 rotate(vec2 pos) {
+const float PI = 3.14159265359;
+float radian = constant.rotate * (PI / 180.0f);
+float s = sin(radian);
+float c = cos(radian);
+vec2 center = constant.center;
+pos -= center;
+center.y = ubo.reso.y - center.y;
+vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
+return rotated + center; }
 void main() {
 for (int i = 0; i < gl_in.length(); i++) {
-edge_dist = vec3(1.0f);
+if (constant.rotate != 0 || constant.rotate != 0.0f) {
+vec2 pos = art_pos[i];
+vec2 rotate = rotate(pos);
+gl_Position = ubo.proj * ubo.view * ubo.model * vec4(rotate, 0.0f, 1.0f);
+data = vec3(1.0f);
+EmitVertex();}
+else {
+data = vec3(1.0f);
 gl_Position = gl_in[i].gl_Position;
-EmitVertex();
+EmitVertex();}
 }
 EndPrimitive();
 })";

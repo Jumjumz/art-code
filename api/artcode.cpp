@@ -139,6 +139,7 @@ void Art::Draw() {
             Shared::Memory::register_instance(inst->generate_vertices(),
                                               inst->generate_indices(),
                                               {.color  = inst->color,
+                                               .center = inst->get_center(),
                                                .stroke = inst->stroke,
                                                .rotate = inst->rotate,
                                                .fill   = static_cast<int>(inst->fill)});
