@@ -40,14 +40,14 @@ DrawQuad::Quad() {
 
 DrawQuad::~Quad() { ShapeRegistry::delete_registry(this); };
 
-ArrayVec2 DrawQuad::generate_vertices() {
+ArrayVec2 DrawQuad::generate_vertices() const {
     //  quad coordinates and size
     return ArrayVec2{this->position, this->position + Vec2{this->w, 0.0f},
                      this->position + Vec2{this->w, this->l},
                      this->position + Vec2{0.0f, this->l}};
 };
 
-ArrayU32 DrawQuad::generate_indices() {
+ArrayU32 DrawQuad::generate_indices() const {
     if (this->fill) {
         // triangles
         return ArrayU32{0, 1, 2, 2, 3, 0};
@@ -70,7 +70,7 @@ DrawCircle::Circle() {
 
 DrawCircle::~Circle() { ShapeRegistry::delete_registry(this); };
 
-ArrayVec2 DrawCircle::generate_vertices() {
+ArrayVec2 DrawCircle::generate_vertices() const {
     ArrayVec2 vertex;
 
     for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
@@ -82,7 +82,7 @@ ArrayVec2 DrawCircle::generate_vertices() {
     return vertex;
 };
 
-ArrayU32 DrawCircle::generate_indices() {
+ArrayU32 DrawCircle::generate_indices() const {
     ArrayU32 indices;
 
     if (this->fill) {
@@ -115,7 +115,8 @@ DrawTriangle::Triangle() {
 
 DrawTriangle::~Triangle() { ShapeRegistry::delete_registry(this); };
 
-ArrayVec2 DrawTriangle::generate_vertices() {
+// TODO:add a type for triangles, like right tri, acute, current triangle is equilateral
+ArrayVec2 DrawTriangle::generate_vertices() const {
     ArrayVec2 vertex;
 
     for (int i = 0; i < 3; i++) {
@@ -126,7 +127,7 @@ ArrayVec2 DrawTriangle::generate_vertices() {
     return vertex;
 };
 
-ArrayU32 DrawTriangle::generate_indices() { return ArrayU32{0, 1, 2, 1, 2, 0}; };
+ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2, 1, 2, 0}; };
 
 void Art::Draw() {
     // load shared memory

@@ -12,11 +12,11 @@
 struct Vertex {
     Vec2 pos;
 
-    static vk::VertexInputBindingDescription getBindingDescription() {
+    static vk::VertexInputBindingDescription get_binding_description() {
         return {0, sizeof(Vertex), vk::VertexInputRate::eVertex};
     };
 
-    static std::array<vk::VertexInputAttributeDescription, 1> getAttributeDescription() {
+    static std::array<vk::VertexInputAttributeDescription, 1> get_attribute_description() {
         return {
             vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32Sfloat,
                                                 offsetof(Vertex, pos)},
@@ -86,7 +86,7 @@ namespace Shared {
         }
 
         static void register_instance(const ArrayVec2& vertex, const ArrayU32 index,
-                                      const PushConstants& push_constans) {
+                                      const PushConstants& push_constants) {
             if (region->size > 500 || !region)
                 return;
 
@@ -99,7 +99,7 @@ namespace Shared {
             for (const auto& idx : index) {
                 inst.index.element[inst.index.size++] = idx;
             }
-            inst.constants = push_constans;
+            inst.constants = push_constants;
             region->size++;
         }
 

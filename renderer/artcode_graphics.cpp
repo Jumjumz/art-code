@@ -112,8 +112,8 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
     dynamic_state_info.pDynamicStates    = dynamic_states.data();
 
     // vert and index bindings
-    const auto binding_desc   = Vertex::getBindingDescription();
-    const auto attribute_desc = Vertex::getAttributeDescription();
+    const auto binding_desc   = Vertex::get_binding_description();
+    const auto attribute_desc = Vertex::get_attribute_description();
 
     vk::PipelineVertexInputStateCreateInfo vertex_info{};
     vertex_info.vertexBindingDescriptionCount = 1;

@@ -21,6 +21,7 @@ typedef glm::vec3 Vec3;
 typedef glm::vec4 Vec4;
 
 typedef Vec4 Color;
+// typedef char* Colour;
 // Arrays
 typedef std::vector<int>    ArrayInt;
 typedef std::vector<float>  ArrayFloat;
@@ -40,23 +41,26 @@ namespace detail {
         virtual ~IPen() = default;
 
         // must implement
-        Vec2  position;
+        Vec2 position;
+        // TODO:make this a hex color, where it converts to vec4 to the GPU
         Color color;
+        // Colour colour[5];
         float stroke;
         float rotate;
         bool  fill;
 
-        virtual ArrayVec2 generate_vertices() = 0;
-        virtual ArrayU32  generate_indices()  = 0;
+        virtual ArrayVec2 generate_vertices() const = 0;
+        virtual ArrayU32  generate_indices() const  = 0;
 
         // centroid vertices
-        Vec2 get_center() {
+        Vec2 get_center() const {
             Vec2 center = {0.0f, 0.0f};
             for (const auto& v : this->generate_vertices()) {
                 center += v;
             }
-            return center /= float(this->generate_vertices().size());
+            return center /= static_cast<float>(this->generate_vertices().size());
         };
+        // TODO:add a hex string to vec4 converter function
     };
 } // namespace detail
 
@@ -70,8 +74,8 @@ namespace Art {
         float l, w;
 
       private:
-        ArrayVec2 generate_vertices() override;
-        ArrayU32  generate_indices() override;
+        ArrayVec2 generate_vertices() const override;
+        ArrayU32  generate_indices() const override;
     };
 
     struct Circle : detail::IPen {
@@ -86,8 +90,8 @@ namespace Art {
         // num of triangles to make a circle, also defines the smoothness
         static constexpr int SEGMENTS = 32;
 
-        ArrayVec2 generate_vertices() override;
-        ArrayU32  generate_indices() override;
+        ArrayVec2 generate_vertices() const override;
+        ArrayU32  generate_indices() const override;
     };
 
     struct Triangle : detail::IPen {
@@ -98,11 +102,13 @@ namespace Art {
 
         float size;
 
+        enum class TriangleTypes { RIGHT, ACUTE, OBTUSE, EQUILATERAL };
+
       private:
-        ArrayVec2 generate_vertices() override;
-        ArrayU32  generate_indices() override;
+        ArrayVec2 generate_vertices() const override;
+        ArrayU32  generate_indices() const override;
     };
-    // TODO:add others
+    // TODO:add pen tool
 
     void Draw();
 }; // namespace Art
