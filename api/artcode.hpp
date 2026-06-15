@@ -20,8 +20,7 @@ typedef glm::vec2 Vec2;
 typedef glm::vec3 Vec3;
 typedef glm::vec4 Vec4;
 
-typedef Vec4 Color;
-// typedef char* Colour;
+typedef string Color;
 // Arrays
 typedef std::vector<int>    ArrayInt;
 typedef std::vector<float>  ArrayFloat;
@@ -41,12 +40,11 @@ namespace detail {
         virtual ~IPen() = default;
 
         // must implement
-        Vec2 position;
-        // TODO:make this a hex color, where it converts to vec4 to the GPU
+        Vec2  position;
         Color color;
-        // Colour colour[5];
         float stroke;
         float rotate;
+        float opacity;
         bool  fill;
 
         virtual ArrayVec2 generate_vertices() const = 0;
@@ -60,7 +58,16 @@ namespace detail {
             }
             return center /= static_cast<float>(this->generate_vertices().size());
         };
-        // TODO:add a hex string to vec4 converter function
+
+        Vec4 convert_color() const {
+            string hex   = this->color[0] == '#' ? this->color.substr(1) : this->color;
+            u32    value = std::stoul(hex, nullptr, 16);
+
+            // 0xFF (255) is a bit mask
+            // 16 left shift to red pos, 8 left shift to green and blue stay still
+            return Vec4{((value >> 16) & 0xFF) / 255.0f, ((value >> 8) & 0xFF) / 255.0f,
+                        ((value >> 0) & 0xFF) / 255.0f, this->opacity};
+        }
     };
 } // namespace detail
 
@@ -101,8 +108,6 @@ namespace Art {
         ~Triangle();
 
         float size;
-
-        enum class TriangleTypes { RIGHT, ACUTE, OBTUSE, EQUILATERAL };
 
       private:
         ArrayVec2 generate_vertices() const override;

@@ -145,7 +145,13 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
     stencil_state_info.stencilTestEnable     = vk::False;
 
     vk::PipelineColorBlendAttachmentState color_attachment{};
-    color_attachment.blendEnable = vk::False;
+    color_attachment.blendEnable         = vk::True;
+    color_attachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+    color_attachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+    color_attachment.colorBlendOp        = vk::BlendOp::eAdd;
+    color_attachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
+    color_attachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
+    color_attachment.alphaBlendOp        = vk::BlendOp::eAdd;
     color_attachment.colorWriteMask =
         vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
         vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;

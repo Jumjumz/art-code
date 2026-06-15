@@ -30,9 +30,10 @@ DrawQuad::Quad() {
     this->l        = 100.0f;
     this->w        = 100.0f;
     this->position = Vec2{200, 200};
-    this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
+    this->color    = "#000";
     this->stroke   = 1.0f;
     this->rotate   = 0.0f;
+    this->opacity  = 1.0f;
     this->fill     = false;
 
     ShapeRegistry::register_shape(this);
@@ -60,9 +61,10 @@ ArrayU32 DrawQuad::generate_indices() const {
 DrawCircle::Circle() {
     this->radius   = 100.f;
     this->position = Vec2{200, 200};
-    this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
+    this->color    = "#000";
     this->stroke   = 1.0f;
     this->rotate   = 0.0f;
+    this->opacity  = 1.0f;
     this->fill     = false;
 
     ShapeRegistry::register_shape(this);
@@ -105,9 +107,10 @@ ArrayU32 DrawCircle::generate_indices() const {
 DrawTriangle::Triangle() {
     this->size     = 100.0f;
     this->position = Vec2{200, 200};
-    this->color    = Vec4{0.0f, 0.0f, 0.0f, 0.0f};
+    this->color    = "#000";
     this->stroke   = 1.0f;
     this->rotate   = 0.0f;
+    this->opacity  = 1.0f;
     this->fill     = false;
 
     ShapeRegistry::register_shape(this);
@@ -139,7 +142,7 @@ void Art::Draw() {
             // register vert and idx per instance
             Shared::Memory::register_instance(inst->generate_vertices(),
                                               inst->generate_indices(),
-                                              {.color  = inst->color,
+                                              {.color  = inst->convert_color(),
                                                .center = inst->get_center(),
                                                .stroke = inst->stroke,
                                                .rotate = inst->rotate,
