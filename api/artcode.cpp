@@ -30,7 +30,7 @@ DrawQuad::Quad() {
     this->l        = 100.0f;
     this->w        = 100.0f;
     this->position = Vec2{200, 200};
-    this->color    = "#000";
+    this->color    = "#000000";
     this->stroke   = 1.0f;
     this->rotate   = 0.0f;
     this->opacity  = 1.0f;
@@ -61,7 +61,7 @@ ArrayU32 DrawQuad::generate_indices() const {
 DrawCircle::Circle() {
     this->radius   = 100.f;
     this->position = Vec2{200, 200};
-    this->color    = "#000";
+    this->color    = "#000000";
     this->stroke   = 1.0f;
     this->rotate   = 0.0f;
     this->opacity  = 1.0f;
@@ -106,8 +106,9 @@ ArrayU32 DrawCircle::generate_indices() const {
 // Triangle
 DrawTriangle::Triangle() {
     this->size     = 100.0f;
+    this->type     = TriangleTypes::Equilateral;
     this->position = Vec2{200, 200};
-    this->color    = "#000";
+    this->color    = "#000000";
     this->stroke   = 1.0f;
     this->rotate   = 0.0f;
     this->opacity  = 1.0f;
@@ -118,19 +119,28 @@ DrawTriangle::Triangle() {
 
 DrawTriangle::~Triangle() { ShapeRegistry::delete_registry(this); };
 
-// TODO:add a type for triangles, like right tri, acute, current triangle is equilateral
 ArrayVec2 DrawTriangle::generate_vertices() const {
     ArrayVec2 vertex;
 
-    for (int i = 0; i < 3; i++) {
-        float angle = i * 2.0f * M_PI / 3.0f - M_PI / 2.0f;
-        vertex.push_back(Vec2{this->position.x + cos(angle) * this->size,
-                              this->position.y + sin(angle) * this->size});
+    switch (this->type) {
+    case TriangleTypes::Equilateral: {
+        for (int i = 0; i < 3; i++) {
+            float angle = i * 2.0f * M_PI / 3.0f - M_PI / 2.0f;
+            vertex.push_back(Vec2{this->position.x + cos(angle) * this->size,
+                                  this->position.y + sin(angle) * this->size});
+        }
+        break;
+    }
+    case TriangleTypes::Right: {
+        vertex = ArrayVec2{this->position, this->position + Vec2{this->size, 0.0f},
+                           this->position - Vec2{0.0f, this->size}};
+        break;
+    }
     }
     return vertex;
 };
 
-ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2, 1, 2, 0}; };
+ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
 
 void Art::Draw() {
     // load shared memory

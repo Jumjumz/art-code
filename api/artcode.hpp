@@ -35,6 +35,8 @@ typedef std::vector<u16>    ArrayU16;
 typedef std::vector<u32>    ArrayU32;
 typedef std::vector<u64>    ArrayU64;
 
+enum class TriangleTypes { Equilateral, Right };
+
 namespace detail {
     struct IPen {
         virtual ~IPen() = default;
@@ -114,7 +116,8 @@ namespace Art {
 
         ~Triangle();
 
-        float size;
+        float         size;
+        TriangleTypes type;
 
       private:
         ArrayVec2 generate_vertices() const override;

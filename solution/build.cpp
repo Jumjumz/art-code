@@ -200,8 +200,10 @@ layout(push_constant) uniform PushConstants {vec4 color; float stroke; float rot
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) in vec3 data;
 void main() {
-if (constant.fill == 0) {frag_color = constant.color;}
-else if (constant.fill == 1) {frag_color = constant.color;}
+vec3 color = constant.color.rgb;
+color = pow(color, vec3(2.2));
+if (constant.fill == 0) {frag_color = vec4(color, constant.color.a);}
+else if (constant.fill == 1) {frag_color = vec4(color, constant.color.a);}
 else {discard;}
 })";
 };
@@ -229,7 +231,7 @@ vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
 return rotated + center; }
 void main() {
 for (int i = 0; i < gl_in.length(); i++) {
-if (constant.rotate != 0 || constant.rotate != 0.0f) {
+if (constant.rotate != 0) {
 vec2 pos = art_pos[i];
 vec2 rotate = rotate(pos);
 gl_Position = ubo.proj * ubo.view * ubo.model * vec4(rotate, 0.0f, 1.0f);
@@ -266,7 +268,7 @@ vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
 return rotated + center; }
 void main() {
 for (int i = 0; i < gl_in.length(); i++) {
-if (constant.rotate != 0 || constant.rotate != 0.0f) {
+if (constant.rotate != 0) {
 vec2 pos = art_pos[i];
 vec2 rotate = rotate(pos);
 gl_Position = ubo.proj * ubo.view * ubo.model * vec4(rotate, 0.0f, 1.0f);
