@@ -37,9 +37,12 @@ struct Indx {
 struct PushConstants {
     Vec4  color;
     Vec2  center;
+    Vec2  skew_pos;
     float stroke;
     float rotate;
     int   fill;
+    int   skew;
+    int   skew_idx;
 };
 
 namespace Shared {

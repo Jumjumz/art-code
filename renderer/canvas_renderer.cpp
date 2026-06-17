@@ -449,7 +449,8 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
                                                   this->vk_buffers.extent.height}});
 
         cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
-                                         vk::ShaderStageFlagBits::eGeometry |
+                                         vk::ShaderStageFlagBits::eVertex |
+                                             vk::ShaderStageFlagBits::eGeometry |
                                              vk::ShaderStageFlagBits::eFragment,
                                          0, cons);
 

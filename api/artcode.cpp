@@ -27,14 +27,17 @@ using DrawTriangle = Art::Triangle;
 
 // Quad
 DrawQuad::Quad() {
-    this->l        = 100.0f;
-    this->w        = 100.0f;
-    this->position = Vec2{200, 200};
-    this->color    = "#000000";
-    this->stroke   = 1.0f;
-    this->rotate   = 0.0f;
-    this->opacity  = 1.0f;
-    this->fill     = false;
+    this->l            = 100.0f;
+    this->w            = 100.0f;
+    this->position     = Vec2{200, 200};
+    this->skewPosition = Vec2{0.0f, 0.0f};
+    this->color        = "#000000";
+    this->stroke       = 1.0f;
+    this->rotate       = 0.0f;
+    this->opacity      = 1.0f;
+    this->fill         = false;
+    this->skew         = false;
+    this->skewIndex    = 0;
 
     ShapeRegistry::register_shape(this);
 };
@@ -43,17 +46,22 @@ DrawQuad::~Quad() { ShapeRegistry::delete_registry(this); };
 
 ArrayVec2 DrawQuad::generate_vertices() const {
     //  quad coordinates and size
-    return ArrayVec2{this->position, this->position + Vec2{this->w, 0.0f},
+    return ArrayVec2{this->position,
+                     this->position + Vec2{this->w * 0.5f, 0.0f},
+                     this->position + Vec2{this->w, 0.0f},
+                     this->position + Vec2{this->w, this->l * 0.5f},
                      this->position + Vec2{this->w, this->l},
-                     this->position + Vec2{0.0f, this->l}};
+                     this->position + Vec2{this->w * 0.5f, this->l},
+                     this->position + Vec2{0.0f, this->l},
+                     this->position + Vec2{0.0f, this->l * 0.5f}};
 };
 
 ArrayU32 DrawQuad::generate_indices() const {
     if (this->fill) {
         // triangles
-        return ArrayU32{0, 1, 2, 2, 3, 0};
+        return ArrayU32{0, 2, 6, 2, 4, 6};
     } else {
-        return ArrayU32{0, 1, 1, 2, 2, 3, 3, 0};
+        return ArrayU32{0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 0};
     }
 };
 
@@ -152,11 +160,14 @@ void Art::Draw() {
             // register vert and idx per instance
             Shared::Memory::register_instance(inst->generate_vertices(),
                                               inst->generate_indices(),
-                                              {.color  = inst->convert_color(),
-                                               .center = inst->get_center(),
-                                               .stroke = inst->stroke,
-                                               .rotate = inst->rotate,
-                                               .fill   = static_cast<int>(inst->fill)});
+                                              {.color    = inst->convert_color(),
+                                               .center   = inst->get_center(),
+                                               .skew_pos = inst->skewPosition,
+                                               .stroke   = inst->stroke,
+                                               .rotate   = inst->rotate,
+                                               .fill     = static_cast<int>(inst->fill),
+                                               .skew     = static_cast<int>(inst->skew),
+                                               .skew_idx = inst->skewIndex});
         }
     }
 };

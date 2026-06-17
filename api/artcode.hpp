@@ -37,17 +37,22 @@ typedef std::vector<u64>    ArrayU64;
 
 enum class TriangleTypes { Equilateral, Right };
 
+// TODO:add skew for shapes
 namespace detail {
     struct IPen {
         virtual ~IPen() = default;
 
         // must implement
+        // uses camel case for users, snake case for api implementation
         Vec2  position;
+        Vec2  skewPosition;
         Color color;
         float stroke;
         float rotate;
         float opacity;
         bool  fill;
+        bool  skew;
+        int   skewIndex;
 
         virtual ArrayVec2 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;
@@ -128,6 +133,7 @@ namespace Art {
     void Draw();
 }; // namespace Art
 
+// TODO:add expresssion templates
 /* STILL LEARNING THIS SHIT
 template <typename Drawable> struct Draw {
   private:
