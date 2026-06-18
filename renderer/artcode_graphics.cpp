@@ -167,9 +167,8 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
 
     // push constants for color
     vk::PushConstantRange constant_range{};
-    constant_range.stageFlags = vk::ShaderStageFlagBits::eVertex |
-                                vk::ShaderStageFlagBits::eFragment |
-                                vk::ShaderStageFlagBits::eGeometry;
+    constant_range.stageFlags =
+        vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eGeometry;
     constant_range.offset = 0;
     constant_range.size   = sizeof(PushConstants);
 
