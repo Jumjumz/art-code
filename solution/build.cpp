@@ -275,21 +275,7 @@ layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 
 layout(push_constant) uniform PushConstants {vec4 color;vec2 center;vec2 skew_pos;vec2 skew_vert;float stroke;float rotate;int fill;int skew;int skew_idx;} constant;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 data;
-vec2 rotate(vec2 pos) {
-const float PI = 3.14159265359;
-float radian = constant.rotate * (PI / 180.0f);
-float s = sin(radian);
-float c = cos(radian);
-vec2 center = constant.center;
-center.y = ubo.reso.y - center.y;
-pos -= center;
-vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
-return rotated + center; }
-void main() {
-vec2 pos_arr[] = art_pos;
-for (int i = 0; i < gl_in.length(); i++) {
-vec2 pos = pos_arr[i];
-if (constant.skew == 1) {
+vec2 skew(vec2 pos) {
 vec2 skew_pos = constant.skew_pos * -1;
 vec2 skew_vert = vec2(constant.skew_vert.x, ubo.reso.y - constant.skew_vert.y);
 int idx = constant.skew_idx;
@@ -305,6 +291,24 @@ pos.y += skew_pos.y;}
 if (pos.x == skew_vert.x && pos.y == skew_vert.y) {
 pos += skew_pos;}
 }
+return pos;
+}
+vec2 rotate(vec2 pos) {
+const float PI = 3.14159265359;
+float radian = constant.rotate * (PI / 180.0f);
+float s = sin(radian);
+float c = cos(radian);
+vec2 center = constant.center;
+center.y = ubo.reso.y - center.y;
+pos -= center;
+vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
+return rotated + center; }
+void main() {
+vec2 pos_arr[] = art_pos;
+for (int i = 0; i < gl_in.length(); i++) {
+vec2 pos = pos_arr[i];
+if (constant.skew == 1) {
+pos = skew(pos);
 }
 if (constant.rotate != 0) {
 pos = rotate(pos);
