@@ -196,7 +196,7 @@ void Build::write_frag_shader(const fs::path& shader) const {
 
     write << R"(#version 450
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
-layout(push_constant) uniform PushConstants {vec4 color; float stroke; float rotate; int fill;} constant;
+layout(push_constant) uniform PushConstants {vec4 color;vec2 center;vec2 skew_pos;vec2 skew_vert;float stroke;float rotate;int fill;int skew;int skew_idx;} constant
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) in vec3 data;
 void main() {
@@ -216,9 +216,27 @@ void Build::write_trigeom_shader(const fs::path& shader) const {
 layout(triangles) in;
 layout(triangle_strip, max_vertices=3) out;
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
-layout(push_constant) uniform PushConstants {vec4 color;float stroke;float rotate;int fill;} constant;
+layout(push_constant) uniform PushConstants {vec4 color;vec2 center;vec2 skew_pos;vec2 skew_vert;float stroke;float rotate;int fill;int skew;int skew_idx;} constant;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 data;
+vec2 skew(vec2 pos) {
+vec2 skew_pos = constant.skew_pos * -1;
+vec2 skew_vert = vec2(constant.skew_vert.x, ubo.reso.y - constant.skew_vert.y);
+int idx = constant.skew_idx;
+if (idx % 2 == 1) {
+if (idx == 1 || idx == 5) {
+if (abs(pos.y - skew_vert.y) < 1.0) {
+pos.x += skew_pos.x;}
+} else if (idx == 3 || idx == 7) {
+if (abs(pos.x - skew_vert.x) < 1.0) {
+pos.y += skew_pos.y;}
+}
+} else {
+if (pos.x == skew_vert.x && pos.y == skew_vert.y) {
+pos += skew_pos;}
+}
+return pos;
+}
 vec2 rotate(vec2 pos) {
 const float PI = 3.14159265359;
 float radian = constant.rotate * (PI / 180.0f);
@@ -230,17 +248,18 @@ pos -= center;
 vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
 return rotated + center; }
 void main() {
+vec2 pos_arr[] = art_pos;
 for (int i = 0; i < gl_in.length(); i++) {
+vec2 pos = pos_arr[i];
+if (constant.skew == 1) {
+pos = skew(pos);
+}
 if (constant.rotate != 0) {
-vec2 pos = art_pos[i];
-vec2 rotate = rotate(pos);
-gl_Position = ubo.proj * ubo.view * ubo.model * vec4(rotate, 0.0f, 1.0f);
+pos = rotate(pos);
+}
+gl_Position = ubo.proj * ubo.view * ubo.model * vec4(pos, 0.0f, 1.0f);
 data = vec3(1.0f);
-EmitVertex();}
-else {
-data = vec3(1.0f);
-gl_Position = gl_in[i].gl_Position;
-EmitVertex();}
+EmitVertex();
 }
 EndPrimitive();
 })";
@@ -253,7 +272,7 @@ void Build::write_linegeom_shader(const fs::path& shader) const {
 layout(lines) in;
 layout(line_strip, max_vertices=2) out;
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
-layout(push_constant) uniform PushConstants {vec4 color;float stroke;float rotate;int fill;} constant;
+layout(push_constant) uniform PushConstants {vec4 color;vec2 center;vec2 skew_pos;vec2 skew_vert;float stroke;float rotate;int fill;int skew;int skew_idx;} constant;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 data;
 vec2 rotate(vec2 pos) {
@@ -262,22 +281,37 @@ float radian = constant.rotate * (PI / 180.0f);
 float s = sin(radian);
 float c = cos(radian);
 vec2 center = constant.center;
-pos -= center;
 center.y = ubo.reso.y - center.y;
+pos -= center;
 vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
 return rotated + center; }
 void main() {
+vec2 pos_arr[] = art_pos;
 for (int i = 0; i < gl_in.length(); i++) {
+vec2 pos = pos_arr[i];
+if (constant.skew == 1) {
+vec2 skew_pos = constant.skew_pos * -1;
+vec2 skew_vert = vec2(constant.skew_vert.x, ubo.reso.y - constant.skew_vert.y);
+int idx = constant.skew_idx;
+if (idx % 2 == 1) {
+if (idx == 1 || idx == 5) {
+if (abs(pos.y - skew_vert.y) < 1.0) {
+pos.x += skew_pos.x;}
+} else if (idx == 3 || idx == 7) {
+if (abs(pos.x - skew_vert.x) < 1.0) {
+pos.y += skew_pos.y;}
+}
+} else {
+if (pos.x == skew_vert.x && pos.y == skew_vert.y) {
+pos += skew_pos;}
+}
+}
 if (constant.rotate != 0) {
-vec2 pos = art_pos[i];
-vec2 rotate = rotate(pos);
-gl_Position = ubo.proj * ubo.view * ubo.model * vec4(rotate, 0.0f, 1.0f);
+pos = rotate(pos);
+}
+gl_Position = ubo.proj * ubo.view * ubo.model * vec4(pos, 0.0f, 1.0f);
 data = vec3(1.0f);
-EmitVertex();}
-else {
-data = vec3(1.0f);
-gl_Position = gl_in[i].gl_Position;
-EmitVertex();}
+EmitVertex();
 }
 EndPrimitive();
 })";

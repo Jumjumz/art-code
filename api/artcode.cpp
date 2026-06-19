@@ -59,9 +59,9 @@ ArrayVec2 DrawQuad::generate_vertices() const {
 ArrayU32 DrawQuad::generate_indices() const {
     if (this->fill) {
         // triangles
-        return ArrayU32{0, 1, 2, 0, 2, 7, 7, 2, 3, 7, 3, 6, 6, 3, 4, 6, 4, 5};
+        return ArrayU32{0, 2, 6, 2, 4, 6};
     } else {
-        return ArrayU32{0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 0};
+        return ArrayU32{0, 2, 2, 4, 4, 6, 6, 0};
     }
 };
 
@@ -155,7 +155,7 @@ void Art::Draw() {
     Shared::Memory::load_shared_memory();
     {
         const auto& instances = ShapeRegistry::get_instances();
-
+        // TODO:skew only works for quad, should also work for other shapes
         for (const auto& inst : instances) {
             Vec2 vec_idx = inst->generate_vertices()[inst->skewIndex];
             // register vert and idx per instance
