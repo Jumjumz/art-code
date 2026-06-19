@@ -38,6 +38,7 @@ struct PushConstants {
     Vec4  color;
     Vec2  center;
     Vec2  skew_pos;
+    Vec2  skew_vert;
     float stroke;
     float rotate;
     int   fill;

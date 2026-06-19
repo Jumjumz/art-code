@@ -59,7 +59,7 @@ ArrayVec2 DrawQuad::generate_vertices() const {
 ArrayU32 DrawQuad::generate_indices() const {
     if (this->fill) {
         // triangles
-        return ArrayU32{0, 2, 6, 2, 4, 6};
+        return ArrayU32{0, 1, 2, 0, 2, 7, 7, 2, 3, 7, 3, 6, 6, 3, 4, 6, 4, 5};
     } else {
         return ArrayU32{0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 0};
     }
@@ -157,17 +157,19 @@ void Art::Draw() {
         const auto& instances = ShapeRegistry::get_instances();
 
         for (const auto& inst : instances) {
+            Vec2 vec_idx = inst->generate_vertices()[inst->skewIndex];
             // register vert and idx per instance
             Shared::Memory::register_instance(inst->generate_vertices(),
                                               inst->generate_indices(),
-                                              {.color    = inst->convert_color(),
-                                               .center   = inst->get_center(),
-                                               .skew_pos = inst->skewPosition,
-                                               .stroke   = inst->stroke,
-                                               .rotate   = inst->rotate,
-                                               .fill     = static_cast<int>(inst->fill),
-                                               .skew     = static_cast<int>(inst->skew),
-                                               .skew_idx = inst->skewIndex});
+                                              {.color     = inst->convert_color(),
+                                               .center    = inst->get_center(),
+                                               .skew_pos  = inst->skewPosition,
+                                               .skew_vert = vec_idx,
+                                               .stroke    = inst->stroke,
+                                               .rotate    = inst->rotate,
+                                               .fill      = static_cast<int>(inst->fill),
+                                               .skew      = static_cast<int>(inst->skew),
+                                               .skew_idx  = inst->skewIndex});
         }
     }
 };

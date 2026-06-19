@@ -216,7 +216,7 @@ void Build::write_trigeom_shader(const fs::path& shader) const {
 layout(triangles) in;
 layout(triangle_strip, max_vertices=3) out;
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
-layout(push_constant) uniform PushConstants {vec4 color; float stroke; float rotate; int fill;} constant;
+layout(push_constant) uniform PushConstants {vec4 color;float stroke;float rotate;int fill;} constant;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 data;
 vec2 rotate(vec2 pos) {
@@ -253,7 +253,7 @@ void Build::write_linegeom_shader(const fs::path& shader) const {
 layout(lines) in;
 layout(line_strip, max_vertices=2) out;
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
-layout(push_constant) uniform PushConstants {vec4 color; float stroke; float rotate; int fill;} constant;
+layout(push_constant) uniform PushConstants {vec4 color;float stroke;float rotate;int fill;} constant;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 data;
 vec2 rotate(vec2 pos) {
