@@ -21,6 +21,22 @@ struct ShapeRegistry {
     static inline std::vector<detail::IPen*> instances;
 };
 
+Vec4 convert_color(const string& color, float opacity) {
+    string hex   = color[0] == '#' ? color.substr(1) : color;
+    u32    value = std::stoul(hex, nullptr, 16);
+
+    // 0xFF (255) is a bit mask
+    if (hex.size() == 8) {
+        // this means hex is already provided an alpha value which makes the hex size 8 i.e #443199FF
+        return Vec4{((value >> 24) & 0xFF) / 255.0f, ((value >> 16) & 0xFF) / 255.0f,
+                    ((value >> 8) & 0xFF) / 255.0f, ((value >> 0) & 0xFF) / 255.0f};
+    } else {
+        // 16 left shift to red pos, 8 left shift to green and blue stay still
+        return Vec4{((value >> 16) & 0xFF) / 255.0f, ((value >> 8) & 0xFF) / 255.0f,
+                    ((value >> 0) & 0xFF) / 255.0f, opacity};
+    }
+}
+
 using DrawQuad     = Art::Quad;
 using DrawCircle   = Art::Circle;
 using DrawTriangle = Art::Triangle;
@@ -159,17 +175,17 @@ void Art::Draw() {
         for (const auto& inst : instances) {
             Vec2 vec_idx = inst->generate_vertices()[inst->skewIndex];
             // register vert and idx per instance
-            Shared::Memory::register_instance(inst->generate_vertices(),
-                                              inst->generate_indices(),
-                                              {.color     = inst->convert_color(),
-                                               .center    = inst->get_center(),
-                                               .skew_pos  = inst->skewPosition,
-                                               .skew_vert = vec_idx,
-                                               .stroke    = inst->stroke,
-                                               .rotate    = inst->rotate,
-                                               .fill      = static_cast<int>(inst->fill),
-                                               .skew      = static_cast<int>(inst->skew),
-                                               .skew_idx  = inst->skewIndex});
+            Shared::Memory::register_instance(
+                inst->generate_vertices(), inst->generate_indices(),
+                {.color     = convert_color(inst->color, inst->opacity),
+                 .center    = inst->get_center(),
+                 .skew_pos  = inst->skewPosition,
+                 .skew_vert = vec_idx,
+                 .stroke    = inst->stroke,
+                 .rotate    = inst->rotate,
+                 .fill      = static_cast<int>(inst->fill),
+                 .skew      = static_cast<int>(inst->skew),
+                 .skew_idx  = inst->skewIndex});
         }
     }
 };

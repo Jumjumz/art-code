@@ -42,8 +42,9 @@ namespace detail {
     struct IPen {
         virtual ~IPen() = default;
 
-        // must implement
-        // uses camel case for users, snake case for api implementation
+        // TODO:make multiple skew points for diff shapes
+        //  must implement
+        //  uses camel case for users, snake case for api implementation
         Vec2  position;
         Vec2  skewPosition;
         Color color;
@@ -65,23 +66,6 @@ namespace detail {
             }
             return center /= static_cast<float>(this->generate_vertices().size());
         };
-
-        Vec4 convert_color() const {
-            string hex   = this->color[0] == '#' ? this->color.substr(1) : this->color;
-            u32    value = std::stoul(hex, nullptr, 16);
-
-            // 0xFF (255) is a bit mask
-            if (hex.size() == 8) {
-                // this means hex is already provided an alpha value which makes the hex size 8 i.e #443199FF
-                return Vec4{((value >> 24) & 0xFF) / 255.0f,
-                            ((value >> 16) & 0xFF) / 255.0f,
-                            ((value >> 8) & 0xFF) / 255.0f, ((value >> 0) & 0xFF) / 255.0f};
-            } else {
-                // 16 left shift to red pos, 8 left shift to green and blue stay still
-                return Vec4{((value >> 16) & 0xFF) / 255.0f, ((value >> 8) & 0xFF) / 255.0f,
-                            ((value >> 0) & 0xFF) / 255.0f, this->opacity};
-            }
-        }
     };
 } // namespace detail
 
