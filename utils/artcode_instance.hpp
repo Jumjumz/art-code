@@ -34,7 +34,9 @@ struct Indx {
     u32    element[9999];
 };
 
+// TODO:move arrays to SSBO or somethin
 struct PushConstants {
+    Vec2  skew_mesh[8];
     Vec4  color;
     Vec2  center;
     Vec2  skew_pos;
@@ -89,7 +91,7 @@ namespace Shared {
             shm_unlink("/artcode_instances");
         }
 
-        static void register_instance(const ArrayVec2& vertex, const ArrayU32 index,
+        static void register_instance(const ArrayVec2& vertex, const ArrayU32& index,
                                       const PushConstants& push_constants) {
             if (region->size > 500 || !region)
                 return;

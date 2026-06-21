@@ -21,7 +21,7 @@ typedef glm::vec3 Vec3;
 typedef glm::vec4 Vec4;
 
 typedef string Color;
-// Arrays
+// Arrays/Vector
 typedef std::vector<int>    ArrayInt;
 typedef std::vector<float>  ArrayFloat;
 typedef std::vector<double> ArrayDouble;
@@ -61,10 +61,12 @@ namespace detail {
         // centroid vertices
         Vec2 get_center() const {
             Vec2 center = {0.0f, 0.0f};
-            for (const auto& v : this->generate_vertices()) {
+
+            const auto& verts = this->generate_vertices();
+            for (const auto& v : verts) {
                 center += v;
             }
-            return center /= static_cast<float>(this->generate_vertices().size());
+            return center /= static_cast<float>(verts.size());
         };
     };
 } // namespace detail

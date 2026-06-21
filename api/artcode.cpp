@@ -1,6 +1,8 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
 #include <cmath>
+#include <cstring>
+#include <glm/common.hpp>
 
 struct ShapeRegistry {
     static void register_shape(detail::IPen* shape) {
@@ -35,6 +37,50 @@ Vec4 convert_color(const string& color, float opacity) {
         return Vec4{((value >> 16) & 0xFF) / 255.0f, ((value >> 8) & 0xFF) / 255.0f,
                     ((value >> 0) & 0xFF) / 255.0f, opacity};
     }
+}
+
+// find length and width of any shapes (forms a quad)
+Vec2 skew_mesh_size(const ArrayVec2& vertices, const Vec2& center) {
+    Vec2 len_wid = Vec2{0.0f, 0.0f};
+    Vec2 v_x     = Vec2{0.0f, 0.0f};
+    Vec2 v_y     = Vec2{0.0f, 0.0f};
+    for (const auto& vertex : vertices) {
+        // get min and max
+        float max_x = glm::max(vertex.x - center.x, vertex.x);
+        float min_x = glm::min(vertex.x - center.x, vertex.x);
+        float max_y = glm::max(vertex.y - center.y, vertex.y);
+        float min_y = glm::min(vertex.y - center.y, vertex.y);
+        // reduction operation
+        if (v_x.x > max_x) {
+            v_x.x = max_x;
+        }
+        if (v_x.y < min_x) {
+            v_x.y = min_x;
+        }
+        if (v_y.x > max_y) {
+            v_y.x = max_y;
+        }
+        if (v_y.y < min_y) {
+            v_y.y = min_y;
+        }
+    }
+    // calculate the max minus min
+    len_wid.x = v_x.x - (v_x.y * -1) * 2;
+    len_wid.y = v_y.x - (v_y.y * -1) * 2;
+
+    return len_wid;
+}
+
+ArrayVec2 get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
+    // return skew mesh quad
+    return ArrayVec2{shape_pos,
+                     shape_pos + Vec2{mesh_size.x * 0.5f, 0.0f},
+                     shape_pos + Vec2{mesh_size.x, 0.0f},
+                     shape_pos + Vec2{mesh_size.x, mesh_size.y * 0.5f},
+                     shape_pos + mesh_size,
+                     shape_pos + Vec2{mesh_size.x * 0.5f, mesh_size.y},
+                     shape_pos + Vec2{0.0f, mesh_size.y},
+                     shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
 }
 
 using DrawQuad     = Art::Quad;
@@ -173,19 +219,25 @@ void Art::Draw() {
         const auto& instances = ShapeRegistry::get_instances();
         // TODO:skew only works for quad, should also work for other shapes
         for (const auto& inst : instances) {
+            const auto skew_mesh =
+                get_skew_mesh(skew_mesh_size(inst->generate_vertices(), inst->get_center()),
+                              inst->position);
             Vec2 vec_idx = inst->generate_vertices()[inst->skewIndex];
+
+            PushConstants constants;
+            memcpy(constants.skew_mesh, skew_mesh.data(), skew_mesh.size() * sizeof(Vec2));
+            constants.color     = convert_color(inst->color, inst->opacity);
+            constants.center    = inst->get_center();
+            constants.skew_pos  = inst->skewPosition;
+            constants.skew_vert = vec_idx;
+            constants.stroke    = inst->stroke;
+            constants.rotate    = inst->rotate;
+            constants.fill      = static_cast<int>(inst->fill);
+            constants.skew      = static_cast<int>(inst->skew);
+            constants.skew_idx  = inst->skewIndex;
             // register vert and idx per instance
-            Shared::Memory::register_instance(
-                inst->generate_vertices(), inst->generate_indices(),
-                {.color     = convert_color(inst->color, inst->opacity),
-                 .center    = inst->get_center(),
-                 .skew_pos  = inst->skewPosition,
-                 .skew_vert = vec_idx,
-                 .stroke    = inst->stroke,
-                 .rotate    = inst->rotate,
-                 .fill      = static_cast<int>(inst->fill),
-                 .skew      = static_cast<int>(inst->skew),
-                 .skew_idx  = inst->skewIndex});
+            Shared::Memory::register_instance(inst->generate_vertices(),
+                                              inst->generate_indices(), constants);
         }
     }
 };
