@@ -37,6 +37,11 @@ typedef std::vector<u64>    ArrayU64;
 
 enum class TriangleTypes { Equilateral, Right };
 
+struct SkewPos {
+    int   index;
+    float angle;
+};
+
 // TODO:add skew for shapes
 namespace detail {
     struct IPen {
@@ -45,15 +50,16 @@ namespace detail {
         // TODO:make multiple skew points for diff shapes
         //  must implement
         //  uses camel case for users, snake case for api implementation
-        Vec2  position;
-        Vec2  skewPosition;
-        Color color;
-        float stroke;
-        float rotate;
-        float opacity;
-        bool  fill;
-        bool  skew;
-        int   skewIndex;
+        SkewPos skewPos[8] = {0, 0.0f}; // set for all
+        Vec2    position;
+        Vec2    skewPosition;
+        Color   color;
+        float   stroke;
+        float   rotate;
+        float   opacity;
+        bool    fill;
+        bool    skew;
+        int     skewIndex;
 
         virtual ArrayVec2 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;

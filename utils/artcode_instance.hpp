@@ -34,9 +34,13 @@ struct Indx {
     u32    element[9999];
 };
 
-// TODO:move arrays to SSBO or somethin
+struct SkewData {
+    Vec2    skew_mesh[8];
+    SkewPos skew_pos[8];
+};
+
+// TODO:move arrays to SSBO or something
 struct PushConstants {
-    Vec2  skew_mesh[8];
     Vec4  color;
     Vec2  center;
     Vec2  skew_pos;

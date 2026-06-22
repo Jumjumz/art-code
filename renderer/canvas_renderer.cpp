@@ -151,10 +151,10 @@ void CanvasRenderer::update_artcode_buffers() {
     this->device.waitIdle();
 
     // clear the vectors for vertex, indices and its buffers
-    this->artcode_buffer->int_vertex.clear();
+    this->artcode_buffer->inst_vertex.clear();
     this->artcode_buffer->vertex_buffers.clear();
     this->artcode_buffer->vertex_memories.clear();
-    this->artcode_buffer->int_index.clear();
+    this->artcode_buffer->inst_index.clear();
     this->artcode_buffer->index_buffers.clear();
     this->artcode_buffer->index_memories.clear();
     // clear color
@@ -172,13 +172,14 @@ void CanvasRenderer::update_artcode_buffers() {
 
         this->push_constants.push_back(inst_constants);
 
-        this->artcode_buffer->int_vertex.push_back(vertex);
-        this->artcode_buffer->int_index.push_back(indices);
+        this->artcode_buffer->inst_vertex.push_back(vertex);
+        this->artcode_buffer->inst_index.push_back(indices);
     }
     // clean/reset instance
     Shared::Memory::reset_instance();
 
-    // create vertex buffer for each instance or shape
+    // TODO: update these functions, should just be in the loop for direct creation for each instance
+    //  create vertex buffer for each instance or shape
     this->artcode_buffer->create_vertex_buffer();
     this->artcode_buffer->create_index_buffer();
 };
@@ -419,7 +420,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
     artcode_rendering_info.colorAttachmentCount = 1;
     artcode_rendering_info.pColorAttachments    = &artcode_attachement_info;
 
-    const auto& inst_index = this->artcode_buffer->int_index;
+    const auto& inst_index = this->artcode_buffer->inst_index;
     // render canvas
     cmd.beginRendering(artcode_rendering_info);
     for (size_t i = inst_index.size(); i > 0; i--) {

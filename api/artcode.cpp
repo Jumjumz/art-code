@@ -225,7 +225,6 @@ void Art::Draw() {
             Vec2 vec_idx = inst->generate_vertices()[inst->skewIndex];
 
             PushConstants constants;
-            memcpy(constants.skew_mesh, skew_mesh.data(), skew_mesh.size() * sizeof(Vec2));
             constants.color     = convert_color(inst->color, inst->opacity);
             constants.center    = inst->get_center();
             constants.skew_pos  = inst->skewPosition;

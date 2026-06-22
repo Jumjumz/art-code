@@ -1,4 +1,5 @@
 #include "artcode_buffer.hpp"
+#include "artcode_instance.hpp"
 
 ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
                              const vk::raii::Device&         device,
@@ -10,8 +11,8 @@ ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
       cmd_pool(cmd_pool) {};
 
 void ArtcodeBuffer::create_vertex_buffer() {
-    for (size_t i = 0; i < this->int_vertex.size(); i++) {
-        const auto vertex = this->int_vertex[i];
+    for (size_t i = 0; i < this->inst_vertex.size(); i++) {
+        const auto vertex = this->inst_vertex[i];
 
         vk::DeviceSize buffer_size = sizeof(vertex[0]) * vertex.size();
 
@@ -64,8 +65,8 @@ void ArtcodeBuffer::create_vertex_buffer() {
 };
 
 void ArtcodeBuffer::create_index_buffer() {
-    for (size_t i = 0; i < this->int_index.size(); i++) {
-        const auto indices = this->int_index[i];
+    for (size_t i = 0; i < this->inst_index.size(); i++) {
+        const auto indices = this->inst_index[i];
 
         const vk::DeviceSize buffer_size = sizeof(indices[0]) * indices.size();
 
@@ -114,7 +115,31 @@ void ArtcodeBuffer::create_index_buffer() {
 
         copy_buffer(staging_buffer, this->index_buffers[i], staging_info.size);
     }
-}
+};
+
+void ArtcodeBuffer::create_ssbo_buffer() {
+    for (size_t i = 0; i < this->index_buffers.size(); i++) {
+        vk::BufferCreateInfo buffer_info{};
+        buffer_info.size        = sizeof(SkewData);
+        buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
+        buffer_info.sharingMode = vk::SharingMode::eExclusive;
+
+        this->ssbo_buffers.push_back(vk::raii::Buffer{this->device, buffer_info, nullptr});
+
+        vk::MemoryRequirements mem_req_staging =
+            this->ssbo_buffers[i].getMemoryRequirements();
+
+        vk::MemoryAllocateInfo mem_alloc_info{};
+        mem_alloc_info.allocationSize  = mem_req_staging.size;
+        mem_alloc_info.memoryTypeIndex = find_memory_type(
+            mem_req_staging.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+        this->ssbo_memories.push_back(
+            vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr});
+
+        this->ssbo_buffers[i].bindMemory(this->ssbo_memories[i], 0);
+    }
+};
 
 uint32_t ArtcodeBuffer::find_memory_type(uint32_t                type_filter,
                                          vk::MemoryPropertyFlags properties) {

@@ -15,11 +15,17 @@ class ArtcodeBuffer {
     std::vector<vk::raii::Buffer>       index_buffers;
     std::vector<vk::raii::DeviceMemory> index_memories;
 
-    std::vector<std::vector<glm::vec2>> int_vertex;
-    std::vector<std::vector<uint32_t>>  int_index;
+    std::vector<vk::raii::Buffer>       ssbo_buffers;
+    std::vector<vk::raii::DeviceMemory> ssbo_memories;
+
+    std::vector<void*> ssbo_memory_mapped;
+
+    std::vector<std::vector<glm::vec2>> inst_vertex;
+    std::vector<std::vector<uint32_t>>  inst_index;
 
     void create_vertex_buffer();
     void create_index_buffer();
+    void create_ssbo_buffer();
 
   private:
     const vk::raii::PhysicalDevice& phys_device;
