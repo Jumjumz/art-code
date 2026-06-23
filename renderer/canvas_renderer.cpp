@@ -103,7 +103,8 @@ void CanvasRenderer::set_canvas_commands() {
         this->MAX_FRAMES_IN_FLIGHT);
     // vert and index buffer
     this->artcode_buffer = std::make_unique<ArtcodeBuffer>(
-        this->physical_device, this->device, this->graphics_queue,
+        this->physical_device, this->device,
+        this->artcode_commands->artcode_descriptor_set[0], this->graphics_queue,
         this->artcode_commands->artcode_command_pool);
 };
 

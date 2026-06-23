@@ -3,10 +3,12 @@
 
 ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
                              const vk::raii::Device&         device,
+                             const vk::raii::DescriptorSet&  descriptor_set,
                              const vk::raii::Queue&          graphics_queue,
                              const vk::raii::CommandPool&    cmd_pool)
     : phys_device(phys_device),
       device(device),
+      descriptor_set(descriptor_set),
       graphics_queue(graphics_queue),
       cmd_pool(cmd_pool) {};
 
@@ -118,7 +120,7 @@ void ArtcodeBuffer::create_index_buffer() {
 };
 
 void ArtcodeBuffer::create_ssbo_buffer() {
-    for (size_t i = 0; i < this->inst_index.size(); i++) {
+    for (size_t i = 0; i < this->skew_data.size(); i++) {
         vk::BufferCreateInfo buffer_info{};
         buffer_info.size        = sizeof(SkewData);
         buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
@@ -144,6 +146,22 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         void* map_memory = this->ssbo_memories[i].mapMemory(0, sizeof(SkewData));
         memcpy(map_memory, &this->skew_data[i], sizeof(SkewData));
         this->ssbo_memories[i].unmapMemory();
+
+        // write to the ssbo per instance
+        vk::DescriptorBufferInfo ssbo_info{};
+        ssbo_info.buffer = this->ssbo_buffers[i];
+        ssbo_info.offset = 0;
+        ssbo_info.range  = sizeof(SkewData);
+
+        vk::WriteDescriptorSet write{};
+        write.dstSet          = this->descriptor_set;
+        write.dstBinding      = 1;
+        write.dstArrayElement = 0;
+        write.descriptorCount = 1;
+        write.descriptorType  = vk::DescriptorType::eStorageBuffer;
+        write.pBufferInfo     = &ssbo_info;
+
+        this->device.updateDescriptorSets(write, {});
     }
 };
 

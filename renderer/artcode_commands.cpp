@@ -1,5 +1,6 @@
 #include "artcode_commands.hpp"
 #include "vk_types.hpp"
+#include <cstdint>
 
 ArtcodeCommands::ArtcodeCommands(const vk::raii::Device&              device,
                                  const vk::raii::Buffer&              uniform_buffer,
@@ -38,17 +39,20 @@ void ArtcodeCommands::artcode_create_command_buffer() {
 };
 
 void ArtcodeCommands::artcode_create_descriptor_pool() {
-    vk::DescriptorPoolSize poolSize(vk::DescriptorType::eUniformBuffer,
-                                    this->MAX_FRAMES_IN_FLIGHT);
+    std::array<vk::DescriptorPoolSize, 2> pool_size{
+        vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer,
+                               static_cast<uint32_t>(this->MAX_FRAMES_IN_FLIGHT)},
+        vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer,
+                               static_cast<uint32_t>(this->MAX_FRAMES_IN_FLIGHT)}};
 
-    vk::DescriptorPoolCreateInfo poolInfo{};
-    poolInfo.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-    poolInfo.maxSets       = this->MAX_FRAMES_IN_FLIGHT;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes    = &poolSize;
+    vk::DescriptorPoolCreateInfo pool_info{};
+    pool_info.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
+    pool_info.maxSets       = this->MAX_FRAMES_IN_FLIGHT;
+    pool_info.poolSizeCount = pool_size.size();
+    pool_info.pPoolSizes    = pool_size.data();
 
     this->artcode_descriptor_pool =
-        vk::raii::DescriptorPool{this->device, poolInfo, nullptr};
+        vk::raii::DescriptorPool{this->device, pool_info, nullptr};
 };
 
 void ArtcodeCommands::artcode_create_descriptor_set() {
