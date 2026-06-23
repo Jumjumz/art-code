@@ -1,6 +1,7 @@
 #include "artcode_graphics.hpp"
 #include "artcode_instance.hpp"
 #include "nav_items.hpp"
+#include <array>
 #include <fstream>
 
 ArtcodeGraphics::ArtcodeGraphics(const vk::raii::Device& device, vk::Format& image_format)
@@ -41,9 +42,16 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
             vk::ShaderStageFlagBits::eGeometry,
         nullptr);
 
+    vk::DescriptorSetLayoutBinding ssbo_layout_binding(
+        1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eGeometry,
+        nullptr);
+
+    std::array<vk::DescriptorSetLayoutBinding, 2> layout_bindings = {ubo_layout_binding,
+                                                                     ssbo_layout_binding};
+
     vk::DescriptorSetLayoutCreateInfo descriptor_info{};
-    descriptor_info.bindingCount = 1;
-    descriptor_info.pBindings    = &ubo_layout_binding;
+    descriptor_info.bindingCount = layout_bindings.size();
+    descriptor_info.pBindings    = layout_bindings.data();
 
     this->artcode_set_layout =
         vk::raii::DescriptorSetLayout{this->device, descriptor_info, nullptr};

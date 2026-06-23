@@ -34,6 +34,7 @@ struct Indx {
     u32    element[9999];
 };
 
+// TODO:transform into c++ array or vector
 struct SkewData {
     Vec2    skew_mesh[8];
     SkewPos skew_pos[8];
@@ -57,6 +58,7 @@ namespace Shared {
         Vert          vertex;
         Indx          index;
         PushConstants constants;
+        SkewData      skew_data;
     };
 
     struct Region {
@@ -121,6 +123,10 @@ namespace Shared {
 
         static PushConstants get_constants(size_t idx) {
             return region->instance[idx].constants;
+        }
+
+        static SkewData get_skew_data(size_t idx) {
+            return region->instance[idx].skew_data;
         }
 
         static void reset_instance() {

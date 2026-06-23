@@ -1,4 +1,5 @@
 #include "canvas_renderer.hpp"
+#include "artcode_instance.hpp"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
 #include "json.hpp"
@@ -157,31 +158,34 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->inst_index.clear();
     this->artcode_buffer->index_buffers.clear();
     this->artcode_buffer->index_memories.clear();
-    // clear color
+    this->artcode_buffer->skew_data.clear();
+    // clear push constants
     this->push_constants.clear();
 
     for (size_t i = 0; i < inst_size; i++) {
         const auto& inst_vertex    = Shared::Memory::get_vertex(i);
         const auto& inst_indices   = Shared::Memory::get_index(i);
         const auto& inst_constants = Shared::Memory::get_constants(i);
+        const auto& inst_skew_data = Shared::Memory::get_skew_data(i);
 
-        const std::vector<Vec2> vertex(inst_vertex.element,
-                                       inst_vertex.element + inst_vertex.size);
-        const std::vector<u32>  indices(inst_indices.element,
-                                        inst_indices.element + inst_indices.size);
-
-        this->push_constants.push_back(inst_constants);
+        std::vector<Vec2> vertex(inst_vertex.element,
+                                 inst_vertex.element + inst_vertex.size);
+        std::vector<u32>  indices(inst_indices.element,
+                                  inst_indices.element + inst_indices.size);
 
         this->artcode_buffer->inst_vertex.push_back(vertex);
         this->artcode_buffer->inst_index.push_back(indices);
+        this->artcode_buffer->skew_data.push_back(inst_skew_data);
+
+        this->push_constants.push_back(inst_constants);
     }
     // clean/reset instance
     Shared::Memory::reset_instance();
 
-    // TODO: update these functions, should just be in the loop for direct creation for each instance
     //  create vertex buffer for each instance or shape
     this->artcode_buffer->create_vertex_buffer();
     this->artcode_buffer->create_index_buffer();
+    this->artcode_buffer->create_ssbo_buffer();
 };
 
 // this is used only for checking if both buffer exist to push the artcode command buffers in render loop

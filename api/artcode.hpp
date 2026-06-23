@@ -42,6 +42,8 @@ struct SkewPos {
     float angle;
 };
 
+typedef std::vector<SkewPos> ArrSkew;
+
 // TODO:add skew for shapes
 namespace detail {
     struct IPen {
@@ -50,7 +52,7 @@ namespace detail {
         // TODO:make multiple skew points for diff shapes
         //  must implement
         //  uses camel case for users, snake case for api implementation
-        SkewPos skewPos[8] = {0, 0.0f}; // set for all
+        ArrSkew skewPos;
         Vec2    position;
         Vec2    skewPosition;
         Color   color;

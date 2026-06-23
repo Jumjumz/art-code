@@ -1,5 +1,5 @@
 #include "artcode_buffer.hpp"
-#include "artcode_instance.hpp"
+#include <cstring>
 
 ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
                              const vk::raii::Device&         device,
@@ -118,7 +118,7 @@ void ArtcodeBuffer::create_index_buffer() {
 };
 
 void ArtcodeBuffer::create_ssbo_buffer() {
-    for (size_t i = 0; i < this->index_buffers.size(); i++) {
+    for (size_t i = 0; i < this->inst_index.size(); i++) {
         vk::BufferCreateInfo buffer_info{};
         buffer_info.size        = sizeof(SkewData);
         buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
@@ -132,12 +132,18 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         vk::MemoryAllocateInfo mem_alloc_info{};
         mem_alloc_info.allocationSize  = mem_req_staging.size;
         mem_alloc_info.memoryTypeIndex = find_memory_type(
-            mem_req_staging.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+            mem_req_staging.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
+                                                vk::MemoryPropertyFlagBits::eHostCoherent);
 
         this->ssbo_memories.push_back(
             vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr});
 
         this->ssbo_buffers[i].bindMemory(this->ssbo_memories[i], 0);
+
+        // map memory
+        void* map_memory = this->ssbo_memories[i].mapMemory(0, sizeof(SkewData));
+        memcpy(map_memory, &this->skew_data[i], sizeof(SkewData));
+        this->ssbo_memories[i].unmapMemory();
     }
 };
 
