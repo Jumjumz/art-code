@@ -71,16 +71,16 @@ Vec2 skew_mesh_size(const ArrayVec2& vertices, const Vec2& center) {
     return len_wid;
 }
 
-ArrayVec2 get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
+ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
     // return skew mesh quad
-    return ArrayVec2{shape_pos,
-                     shape_pos + Vec2{mesh_size.x * 0.5f, 0.0f},
-                     shape_pos + Vec2{mesh_size.x, 0.0f},
-                     shape_pos + Vec2{mesh_size.x, mesh_size.y * 0.5f},
-                     shape_pos + mesh_size,
-                     shape_pos + Vec2{mesh_size.x * 0.5f, mesh_size.y},
-                     shape_pos + Vec2{0.0f, mesh_size.y},
-                     shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
+    return {shape_pos,
+            shape_pos + Vec2{mesh_size.x * 0.5f, 0.0f},
+            shape_pos + Vec2{mesh_size.x, 0.0f},
+            shape_pos + Vec2{mesh_size.x, mesh_size.y * 0.5f},
+            shape_pos + mesh_size,
+            shape_pos + Vec2{mesh_size.x * 0.5f, mesh_size.y},
+            shape_pos + Vec2{0.0f, mesh_size.y},
+            shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
 }
 
 using DrawQuad     = Art::Quad;
@@ -89,17 +89,15 @@ using DrawTriangle = Art::Triangle;
 
 // Quad
 DrawQuad::Quad() {
-    this->l            = 100.0f;
-    this->w            = 100.0f;
-    this->position     = Vec2{200, 200};
-    this->skewPosition = Vec2{0.0f, 0.0f};
-    this->color        = "#000000";
-    this->stroke       = 1.0f;
-    this->rotate       = 0.0f;
-    this->opacity      = 1.0f;
-    this->fill         = false;
-    this->skew         = false;
-    this->skewIndex    = 0;
+    this->l        = 100.0f;
+    this->w        = 100.0f;
+    this->position = Vec2{200, 200};
+    this->color    = "#000000";
+    this->stroke   = 1.0f;
+    this->rotate   = 0.0f;
+    this->opacity  = 1.0f;
+    this->fill     = false;
+    this->skew     = false;
 
     ShapeRegistry::register_shape(this);
 };
@@ -219,24 +217,25 @@ void Art::Draw() {
         const auto& instances = ShapeRegistry::get_instances();
         // TODO:skew only works for quad, should also work for other shapes
         for (const auto& inst : instances) {
-            const auto skew_mesh =
+            PushConstants constants;
+            constants.color  = convert_color(inst->color, inst->opacity);
+            constants.center = inst->get_center();
+            constants.stroke = inst->stroke;
+            constants.rotate = inst->rotate;
+            constants.fill   = static_cast<int>(inst->fill);
+            constants.skew   = static_cast<int>(inst->skew);
+
+            const auto& skew_mesh =
                 get_skew_mesh(skew_mesh_size(inst->generate_vertices(), inst->get_center()),
                               inst->position);
-            Vec2 vec_idx = inst->generate_vertices()[inst->skewIndex];
 
-            PushConstants constants;
-            constants.color     = convert_color(inst->color, inst->opacity);
-            constants.center    = inst->get_center();
-            constants.skew_pos  = inst->skewPosition;
-            constants.skew_vert = vec_idx;
-            constants.stroke    = inst->stroke;
-            constants.rotate    = inst->rotate;
-            constants.fill      = static_cast<int>(inst->fill);
-            constants.skew      = static_cast<int>(inst->skew);
-            constants.skew_idx  = inst->skewIndex;
+            SkewData skew_data;
+            memcpy(skew_data.skew_mesh, skew_mesh.data(), skew_mesh.size() * sizeof(Vec2));
+            memcpy(skew_data.skew_pos, inst->skewPos.data(),
+                   inst->skewPos.size() * sizeof(SkewPos));
             // register vert and idx per instance
-            Shared::Memory::register_instance(inst->generate_vertices(),
-                                              inst->generate_indices(), constants);
+            Shared::Memory::register_instance(
+                inst->generate_vertices(), inst->generate_indices(), constants, skew_data);
         }
     }
 };

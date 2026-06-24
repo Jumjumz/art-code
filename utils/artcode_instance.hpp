@@ -34,23 +34,18 @@ struct Indx {
     u32    element[9999];
 };
 
-// TODO:transform into c++ array or vector
 struct SkewData {
     Vec2    skew_mesh[8];
     SkewPos skew_pos[8];
 };
 
-// TODO:move arrays to SSBO or something
 struct PushConstants {
     Vec4  color;
     Vec2  center;
-    Vec2  skew_pos;
-    Vec2  skew_vert;
     float stroke;
     float rotate;
     int   fill;
     int   skew;
-    int   skew_idx;
 };
 
 namespace Shared {
@@ -98,7 +93,8 @@ namespace Shared {
         }
 
         static void register_instance(const ArrayVec2& vertex, const ArrayU32& index,
-                                      const PushConstants& push_constants) {
+                                      const PushConstants& push_constants,
+                                      const SkewData&      skew_data) {
             if (region->size > 500 || !region)
                 return;
 
@@ -112,6 +108,7 @@ namespace Shared {
                 inst.index.element[inst.index.size++] = idx;
             }
             inst.constants = push_constants;
+            inst.skew_data = skew_data;
             region->size++;
         }
 

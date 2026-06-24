@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <glm/glm.hpp>
 
 #include <string>
@@ -44,6 +45,8 @@ struct SkewPos {
 
 typedef std::vector<SkewPos> ArrSkew;
 
+template <typename T, uint32_t size> using ArrayT = std::array<T, size>;
+
 // TODO:add skew for shapes
 namespace detail {
     struct IPen {
@@ -52,16 +55,14 @@ namespace detail {
         // TODO:make multiple skew points for diff shapes
         //  must implement
         //  uses camel case for users, snake case for api implementation
-        ArrSkew skewPos;
-        Vec2    position;
-        Vec2    skewPosition;
-        Color   color;
-        float   stroke;
-        float   rotate;
-        float   opacity;
-        bool    fill;
-        bool    skew;
-        int     skewIndex;
+        Vec2               position;
+        Color              color;
+        float              stroke;
+        float              rotate;
+        float              opacity;
+        bool               fill;
+        bool               skew;
+        ArrayT<SkewPos, 8> skewPos;
 
         virtual ArrayVec2 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;

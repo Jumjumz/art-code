@@ -159,6 +159,8 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->inst_index.clear();
     this->artcode_buffer->index_buffers.clear();
     this->artcode_buffer->index_memories.clear();
+    this->artcode_buffer->ssbo_buffers.clear();
+    this->artcode_buffer->ssbo_memories.clear();
     this->artcode_buffer->skew_data.clear();
     // clear push constants
     this->push_constants.clear();
