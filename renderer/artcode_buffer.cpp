@@ -147,7 +147,9 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         memcpy(map_memory, &this->skew_data[i], sizeof(SkewData));
         this->ssbo_memories[i].unmapMemory();
 
-        // write to the ssbo per instance
+        // FIXME:this is wrong.. this overwrites the descriptor set per skew data
+        //  and not storing it correctly PER instance
+        //  write to the ssbo per instance
         vk::DescriptorBufferInfo ssbo_info{};
         ssbo_info.buffer = this->ssbo_buffers[i];
         ssbo_info.offset = 0;

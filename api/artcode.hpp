@@ -43,8 +43,6 @@ struct SkewPos {
     float angle;
 };
 
-typedef std::vector<SkewPos> ArrSkew;
-
 template <typename T, uint32_t size> using ArrayT = std::array<T, size>;
 
 // TODO:add skew for shapes

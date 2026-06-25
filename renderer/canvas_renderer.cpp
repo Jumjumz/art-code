@@ -185,7 +185,7 @@ void CanvasRenderer::update_artcode_buffers() {
     // clean/reset instance
     Shared::Memory::reset_instance();
 
-    //  create vertex buffer for each instance or shape
+    // create buffer for each instance or shape
     this->artcode_buffer->create_vertex_buffer();
     this->artcode_buffer->create_index_buffer();
     this->artcode_buffer->create_ssbo_buffer();

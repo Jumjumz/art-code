@@ -217,6 +217,9 @@ layout(triangles) in;
 layout(triangle_strip, max_vertices=3) out;
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
 layout(push_constant) uniform PushConstants {vec4 color;vec2 center;float stroke;float rotate;int fill;int skew;} constant;
+struct SkewPos{int index;float angle;};
+struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
+layout(binding = 1) readonly buffer SkewBuffer {SkewData data[];} ssbo;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 data;
 vec2 skew(vec2 pos) {
@@ -273,6 +276,9 @@ layout(lines) in;
 layout(line_strip, max_vertices=2) out;
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;vec2 viewport;} ubo;
 layout(push_constant) uniform PushConstants {vec4 color;vec2 center;float stroke;float rotate;int fill;int skew;} constant;
+struct SkewPos{int index;float angle;};
+struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
+layout(binding = 1) readonly buffer SkewBuffer {SkewData data[];} ssbo;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 data;
 vec2 skew(vec2 pos) {
