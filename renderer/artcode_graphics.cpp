@@ -43,7 +43,7 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
         nullptr);
 
     vk::DescriptorSetLayoutBinding ssbo_layout_binding(
-        1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eGeometry,
+        1, vk::DescriptorType::eStorageBuffer, 500, vk::ShaderStageFlagBits::eGeometry,
         nullptr);
 
     std::array<vk::DescriptorSetLayoutBinding, 2> layout_bindings = {ubo_layout_binding,
@@ -58,9 +58,9 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
 };
 
 void ArtcodeGraphics::create_shaders(Topology topology) {
-    const auto shader_execs = ProjectPath::get_project_path() / "shaders";
-    const auto vert_exec    = shader_execs / "artcode.vert.spv";
-    const auto frag_exec    = shader_execs / "artcode.frag.spv";
+    const auto& shader_execs = ProjectPath::get_project_path() / "shaders";
+    const auto  vert_exec    = shader_execs / "artcode.vert.spv";
+    const auto  frag_exec    = shader_execs / "artcode.frag.spv";
 
     this->vert_shader_module = create_shader_module(read_file(vert_exec));
     this->frag_shader_module = create_shader_module(read_file(frag_exec));

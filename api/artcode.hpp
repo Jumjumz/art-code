@@ -60,7 +60,7 @@ namespace detail {
         float              opacity;
         bool               fill;
         bool               skew;
-        ArrayT<SkewPos, 8> skewPos;
+        ArrayT<SkewPos, 8> skewPos = {};
 
         virtual ArrayVec2 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;

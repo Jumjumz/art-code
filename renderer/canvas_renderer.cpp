@@ -103,9 +103,9 @@ void CanvasRenderer::set_canvas_commands() {
         this->MAX_FRAMES_IN_FLIGHT);
     // vert and index buffer
     this->artcode_buffer = std::make_unique<ArtcodeBuffer>(
-        this->physical_device, this->device,
-        this->artcode_commands->artcode_descriptor_set[0], this->graphics_queue,
-        this->artcode_commands->artcode_command_pool);
+        this->physical_device, this->device, this->graphics_queue,
+        this->artcode_commands->artcode_command_pool,
+        this->artcode_commands->artcode_descriptor_sets);
 };
 
 void CanvasRenderer::reload_pipeline() {
@@ -148,11 +148,10 @@ void CanvasRenderer::reload_pipeline() {
 };
 
 void CanvasRenderer::update_artcode_buffers() {
-    const auto inst_size = Shared::Memory::get_intance_size();
     // wait gpu to finish using old buffers
     this->device.waitIdle();
 
-    // clear the vectors for vertex, indices and its buffers
+    // clear the arrays for multiple buffers
     this->artcode_buffer->inst_vertex.clear();
     this->artcode_buffer->vertex_buffers.clear();
     this->artcode_buffer->vertex_memories.clear();
@@ -165,6 +164,7 @@ void CanvasRenderer::update_artcode_buffers() {
     // clear push constants
     this->push_constants.clear();
 
+    const auto inst_size = Shared::Memory::get_intance_size();
     for (size_t i = 0; i < inst_size; i++) {
         const auto& inst_vertex    = Shared::Memory::get_vertex(i);
         const auto& inst_indices   = Shared::Memory::get_index(i);
@@ -430,6 +430,8 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
     const auto& inst_index = this->artcode_buffer->inst_index;
     // render canvas
     cmd.beginRendering(artcode_rendering_info);
+
+    // draw in reverse order for shape instances
     for (size_t i = inst_index.size(); i > 0; i--) {
         auto idx = i - 1;
 
@@ -443,9 +445,9 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
                              this->artcode_pipeline->pipeline_linelist);
         }
 
-        cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                               this->artcode_pipeline->layout, 0,
-                               *this->artcode_commands->artcode_descriptor_set[0], nullptr);
+        cmd.bindDescriptorSets(
+            vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->layout, 0,
+            *this->artcode_commands->artcode_descriptor_sets[i], nullptr);
 
         cmd.setViewport(
             0,

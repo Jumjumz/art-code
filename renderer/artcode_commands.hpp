@@ -5,7 +5,7 @@
 class ArtcodeCommands {
   public:
     ArtcodeCommands(const vk::raii::Device& device, const vk::raii::Buffer& uniform_buffer,
-                    const vk::raii::DescriptorSetLayout& descriptor_set,
+                    const vk::raii::DescriptorSetLayout& descriptor_set_layout,
                     const int& graphics_family, const int& MAX_FRAMES_IN_FLIGHT);
     vk::raii::CommandPool artcode_command_pool = nullptr;
 
@@ -13,12 +13,12 @@ class ArtcodeCommands {
 
     vk::raii::DescriptorPool artcode_descriptor_pool = nullptr;
 
-    std::vector<vk::raii::DescriptorSet> artcode_descriptor_set;
+    std::vector<vk::raii::DescriptorSet> artcode_descriptor_sets;
 
   private:
     const vk::raii::Device&              device;
     const vk::raii::Buffer&              uniform_buffer;
-    const vk::raii::DescriptorSetLayout& descriptor_set;
+    const vk::raii::DescriptorSetLayout& descriptor_set_layout;
 
     const int &graphics_family, MAX_FRAMES_IN_FLIGHT;
 

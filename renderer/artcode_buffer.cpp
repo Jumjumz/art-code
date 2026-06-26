@@ -1,16 +1,16 @@
 #include "artcode_buffer.hpp"
 #include <cstring>
 
-ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
-                             const vk::raii::Device&         device,
-                             const vk::raii::DescriptorSet&  descriptor_set,
-                             const vk::raii::Queue&          graphics_queue,
-                             const vk::raii::CommandPool&    cmd_pool)
+ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice&             phys_device,
+                             const vk::raii::Device&                     device,
+                             const vk::raii::Queue&                      graphics_queue,
+                             const vk::raii::CommandPool&                cmd_pool,
+                             const std::vector<vk::raii::DescriptorSet>& descriptor_sets)
     : phys_device(phys_device),
       device(device),
-      descriptor_set(descriptor_set),
       graphics_queue(graphics_queue),
-      cmd_pool(cmd_pool) {};
+      cmd_pool(cmd_pool),
+      descriptor_sets(descriptor_sets) {};
 
 void ArtcodeBuffer::create_vertex_buffer() {
     for (size_t i = 0; i < this->inst_vertex.size(); i++) {
@@ -147,8 +147,6 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         memcpy(map_memory, &this->skew_data[i], sizeof(SkewData));
         this->ssbo_memories[i].unmapMemory();
 
-        // FIXME:this is wrong.. this overwrites the descriptor set per skew data
-        //  and not storing it correctly PER instance
         //  write to the ssbo per instance
         vk::DescriptorBufferInfo ssbo_info{};
         ssbo_info.buffer = this->ssbo_buffers[i];
@@ -156,7 +154,7 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         ssbo_info.range  = sizeof(SkewData);
 
         vk::WriteDescriptorSet write{};
-        write.dstSet          = this->descriptor_set;
+        write.dstSet          = this->descriptor_sets[i];
         write.dstBinding      = 1;
         write.dstArrayElement = 0;
         write.descriptorCount = 1;

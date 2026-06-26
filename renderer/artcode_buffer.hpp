@@ -8,10 +8,9 @@
 class ArtcodeBuffer {
   public:
     ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
-                  const vk::raii::Device&         device,
-                  const vk::raii::DescriptorSet&  descriptor_set,
-                  const vk::raii::Queue&          graphics_queue,
-                  const vk::raii::CommandPool&    cmd_pool);
+                  const vk::raii::Device& device, const vk::raii::Queue& graphics_queue,
+                  const vk::raii::CommandPool&                cmd_pool,
+                  const std::vector<vk::raii::DescriptorSet>& descriptor_sets);
     std::vector<vk::raii::Buffer>       vertex_buffers;
     std::vector<vk::raii::DeviceMemory> vertex_memories;
 
@@ -37,9 +36,10 @@ class ArtcodeBuffer {
   private:
     const vk::raii::PhysicalDevice& phys_device;
     const vk::raii::Device&         device;
-    const vk::raii::DescriptorSet&  descriptor_set;
     const vk::raii::Queue&          graphics_queue;
     const vk::raii::CommandPool&    cmd_pool;
+
+    const std::vector<vk::raii::DescriptorSet>& descriptor_sets;
 
     uint32_t find_memory_type(uint32_t type_filter, vk::MemoryPropertyFlags properties);
 
