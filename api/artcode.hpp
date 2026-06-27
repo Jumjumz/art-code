@@ -36,6 +36,8 @@ typedef std::vector<u16>    ArrayU16;
 typedef std::vector<u32>    ArrayU32;
 typedef std::vector<u64>    ArrayU64;
 
+// TODO:add predefined positions such as center, corner etc.
+
 enum class TriangleTypes { Equilateral, Right };
 
 struct SkewPos {

@@ -39,18 +39,14 @@ void ArtcodeCommands::artcode_create_command_buffer() {
 };
 
 void ArtcodeCommands::artcode_create_descriptor_pool() {
-    // max num of instnaces from the shapes
-    const uint32_t max_instances = 500;
-
     std::array<vk::DescriptorPoolSize, 2> pool_size{
         vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer,
                                static_cast<uint32_t>(this->MAX_FRAMES_IN_FLIGHT)},
-        vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer,
-                               static_cast<uint32_t>(this->MAX_FRAMES_IN_FLIGHT)}};
+        vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, this->max_instances}};
 
     vk::DescriptorPoolCreateInfo pool_info{};
     pool_info.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-    pool_info.maxSets       = max_instances;
+    pool_info.maxSets       = this->max_instances;
     pool_info.poolSizeCount = pool_size.size();
     pool_info.pPoolSizes    = pool_size.data();
 
@@ -59,20 +55,18 @@ void ArtcodeCommands::artcode_create_descriptor_pool() {
 };
 
 void ArtcodeCommands::artcode_create_descriptor_set() {
-    const uint32_t max_instances = 500;
-
-    std::vector<vk::DescriptorSetLayout> layouts(max_instances,
+    std::vector<vk::DescriptorSetLayout> layouts(this->max_instances,
                                                  *this->descriptor_set_layout);
 
     vk::DescriptorSetAllocateInfo set_alloc_info{};
     set_alloc_info.descriptorPool     = *this->artcode_descriptor_pool;
-    set_alloc_info.descriptorSetCount = max_instances;
+    set_alloc_info.descriptorSetCount = this->max_instances;
     set_alloc_info.pSetLayouts        = layouts.data();
 
     this->artcode_descriptor_sets.clear();
     this->artcode_descriptor_sets = this->device.allocateDescriptorSets(set_alloc_info);
 
-    for (uint32_t i = 0; i < max_instances; i++) {
+    for (uint32_t i = 0; i < this->max_instances; i++) {
         vk::DescriptorBufferInfo buffer_info{};
         buffer_info.buffer = *this->uniform_buffer;
         buffer_info.offset = 0;
