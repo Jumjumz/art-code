@@ -120,6 +120,9 @@ void ArtcodeBuffer::create_index_buffer() {
 };
 
 void ArtcodeBuffer::create_ssbo_buffer() {
+    std::vector<vk::WriteDescriptorSet> writes;
+    writes.reserve(this->skew_data.size());
+
     for (size_t i = 0; i < this->skew_data.size(); i++) {
         vk::BufferCreateInfo buffer_info{};
         buffer_info.size        = sizeof(SkewData);
@@ -147,9 +150,9 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         memcpy(map_memory, &this->skew_data[i], sizeof(SkewData));
         this->ssbo_memories[i].unmapMemory();
 
-        //  write to the ssbo per instance
+        // write to the ssbo per instance
         vk::DescriptorBufferInfo ssbo_info{};
-        ssbo_info.buffer = this->ssbo_buffers[i];
+        ssbo_info.buffer = *this->ssbo_buffers[i];
         ssbo_info.offset = 0;
         ssbo_info.range  = sizeof(SkewData);
 
@@ -160,9 +163,9 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         write.descriptorCount = 1;
         write.descriptorType  = vk::DescriptorType::eStorageBuffer;
         write.pBufferInfo     = &ssbo_info;
-
-        this->device.updateDescriptorSets(write, {});
+        writes.push_back(write);
     }
+    this->device.updateDescriptorSets(writes, {});
 };
 
 uint32_t ArtcodeBuffer::find_memory_type(uint32_t                type_filter,

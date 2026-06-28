@@ -45,7 +45,7 @@ struct SkewPos {
     float angle;
 };
 
-template <typename T, uint32_t size> using ArrayT = std::array<T, size>;
+template <typename T, size_t size> using ArrayT = std::array<T, size>;
 
 // TODO:add skew for shapes
 namespace detail {

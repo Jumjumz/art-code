@@ -35,8 +35,8 @@ struct Indx {
 };
 
 struct SkewData {
-    Vec2    skew_mesh[8];
-    SkewPos skew_pos[8];
+    ArrayT<Vec2, 8>    skew_mesh;
+    ArrayT<SkewPos, 8> skew_pos;
 };
 
 struct PushConstants {

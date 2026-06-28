@@ -43,7 +43,7 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
         nullptr);
 
     vk::DescriptorSetLayoutBinding ssbo_layout_binding(
-        1, vk::DescriptorType::eStorageBuffer, 500, vk::ShaderStageFlagBits::eGeometry,
+        1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eGeometry,
         nullptr);
 
     std::array<vk::DescriptorSetLayoutBinding, 2> layout_bindings = {ubo_layout_binding,

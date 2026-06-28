@@ -63,7 +63,6 @@ void ArtcodeCommands::artcode_create_descriptor_set() {
     set_alloc_info.descriptorSetCount = this->max_instances;
     set_alloc_info.pSetLayouts        = layouts.data();
 
-    this->artcode_descriptor_sets.clear();
     this->artcode_descriptor_sets = this->device.allocateDescriptorSets(set_alloc_info);
 
     for (uint32_t i = 0; i < this->max_instances; i++) {

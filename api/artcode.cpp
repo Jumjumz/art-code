@@ -233,9 +233,12 @@ void Art::Draw() {
                               inst->position);
 
             SkewData skew_data;
-            memcpy(skew_data.skew_mesh, skew_mesh.data(), skew_mesh.size() * sizeof(Vec2));
-            memcpy(skew_data.skew_pos, inst->skewPos.data(),
-                   inst->skewPos.size() * sizeof(SkewPos));
+            skew_data.skew_mesh = skew_mesh;
+            skew_data.skew_pos  = inst->skewPos;
+            // memcpy(skew_data.skew_mesh, skew_mesh.data(), skew_mesh.size() * sizeof(Vec2));
+
+            // memcpy(skew_data.skew_pos, inst->skewPos.data(),
+            //      inst->skewPos.size() * sizeof(SkewPos));
             // register vert and idx per instance
             Shared::Memory::register_instance(
                 inst->generate_vertices(), inst->generate_indices(), constants, skew_data);

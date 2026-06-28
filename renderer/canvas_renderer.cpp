@@ -434,7 +434,6 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
         auto idx = i - 1;
 
         const PushConstants& cons = this->push_constants[idx];
-
         if (cons.fill) {
             cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
                              this->artcode_pipeline->pipeline_trianglelist);
@@ -445,7 +444,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
 
         cmd.bindDescriptorSets(
             vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->layout, 0,
-            *this->artcode_commands->artcode_descriptor_sets[i], nullptr);
+            *this->artcode_commands->artcode_descriptor_sets[idx], nullptr);
 
         cmd.setViewport(
             0,
