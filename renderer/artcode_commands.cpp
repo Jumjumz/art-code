@@ -60,7 +60,7 @@ void ArtcodeCommands::artcode_create_descriptor_set() {
 
     vk::DescriptorSetAllocateInfo set_alloc_info{};
     set_alloc_info.descriptorPool     = *this->artcode_descriptor_pool;
-    set_alloc_info.descriptorSetCount = this->max_instances;
+    set_alloc_info.descriptorSetCount = layouts.size();
     set_alloc_info.pSetLayouts        = layouts.data();
 
     this->artcode_descriptor_sets = this->device.allocateDescriptorSets(set_alloc_info);

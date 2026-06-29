@@ -120,25 +120,29 @@ void ArtcodeBuffer::create_index_buffer() {
 };
 
 void ArtcodeBuffer::create_ssbo_buffer() {
-    std::vector<vk::WriteDescriptorSet> writes;
-    writes.reserve(this->skew_data.size());
+    const auto skew_size = this->skew_data.size();
+
+    std::vector<vk::DescriptorBufferInfo> ssbo_infos;
+    std::vector<vk::WriteDescriptorSet>   writes;
+
+    ssbo_infos.reserve(skew_size);
+    writes.reserve(skew_size);
 
     for (size_t i = 0; i < this->skew_data.size(); i++) {
         vk::BufferCreateInfo buffer_info{};
-        buffer_info.size        = sizeof(SkewData);
+        buffer_info.size        = sizeof(this->skew_data[0]);
         buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
         buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
         this->ssbo_buffers.push_back(vk::raii::Buffer{this->device, buffer_info, nullptr});
 
-        vk::MemoryRequirements mem_req_staging =
-            this->ssbo_buffers[i].getMemoryRequirements();
+        vk::MemoryRequirements mem_req = this->ssbo_buffers[i].getMemoryRequirements();
 
         vk::MemoryAllocateInfo mem_alloc_info{};
-        mem_alloc_info.allocationSize  = mem_req_staging.size;
+        mem_alloc_info.allocationSize  = mem_req.size;
         mem_alloc_info.memoryTypeIndex = find_memory_type(
-            mem_req_staging.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
-                                                vk::MemoryPropertyFlagBits::eHostCoherent);
+            mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
+                                        vk::MemoryPropertyFlagBits::eHostCoherent);
 
         this->ssbo_memories.push_back(
             vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr});
@@ -146,15 +150,16 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         this->ssbo_buffers[i].bindMemory(this->ssbo_memories[i], 0);
 
         // map memory
-        void* map_memory = this->ssbo_memories[i].mapMemory(0, sizeof(SkewData));
-        memcpy(map_memory, &this->skew_data[i], sizeof(SkewData));
+        void* map_memory = this->ssbo_memories[i].mapMemory(0, buffer_info.size);
+        memcpy(map_memory, &this->skew_data[i], buffer_info.size);
         this->ssbo_memories[i].unmapMemory();
 
         // write to the ssbo per instance
         vk::DescriptorBufferInfo ssbo_info{};
         ssbo_info.buffer = *this->ssbo_buffers[i];
         ssbo_info.offset = 0;
-        ssbo_info.range  = sizeof(SkewData);
+        ssbo_info.range  = buffer_info.size;
+        ssbo_infos.push_back(ssbo_info);
 
         vk::WriteDescriptorSet write{};
         write.dstSet          = this->descriptor_sets[i];
@@ -162,7 +167,7 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         write.dstArrayElement = 0;
         write.descriptorCount = 1;
         write.descriptorType  = vk::DescriptorType::eStorageBuffer;
-        write.pBufferInfo     = &ssbo_info;
+        write.pBufferInfo     = &ssbo_infos[i];
         writes.push_back(write);
     }
     this->device.updateDescriptorSets(writes, {});
