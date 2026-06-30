@@ -219,25 +219,10 @@ layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 
 layout(push_constant) uniform PushConstants {vec4 color;vec2 center;float stroke;float rotate;int fill;int skew;} constant;
 struct SkewPos{int index;float angle;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
-layout(binding = 1) readonly buffer SkewBuffer {SkewData data[];} ssbo;
+layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} ssbo;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 data;
 vec2 skew(vec2 pos) {
-vec2 skew_pos = constant.skew_pos * -1;
-vec2 skew_vert = vec2(constant.skew_vert.x, ubo.reso.y - constant.skew_vert.y);
-int idx = constant.skew_idx;
-if (idx % 2 == 1) {
-if (idx == 1 || idx == 5) {
-if (abs(pos.y - skew_vert.y) < 1.0) {
-pos.x += skew_pos.x;}
-} else if (idx == 3 || idx == 7) {
-if (abs(pos.x - skew_vert.x) < 1.0) {
-pos.y += skew_pos.y;}
-}
-} else {
-if (pos.x == skew_vert.x && pos.y == skew_vert.y) {
-pos += skew_pos;}
-}
 return pos;
 }
 vec2 rotate(vec2 pos) {
@@ -278,25 +263,10 @@ layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 
 layout(push_constant) uniform PushConstants {vec4 color;vec2 center;float stroke;float rotate;int fill;int skew;} constant;
 struct SkewPos{int index;float angle;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
-layout(binding = 1) readonly buffer SkewBuffer {SkewData data[];} ssbo;
+layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} ssbo;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 data;
 vec2 skew(vec2 pos) {
-vec2 skew_pos = constant.skew_pos * -1;
-vec2 skew_vert = vec2(constant.skew_vert.x, ubo.reso.y - constant.skew_vert.y);
-int idx = constant.skew_idx;
-if (idx % 2 == 1) {
-if (idx == 1 || idx == 5) {
-if (abs(pos.y - skew_vert.y) < 1.0) {
-pos.x += skew_pos.x;}
-} else if (idx == 3 || idx == 7) {
-if (abs(pos.x - skew_vert.x) < 1.0) {
-pos.y += skew_pos.y;}
-}
-} else {
-if (pos.x == skew_vert.x && pos.y == skew_vert.y) {
-pos += skew_pos;}
-}
 return pos;
 }
 vec2 rotate(vec2 pos) {

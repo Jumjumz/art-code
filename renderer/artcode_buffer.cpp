@@ -120,14 +120,15 @@ void ArtcodeBuffer::create_index_buffer() {
 };
 
 void ArtcodeBuffer::create_ssbo_buffer() {
-    const auto skew_size = this->skew_data.size();
-
+    // create buffer per instance
     std::vector<vk::DescriptorBufferInfo> ssbo_infos;
     std::vector<vk::WriteDescriptorSet>   writes;
 
-    ssbo_infos.reserve(skew_size);
-    writes.reserve(skew_size);
+    // reserve size to avoid seg faults
+    ssbo_infos.reserve(this->skew_data.size());
+    writes.reserve(this->skew_data.size());
 
+    // creates ssbo buffer per shape instance, meaning every shape has an attached ssbo buffer
     for (size_t i = 0; i < this->skew_data.size(); i++) {
         vk::BufferCreateInfo buffer_info{};
         buffer_info.size        = sizeof(this->skew_data[0]);
@@ -154,7 +155,7 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         memcpy(map_memory, &this->skew_data[i], buffer_info.size);
         this->ssbo_memories[i].unmapMemory();
 
-        // write to the ssbo per instance
+        // write to the buffer per instance
         vk::DescriptorBufferInfo ssbo_info{};
         ssbo_info.buffer = *this->ssbo_buffers[i];
         ssbo_info.offset = 0;
@@ -162,7 +163,7 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         ssbo_infos.push_back(ssbo_info);
 
         vk::WriteDescriptorSet write{};
-        write.dstSet          = this->descriptor_sets[i];
+        write.dstSet          = *this->descriptor_sets[i];
         write.dstBinding      = 1;
         write.dstArrayElement = 0;
         write.descriptorCount = 1;
@@ -170,6 +171,7 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         write.pBufferInfo     = &ssbo_infos[i];
         writes.push_back(write);
     }
+    // update descriptor sets for entire writes
     this->device.updateDescriptorSets(writes, {});
 };
 

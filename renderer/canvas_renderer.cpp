@@ -431,7 +431,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
 
     // draw in reverse order for shape instances
     for (size_t i = inst_index.size(); i > 0; i--) {
-        auto idx = i - 1;
+        const auto idx = i - 1;
 
         const PushConstants& cons = this->push_constants[idx];
         if (cons.fill) {
