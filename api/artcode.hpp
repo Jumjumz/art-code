@@ -40,14 +40,14 @@ typedef std::vector<u64>    ArrayU64;
 
 enum class TriangleTypes { Equilateral, Right };
 
+// TODO:replace skewpos angle to a vec2
 struct SkewPos {
-    int   index;
-    float angle;
+    int  index;
+    Vec2 pos;
 };
 
 template <typename T, size_t size> using ArrayT = std::array<T, size>;
 
-// TODO:add skew for shapes
 namespace detail {
     struct IPen {
         virtual ~IPen() = default;

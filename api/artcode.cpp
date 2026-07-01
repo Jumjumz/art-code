@@ -218,7 +218,6 @@ void Art::Draw() {
         Shared::Memory::reset_instance();
 
         const auto& instances = ShapeRegistry::get_instances();
-        // TODO:skew only works for quad, should also work for other shapes
         for (const auto& inst : instances) {
             PushConstants constants;
             constants.color  = convert_color(inst->color, inst->opacity);
