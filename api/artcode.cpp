@@ -71,6 +71,7 @@ Vec2 skew_mesh_size(const ArrayVec2& vertices, const Vec2& center) {
     return len_wid;
 }
 
+// TODO:make the vertices in clockwise order
 ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
     // return skew mesh quad
     return {shape_pos,
@@ -98,6 +99,7 @@ DrawQuad::Quad() {
     this->opacity  = 1.0f;
     this->fill     = false;
     this->skew     = false;
+    this->skewPos  = {};
 
     ShapeRegistry::register_shape(this);
 };
@@ -134,6 +136,8 @@ DrawCircle::Circle() {
     this->rotate   = 0.0f;
     this->opacity  = 1.0f;
     this->fill     = false;
+    this->skew     = false;
+    this->skewPos  = {};
 
     ShapeRegistry::register_shape(this);
 };
@@ -181,6 +185,8 @@ DrawTriangle::Triangle() {
     this->rotate   = 0.0f;
     this->opacity  = 1.0f;
     this->fill     = false;
+    this->skew     = false;
+    this->skewPos  = {};
 
     ShapeRegistry::register_shape(this);
 };

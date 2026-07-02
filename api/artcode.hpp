@@ -40,10 +40,22 @@ typedef std::vector<u64>    ArrayU64;
 
 enum class TriangleTypes { Equilateral, Right };
 
-// TODO:replace skewpos angle to a vec2
+// hides padding as this is for alingment in the gpu
 struct SkewPos {
-    int  index;
     Vec2 pos;
+    int  index;
+
+    SkewPos()
+        : pos{},
+          index(0),
+          _padding(0) {}
+    SkewPos(Vec2 p, int i)
+        : pos{p},
+          index{i},
+          _padding{0} {}
+
+  private:
+    int _padding;
 };
 
 template <typename T, size_t size> using ArrayT = std::array<T, size>;
@@ -62,7 +74,7 @@ namespace detail {
         float              opacity;
         bool               fill;
         bool               skew;
-        ArrayT<SkewPos, 8> skewPos = {};
+        ArrayT<SkewPos, 8> skewPos;
 
         virtual ArrayVec2 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;
