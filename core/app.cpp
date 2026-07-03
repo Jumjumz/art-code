@@ -72,7 +72,7 @@ void Application::loop() {
 
                 ShadersCompiled::compiled = false;
             }
-            this->canvas.update_canvas(this->ctx.device);
+            this->canvas.update_canvas();
         }
 
         ImGui_ImplVulkan_NewFrame();

@@ -59,12 +59,14 @@ struct SkewPos {
 };
 
 template <typename T, size_t size> using ArrayT = std::array<T, size>;
+template <typename T> using VectorT             = std::vector<T>;
 
 namespace detail {
     struct IPen {
         virtual ~IPen() = default;
 
         // TODO:make multiple skew points for diff shapes
+        // TODO:make skew pos a function.. or change the way skew pos syntax wise
         //  must implement
         //  uses camel case for users, snake case for api implementation
         Vec2               position;

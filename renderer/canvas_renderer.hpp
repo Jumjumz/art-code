@@ -47,11 +47,11 @@ class CanvasRenderer {
 
     void canvas_setup(const glm::vec3& artboard_size, bool show_main_ui);
 
-    void record_canvas_command(const uint32_t& current_frame);
+    void record_canvas_command(const uint32_t current_frame);
 
-    void record_artcode_command(const uint32_t& current_frame);
+    void record_artcode_command(const uint32_t current_frame);
 
-    void update_canvas(const vk::raii::Device& device);
+    void update_canvas();
 
   private:
     const vk::raii::PhysicalDevice& physical_device;

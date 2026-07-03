@@ -12,7 +12,7 @@ struct ShapeRegistry {
         instances.push_back(shape);
     }
 
-    static std::vector<detail::IPen*> get_instances() { return instances; }
+    static VectorT<detail::IPen*> get_instances() { return instances; }
 
     static void delete_registry(detail::IPen* shape) {
         instances.erase(std::remove(instances.begin(), instances.end(), shape),
@@ -20,7 +20,7 @@ struct ShapeRegistry {
     }
 
   private:
-    static inline std::vector<detail::IPen*> instances;
+    static inline VectorT<detail::IPen*> instances;
 };
 
 Vec4 convert_color(const string& color, float opacity) {
@@ -37,13 +37,13 @@ Vec4 convert_color(const string& color, float opacity) {
         return Vec4{((value >> 16) & 0xFF) / 255.0f, ((value >> 8) & 0xFF) / 255.0f,
                     ((value >> 0) & 0xFF) / 255.0f, opacity};
     }
-}
+};
 
 // find length and width of any shapes (forms a quad)
 Vec2 skew_mesh_size(const ArrayVec2& vertices, const Vec2& center) {
-    Vec2 len_wid = Vec2{0.0f, 0.0f};
-    Vec2 v_x     = Vec2{0.0f, 0.0f};
-    Vec2 v_y     = Vec2{0.0f, 0.0f};
+    Vec2 len_width = Vec2{0.0f, 0.0f};
+    Vec2 v_x       = Vec2{0.0f, 0.0f};
+    Vec2 v_y       = Vec2{0.0f, 0.0f};
     for (const auto& vertex : vertices) {
         // get min and max
         float max_x = glm::max(vertex.x - center.x, vertex.x);
@@ -65,13 +65,12 @@ Vec2 skew_mesh_size(const ArrayVec2& vertices, const Vec2& center) {
         }
     }
     // calculate the max minus min
-    len_wid.x = v_x.x - (v_x.y * -1) * 2;
-    len_wid.y = v_y.x - (v_y.y * -1) * 2;
+    len_width.x = v_x.x - (v_x.y * -1) * 2;
+    len_width.y = v_y.x - (v_y.y * -1) * 2;
 
-    return len_wid;
-}
+    return len_width;
+};
 
-// TODO:make the vertices in clockwise order
 ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
     // return skew mesh quad
     return {shape_pos,
@@ -82,7 +81,7 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
             shape_pos + Vec2{mesh_size.x * 0.5f, mesh_size.y},
             shape_pos + Vec2{0.0f, mesh_size.y},
             shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
-}
+};
 
 using DrawQuad     = Art::Quad;
 using DrawCircle   = Art::Circle;
@@ -123,6 +122,7 @@ ArrayU32 DrawQuad::generate_indices() const {
         // triangles
         return ArrayU32{0, 2, 6, 2, 4, 6};
     } else {
+        // lines
         return ArrayU32{0, 2, 2, 4, 4, 6, 6, 0};
     }
 };
@@ -146,6 +146,8 @@ DrawCircle::~Circle() { ShapeRegistry::delete_registry(this); };
 
 ArrayVec2 DrawCircle::generate_vertices() const {
     ArrayVec2 vertex;
+    // center of the circle
+    vertex.push_back(this->position);
 
     for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
         float angle = i * 2.0f * M_PI / DrawCircle::SEGMENTS;
@@ -163,13 +165,14 @@ ArrayU32 DrawCircle::generate_indices() const {
         // triangles
         for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
             indices.push_back(0);
-            indices.push_back(i);
-            indices.push_back((i + 1) % DrawCircle::SEGMENTS);
+            indices.push_back(i + 1);
+            indices.push_back((i + 1) % DrawCircle::SEGMENTS + 1);
         }
     } else {
+        // lines
         for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
-            indices.push_back(i);
-            indices.push_back((i + 1) % DrawCircle::SEGMENTS);
+            indices.push_back(i + 1);
+            indices.push_back((i + 1) % DrawCircle::SEGMENTS + 1);
         }
     }
     return indices;
@@ -216,6 +219,7 @@ ArrayVec2 DrawTriangle::generate_vertices() const {
 
 ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
 
+// draw every shape instance registered
 void Art::Draw() {
     // load shared memory
     Shared::Memory::load_shared_memory();

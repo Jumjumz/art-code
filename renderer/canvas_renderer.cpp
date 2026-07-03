@@ -112,8 +112,7 @@ void CanvasRenderer::reload_pipeline() {
     // reset graphics_pipeline
     this->device.waitIdle();
 
-    bool need_trilist  = false;
-    bool need_linelist = false;
+    bool need_trilist, need_linelist = false;
 
     const auto inst_size = Shared::Memory::get_intance_size();
     // recreate graphics_pipeline
@@ -342,7 +341,7 @@ void CanvasRenderer::canvas_setup(const glm::vec3& artboard_size, bool show_main
     memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
 };
 
-void CanvasRenderer::record_canvas_command(const uint32_t& current_frame) {
+void CanvasRenderer::record_canvas_command(const uint32_t current_frame) {
     auto& cmd = this->canvas_commands->canvas_command_buffers[current_frame];
 
     // render
@@ -404,7 +403,7 @@ void CanvasRenderer::record_canvas_command(const uint32_t& current_frame) {
     cmd.end();
 };
 
-void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
+void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
     auto& cmd = this->artcode_commands->artcode_command_buffers[current_frame];
     // render
     cmd.begin({});
@@ -429,6 +428,15 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
     // render canvas
     cmd.beginRendering(artcode_rendering_info);
 
+    // set viewport and scissors
+    cmd.setViewport(
+        0, vk::Viewport{0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),
+                        static_cast<float>(this->vk_buffers.extent.height), 0.0f, 1.0f});
+
+    cmd.setScissor(
+        0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
+                                                       this->vk_buffers.extent.height}});
+
     // draw in reverse order for shape instances
     for (size_t i = inst_index.size(); i > 0; i--) {
         const auto idx = i - 1;
@@ -445,15 +453,6 @@ void CanvasRenderer::record_artcode_command(const uint32_t& current_frame) {
         cmd.bindDescriptorSets(
             vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->layout, 0,
             *this->artcode_commands->artcode_descriptor_sets[idx], nullptr);
-
-        cmd.setViewport(
-            0,
-            vk::Viewport{0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),
-                         static_cast<float>(this->vk_buffers.extent.height), 0.0f, 1.0f});
-
-        cmd.setScissor(0, vk::Rect2D{vk::Offset2D{0, 0},
-                                     vk::Extent2D{this->vk_buffers.extent.width,
-                                                  this->vk_buffers.extent.height}});
 
         cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
                                          vk::ShaderStageFlagBits::eGeometry |
@@ -509,16 +508,16 @@ void CanvasRenderer::transition_image(const vk::Image&               image,
     cmd_buffer.pipelineBarrier2(dependency_info);
 };
 
-void CanvasRenderer::update_canvas(const vk::raii::Device& device) {
-    const auto canvas = ImGui::FindWindowByName("##canvas-begin");
+void CanvasRenderer::update_canvas() {
+    const auto& canvas = ImGui::FindWindowByName("##canvas-begin");
 
     if (canvas) {
-        const auto& width  = static_cast<uint32_t>(canvas->Size.x);
-        const auto& height = static_cast<uint32_t>(canvas->Size.y);
+        const auto width  = static_cast<uint32_t>(canvas->Size.x);
+        const auto height = static_cast<uint32_t>(canvas->Size.y);
 
         if (width != this->vk_buffers.extent.width ||
             height != this->vk_buffers.extent.height) {
-            device.waitIdle();
+            this->device.waitIdle();
 
             this->vk_buffers.canvas_create_image(width, height);
             this->vk_buffers.canvas_create_image_views();
