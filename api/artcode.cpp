@@ -86,6 +86,7 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
 using DrawQuad     = Art::Quad;
 using DrawCircle   = Art::Circle;
 using DrawTriangle = Art::Triangle;
+using DrawPen      = Art::Pen;
 
 // Quad
 DrawQuad::Quad() {
@@ -107,23 +108,21 @@ DrawQuad::~Quad() { ShapeRegistry::delete_registry(this); };
 
 ArrayVec2 DrawQuad::generate_vertices() const {
     //  quad coordinates and size
-    return ArrayVec2{this->position,
-                     this->position + Vec2{this->w * 0.5f, 0.0f},
-                     this->position + Vec2{this->w, 0.0f},
-                     this->position + Vec2{this->w, this->l * 0.5f},
-                     this->position + Vec2{this->w, this->l},
-                     this->position + Vec2{this->w * 0.5f, this->l},
-                     this->position + Vec2{0.0f, this->l},
-                     this->position + Vec2{0.0f, this->l * 0.5f}};
+    return ArrayVec2{
+        this->position,
+        this->position + Vec2{this->w, 0.0f},
+        this->position + Vec2{this->w, this->l},
+        this->position + Vec2{0.0f, this->l},
+    };
 };
 
 ArrayU32 DrawQuad::generate_indices() const {
     if (this->fill) {
         // triangles
-        return ArrayU32{0, 2, 6, 2, 4, 6};
+        return ArrayU32{0, 1, 3, 1, 2, 3};
     } else {
         // lines
-        return ArrayU32{0, 2, 2, 4, 4, 6, 6, 0};
+        return ArrayU32{0, 1, 1, 2, 2, 3, 3, 0};
     }
 };
 
@@ -217,7 +216,34 @@ ArrayVec2 DrawTriangle::generate_vertices() const {
     return vertex;
 };
 
-ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
+ArrayU32 DrawTriangle::generate_indices() const {
+    if (this->fill) {
+        return ArrayU32{0, 1, 2};
+    } else {
+        // line list
+        return ArrayU32{0, 1, 1, 2, 2, 0};
+    }
+};
+
+DrawPen::Pen() {
+    this->positions = {};
+    this->position  = Vec2{200, 200};
+    this->color     = "#000000";
+    this->stroke    = 1.0f;
+    this->rotate    = 0.0f;
+    this->opacity   = 1.0f;
+    this->fill      = false;
+    this->skew      = false;
+    this->skewPos   = {};
+
+    ShapeRegistry::register_shape(this);
+};
+
+DrawPen::~Pen() { ShapeRegistry::delete_registry(this); };
+
+ArrayVec2 DrawPen::generate_vertices() const { return ArrayVec2{}; };
+
+ArrayU32 DrawPen::generate_indices() const { return ArrayU32{}; };
 
 // draw every shape instance registered
 void Art::Draw() {

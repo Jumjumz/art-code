@@ -12,7 +12,7 @@
 BuildPanel::BuildPanel() {};
 
 void BuildPanel::render() {
-    const auto  panel_size = ImGui::GetContentRegionAvail();
+    const auto& panel_size = ImGui::GetContentRegionAvail();
     const float width = 100.0f, height = 20.0f;
 
     bool show_adding_includes = false;
@@ -26,9 +26,8 @@ void BuildPanel::render() {
                 add_includes();
             }
 
-            if (action == "Build") {
+            if (action == "Build")
                 compile();
-            }
 
             if (action == "Run") {
                 if (!this->project_compiled)
@@ -52,13 +51,13 @@ void BuildPanel::render() {
 
 void BuildPanel::compile() {
     // run compile command
-    const auto cmd = create_cmd(BuildPanel::Flags::C);
+    const auto& cmd = create_cmd(BuildPanel::Flags::C);
     execute(cmd);
     this->project_compiled = true;
 };
 
 void BuildPanel::add_includes() const {
-    auto solution_file = ProjectPath::get_solution_file();
+    const auto& solution_file = ProjectPath::get_solution_file();
 
     nlohmann::json js;
     {
@@ -89,8 +88,9 @@ void BuildPanel::add_includes() const {
 };
 
 std::vector<fs::path> BuildPanel::shader_files() const {
-    const auto     shader_file = ProjectPath::get_solution_file();
-    std::ifstream  read(shader_file);
+    const auto&   shader_file = ProjectPath::get_solution_file();
+    std::ifstream read(shader_file);
+
     nlohmann::json js;
     js = nlohmann::json::parse(read);
     read.close();
@@ -100,9 +100,9 @@ std::vector<fs::path> BuildPanel::shader_files() const {
 
 std::string BuildPanel::executable_files() const {
     // read solution file
-    std::vector<std::string> executables;
+    std::vector<std::string> executables = {};
     {
-        const auto    solution_file = ProjectPath::get_solution_file();
+        const auto&   solution_file = ProjectPath::get_solution_file();
         std::ifstream read(solution_file);
 
         nlohmann::json js;
@@ -117,7 +117,7 @@ std::string BuildPanel::executable_files() const {
         }
     }
 
-    std::string source;
+    std::string source = "";
     for (const auto& dir : executables) {
         source += dir + " "; // add space at the end of each path
     }
@@ -195,8 +195,8 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
 
 // TODO:add progress bar/indicator when executing this function
 int BuildPanel::execute(const std::string& cmd) {
-    std::string result;
-    FILE*       pipe = popen(cmd.c_str(), "r");
+    std::string result = "";
+    FILE*       pipe   = popen(cmd.c_str(), "r");
     if (!pipe) {
         int return_err_code = -1;
         result              = "Failed to run the command. Error occured somewhere";

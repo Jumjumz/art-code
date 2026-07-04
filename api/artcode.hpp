@@ -58,6 +58,16 @@ struct SkewPos {
     int _padding;
 };
 
+struct Handles {
+    Vec2 handlePosition;
+    bool handle;
+};
+
+struct PenHandles {
+    Vec2    position;
+    Handles handles;
+};
+
 template <typename T, size_t size> using ArrayT = std::array<T, size>;
 template <typename T> using VectorT             = std::vector<T>;
 
@@ -65,10 +75,8 @@ namespace detail {
     struct IPen {
         virtual ~IPen() = default;
 
-        // TODO:make multiple skew points for diff shapes
-        // TODO:make skew pos a function.. or change the way skew pos syntax wise
-        //  must implement
-        //  uses camel case for users, snake case for api implementation
+        // TODO:make skewPos a function.. or change the way skew pos syntax wise
+        // uses camel case for users, snake case for api implementation
         Vec2               position;
         Color              color;
         float              stroke;
@@ -78,6 +86,7 @@ namespace detail {
         bool               skew;
         ArrayT<SkewPos, 8> skewPos;
 
+        // must implement
         virtual ArrayVec2 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;
 
@@ -137,7 +146,19 @@ namespace Art {
         ArrayVec2 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
     };
-    // TODO:add pen tool
+
+    struct Pen : detail::IPen {
+      public:
+        Pen();
+
+        ~Pen();
+
+        VectorT<PenHandles> positions;
+
+      private:
+        ArrayVec2 generate_vertices() const override;
+        ArrayU32  generate_indices() const override;
+    };
 
     void Draw();
 }; // namespace Art
