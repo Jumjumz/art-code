@@ -177,9 +177,13 @@ ArrayU32 DrawCircle::generate_indices() const {
     return indices;
 };
 
+// TODO:have a way where compiler identifies the type first, then from there triangle
+// can only provide if user has access to base and height or only base if type is
+// equilateral
 // Triangle
 DrawTriangle::Triangle() {
-    this->size     = 100.0f;
+    this->base     = 100.0f;
+    this->height   = 100.0f;
     this->type     = TriangleTypes::Equilateral;
     this->position = Vec2{200, 200};
     this->color    = "#000000";
@@ -200,16 +204,17 @@ ArrayVec2 DrawTriangle::generate_vertices() const {
 
     switch (this->type) {
     case TriangleTypes::Equilateral: {
+        float size = this->base * glm::sqrt(3) / 2;
         for (int i = 0; i < 3; i++) {
             float angle = i * 2.0f * M_PI / 3.0f - M_PI / 2.0f;
-            vertex.push_back(Vec2{this->position.x + cos(angle) * this->size,
-                                  this->position.y + sin(angle) * this->size});
+            vertex.push_back(Vec2{this->position.x + cos(angle) * size,
+                                  this->position.y + sin(angle) * size});
         }
         break;
     }
     case TriangleTypes::Right: {
-        vertex = ArrayVec2{this->position, this->position + Vec2{this->size, 0.0f},
-                           this->position - Vec2{0.0f, this->size}};
+        vertex = ArrayVec2{this->position, this->position + Vec2{this->base, 0.0f},
+                           this->position - Vec2{0.0f, this->height}};
         break;
     }
     }
@@ -225,6 +230,7 @@ ArrayU32 DrawTriangle::generate_indices() const {
     }
 };
 
+// TODO:create pen tool config
 DrawPen::Pen() {
     this->positions = {};
     this->position  = Vec2{200, 200};

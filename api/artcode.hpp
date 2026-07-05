@@ -139,7 +139,8 @@ namespace Art {
 
         ~Triangle();
 
-        float         size;
+        float base, height;
+
         TriangleTypes type;
 
       private:
