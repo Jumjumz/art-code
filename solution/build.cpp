@@ -266,7 +266,8 @@ vec2 center = constant.center;
 center.y = ubo.reso.y - center.y;
 pos -= center;
 vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
-return rotated + center; }
+return rotated + center;
+}
 void main() {
 vec2 pos_arr[] = art_pos;
 for (int i = 0; i < gl_in.length(); i++) {
@@ -343,7 +344,8 @@ vec2 center = constant.center;
 center.y = ubo.reso.y - center.y;
 pos -= center;
 vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
-return rotated + center; }
+return rotated + center;
+}
 void main() {
 vec2 pos_arr[] = art_pos;
 for (int i = 0; i < gl_in.length(); i++) {

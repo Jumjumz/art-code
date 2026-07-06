@@ -247,9 +247,34 @@ DrawPen::Pen() {
 
 DrawPen::~Pen() { ShapeRegistry::delete_registry(this); };
 
-ArrayVec2 DrawPen::generate_vertices() const { return ArrayVec2{}; };
+// TODO:this is for test only, not the correct implementation
+ArrayVec2 DrawPen::generate_vertices() const {
+    ArrayVec2 vertex;
+    for (const auto& vets : this->positions) {
+        vertex.push_back(vets);
+    }
+    return vertex;
+};
 
-ArrayU32 DrawPen::generate_indices() const { return ArrayU32{}; };
+// FIXME:this is wrong!
+ArrayU32 DrawPen::generate_indices() const {
+    ArrayU32   indices;
+    const auto pos_size = this->positions.size();
+    if (this->fill) {
+        for (size_t i = 0; i < pos_size; i++) {
+            indices.push_back(i);
+            indices.push_back(i + 1);
+            indices.push_back((i + 1) % pos_size);
+        }
+    } else {
+        for (size_t i = 0; i < pos_size; i++) {
+            indices.push_back(i);
+            indices.push_back((i + 1));
+        }
+    }
+
+    return indices;
+};
 
 // draw every shape instance registered
 void Art::Draw() {

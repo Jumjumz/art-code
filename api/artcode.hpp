@@ -64,8 +64,8 @@ struct Handles {
 };
 
 struct PenHandles {
-    Vec2    position;
-    Handles handles;
+    Vec2 position;
+    // Handles handles;
 };
 
 template <typename T, size_t size> using ArrayT = std::array<T, size>;
@@ -154,7 +154,7 @@ namespace Art {
 
         ~Pen();
 
-        VectorT<PenHandles> positions;
+        VectorT<Vec2> positions;
 
       private:
         ArrayVec2 generate_vertices() const override;
