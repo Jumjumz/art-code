@@ -256,20 +256,19 @@ ArrayVec2 DrawPen::generate_vertices() const {
     return vertex;
 };
 
-// FIXME:this is wrong!
 ArrayU32 DrawPen::generate_indices() const {
     ArrayU32   indices;
     const auto pos_size = this->positions.size();
     if (this->fill) {
-        for (size_t i = 0; i < pos_size; i++) {
-            indices.push_back(i);
+        for (size_t i = 0; i < pos_size - 1; i++) {
+            indices.push_back(0);
             indices.push_back(i + 1);
             indices.push_back((i + 1) % pos_size);
         }
     } else {
-        for (size_t i = 0; i < pos_size; i++) {
+        for (size_t i = 0; i < pos_size - 1; i++) {
             indices.push_back(i);
-            indices.push_back((i + 1));
+            indices.push_back(i + 1);
         }
     }
 
