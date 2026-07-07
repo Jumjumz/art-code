@@ -154,7 +154,7 @@ namespace Art {
 
         ~Pen();
 
-        VectorT<Vec2> positions;
+        VectorT<PenHandles> positions;
 
       private:
         ArrayVec2 generate_vertices() const override;

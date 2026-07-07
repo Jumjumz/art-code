@@ -247,11 +247,10 @@ DrawPen::Pen() {
 
 DrawPen::~Pen() { ShapeRegistry::delete_registry(this); };
 
-// TODO:this is for test only, not the correct implementation
 ArrayVec2 DrawPen::generate_vertices() const {
     ArrayVec2 vertex;
     for (const auto& vets : this->positions) {
-        vertex.push_back(vets);
+        vertex.push_back(vets.position);
     }
     return vertex;
 };
@@ -262,8 +261,8 @@ ArrayU32 DrawPen::generate_indices() const {
     if (this->fill) {
         for (size_t i = 0; i < pos_size - 1; i++) {
             indices.push_back(0);
+            indices.push_back(i);
             indices.push_back(i + 1);
-            indices.push_back((i + 1) % pos_size);
         }
     } else {
         for (size_t i = 0; i < pos_size - 1; i++) {
