@@ -278,10 +278,9 @@ ArrayU32 DrawPen::generate_indices() const {
 void Art::Draw() {
     // load shared memory
     Shared::Memory::load_shared_memory();
+    // reset/clear previous instances
+    Shared::Memory::reset_instance();
     {
-        // reset/clear previous instances
-        Shared::Memory::reset_instance();
-
         const auto& instances = ShapeRegistry::get_instances();
         for (const auto& inst : instances) {
             PushConstants constants;
@@ -292,6 +291,8 @@ void Art::Draw() {
             constants.fill   = static_cast<int>(inst->fill);
             constants.skew   = static_cast<int>(inst->skew);
 
+            // TODO:skew should also work for pen, curently skew mesh is using member
+            // "position" and not "positions" which pen uses
             const auto& skew_mesh =
                 get_skew_mesh(skew_mesh_size(inst->generate_vertices(), inst->get_center()),
                               inst->position);
