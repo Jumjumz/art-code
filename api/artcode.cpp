@@ -126,6 +126,8 @@ ArrayU32 DrawQuad::generate_indices() const {
     }
 };
 
+VectorT<Handles> DrawQuad::generate_handles() { return VectorT<Handles>{}; };
+
 // Circle
 DrawCircle::Circle() {
     this->radius   = 100.f;
@@ -176,6 +178,8 @@ ArrayU32 DrawCircle::generate_indices() const {
     }
     return indices;
 };
+
+VectorT<Handles> DrawCircle::generate_handles() { return VectorT<Handles>{}; };
 
 // TODO:have a way where compiler identifies the type first, then from there triangle
 // can only provide if user has access to base and height or only base if type is
@@ -230,7 +234,8 @@ ArrayU32 DrawTriangle::generate_indices() const {
     }
 };
 
-// TODO:create pen tool config
+VectorT<Handles> DrawTriangle::generate_handles() { return VectorT<Handles>{}; };
+
 DrawPen::Pen() {
     this->positions = {};
     this->position  = Vec2{200, 200};
@@ -272,6 +277,11 @@ ArrayU32 DrawPen::generate_indices() const {
     }
 
     return indices;
+};
+
+VectorT<Handles> DrawPen::generate_handles() {
+    this->position = this->positions[0].position;
+    return VectorT<Handles>{};
 };
 
 // draw every shape instance registered
