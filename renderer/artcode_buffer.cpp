@@ -175,6 +175,11 @@ void ArtcodeBuffer::create_ssbo_buffer() {
     this->device.updateDescriptorSets(writes, {});
 };
 
+// TODO:add pen buffer config
+void ArtcodeBuffer::create_pen_buffer() {
+
+};
+
 uint32_t ArtcodeBuffer::find_memory_type(uint32_t                type_filter,
                                          vk::MemoryPropertyFlags properties) {
     vk::PhysicalDeviceMemoryProperties mem_properties =

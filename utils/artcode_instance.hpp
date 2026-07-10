@@ -25,18 +25,23 @@ struct Vertex {
 };
 
 struct Vert {
-    size_t size;
-    Vec2   element[999];
+    size_t            size;
+    ArrayT<Vec2, 999> element;
 };
 
 struct Indx {
-    size_t size;
-    u32    element[9999];
+    size_t            size;
+    ArrayT<u32, 9999> element;
 };
 
 struct SkewData {
     ArrayT<Vec2, 8>    skew_mesh;
     ArrayT<SkewPos, 8> skew_pos;
+};
+
+struct HandleData {
+    size_t  size;
+    Handles handles[999];
 };
 
 struct PushConstants {
@@ -54,6 +59,7 @@ namespace Shared {
         Indx          index;
         PushConstants constants;
         SkewData      skew_data;
+        HandleData    handle_data;
     };
 
     struct Region {
@@ -93,8 +99,9 @@ namespace Shared {
         }
 
         static void register_instance(const ArrayVec2& vertex, const ArrayU32& index,
-                                      const PushConstants& push_constants,
-                                      const SkewData&      skew_data) {
+                                      const PushConstants&    push_constants,
+                                      const SkewData&         skew_data,
+                                      const VectorT<Handles>& handle_data) {
             if (region->size > 500 || !region)
                 return;
 
@@ -107,6 +114,10 @@ namespace Shared {
             for (const auto& idx : index) {
                 inst.index.element[inst.index.size++] = idx;
             }
+            // insert handle data
+            for (const auto& handle : handle_data) {
+                inst.handle_data.handles[inst.handle_data.size++] = handle;
+            }
             inst.constants = push_constants;
             inst.skew_data = skew_data;
             region->size++;
@@ -114,9 +125,7 @@ namespace Shared {
 
         static size_t get_intance_size() { return region->size; }
 
-        static Vert get_vertex(size_t idx) { return region->instance[idx].vertex; }
-
-        static Indx get_index(size_t idx) { return region->instance[idx].index; }
+        static Shared::Instance get_instance(size_t idx) { return region->instance[idx]; }
 
         static PushConstants get_constants(size_t idx) {
             return region->instance[idx].constants;

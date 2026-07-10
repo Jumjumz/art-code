@@ -146,6 +146,7 @@ void CanvasRenderer::reload_pipeline() {
     }
 };
 
+// TODO:add handle data to a buffer
 void CanvasRenderer::update_artcode_buffers() {
     // wait gpu to finish using old buffers
     this->device.waitIdle();
@@ -165,21 +166,18 @@ void CanvasRenderer::update_artcode_buffers() {
 
     const auto inst_size = Shared::Memory::get_intance_size();
     for (size_t i = 0; i < inst_size; i++) {
-        const auto& inst_vertex    = Shared::Memory::get_vertex(i);
-        const auto& inst_indices   = Shared::Memory::get_index(i);
-        const auto& inst_skew      = Shared::Memory::get_skew_data(i);
-        const auto& inst_constants = Shared::Memory::get_constants(i);
+        const auto& instance = Shared::Memory::get_instance(i);
 
-        std::vector<Vec2> vertex(inst_vertex.element,
-                                 inst_vertex.element + inst_vertex.size);
-        std::vector<u32>  indices(inst_indices.element,
-                                  inst_indices.element + inst_indices.size);
+        std::vector<Vec2> vertex(instance.vertex.element.begin(),
+                                 instance.vertex.element.begin() + instance.vertex.size);
+        std::vector<u32>  indices(instance.index.element.begin(),
+                                  instance.index.element.begin() + instance.index.size);
 
         this->artcode_buffer->inst_vertex.push_back(vertex);
         this->artcode_buffer->inst_index.push_back(indices);
-        this->artcode_buffer->skew_data.push_back(inst_skew);
+        this->artcode_buffer->skew_data.push_back(instance.skew_data);
 
-        this->push_constants.push_back(inst_constants);
+        this->push_constants.push_back(instance.constants);
     }
 
     // create buffer for each instance or shape

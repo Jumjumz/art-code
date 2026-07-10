@@ -280,8 +280,12 @@ ArrayU32 DrawPen::generate_indices() const {
 };
 
 VectorT<Handles> DrawPen::generate_handles() {
-    this->position = this->positions[0].position;
-    return VectorT<Handles>{};
+    this->position           = this->positions[0].position;
+    VectorT<Handles> handles = {};
+    for (const auto& handle : this->positions) {
+        handles.push_back(handle.handles);
+    }
+    return handles;
 };
 
 // draw every shape instance registered
@@ -310,9 +314,14 @@ void Art::Draw() {
             SkewData skew_data;
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = inst->skewPos;
+            // add handles
+            VectorT<Handles> handles = {};
+            if (!inst->generate_handles().empty())
+                handles = inst->generate_handles();
             // register resources per instance
-            Shared::Memory::register_instance(
-                inst->generate_vertices(), inst->generate_indices(), constants, skew_data);
+            Shared::Memory::register_instance(inst->generate_vertices(),
+                                              inst->generate_indices(), constants,
+                                              skew_data, handles);
         }
     }
 };
