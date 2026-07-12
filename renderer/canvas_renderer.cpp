@@ -161,9 +161,9 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->ssbo_buffers.clear();
     this->artcode_buffer->ssbo_memories.clear();
     this->artcode_buffer->skew_data.clear();
-    this->artcode_buffer->handle_data.clear();
     this->artcode_buffer->handle_buffers.clear();
     this->artcode_buffer->handle_memories.clear();
+    this->artcode_buffer->handle_data.clear();
     // clear push constants
     this->push_constants.clear();
 
@@ -171,20 +171,20 @@ void CanvasRenderer::update_artcode_buffers() {
     for (size_t i = 0; i < inst_size; i++) {
         const auto& instance = Shared::Memory::get_instance(i);
 
-        std::vector<Vec2>    vertex(instance.vertex.element.begin(),
-                                    instance.vertex.element.begin() + instance.vertex.size);
-        std::vector<u32>     indices(instance.index.element.begin(),
-                                     instance.index.element.begin() + instance.index.size);
-        std::vector<Handles> handles = {};
-        if (!instance.handle_data.handles.empty())
-            std::vector<Handles> handles = std::vector<Handles>(
-                instance.handle_data.handles.begin(),
-                instance.handle_data.handles.begin() + instance.handle_data.size);
+        std::vector<Vec2> vertex(instance.vertex.element.begin(),
+                                 instance.vertex.element.begin() + instance.vertex.size);
+        std::vector<u32>  indices(instance.index.element.begin(),
+                                  instance.index.element.begin() + instance.index.size);
 
         this->artcode_buffer->inst_vertex.push_back(vertex);
         this->artcode_buffer->inst_index.push_back(indices);
         this->artcode_buffer->skew_data.push_back(instance.skew_data);
-        this->artcode_buffer->handle_data.push_back(handles);
+        if (instance.handle_data.size != 0) {
+            std::vector<Handles> handles(instance.handle_data.handles.begin(),
+                                         instance.handle_data.handles.begin() +
+                                             instance.handle_data.size);
+            this->artcode_buffer->handle_data.push_back(handles);
+        }
 
         this->push_constants.push_back(instance.constants);
     }

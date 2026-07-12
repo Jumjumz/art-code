@@ -175,7 +175,7 @@ void ArtcodeBuffer::create_ssbo_buffer() {
     this->device.updateDescriptorSets(writes, {});
 };
 
-// TODO:add pen buffer config
+// FIXME:buffer not sent fo GPU!
 void ArtcodeBuffer::create_pen_buffer() {
     // create buffer per instance
     std::vector<vk::DescriptorBufferInfo> ssbo_infos;
