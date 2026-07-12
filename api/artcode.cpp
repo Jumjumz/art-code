@@ -314,6 +314,7 @@ void Art::Draw() {
             SkewData skew_data;
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = inst->skewPos;
+
             // register resources per instance
             Shared::Memory::register_instance(inst->generate_vertices(),
                                               inst->generate_indices(), constants,
