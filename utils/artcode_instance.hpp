@@ -40,8 +40,8 @@ struct SkewData {
 };
 
 struct HandleData {
-    size_t  size;
-    Handles handles[999];
+    size_t               size;
+    ArrayT<Handles, 999> handles;
 };
 
 struct PushConstants {

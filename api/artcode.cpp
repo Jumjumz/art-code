@@ -314,14 +314,10 @@ void Art::Draw() {
             SkewData skew_data;
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = inst->skewPos;
-            // add handles
-            VectorT<Handles> handles = {};
-            if (!inst->generate_handles().empty())
-                handles = inst->generate_handles();
             // register resources per instance
             Shared::Memory::register_instance(inst->generate_vertices(),
                                               inst->generate_indices(), constants,
-                                              skew_data, handles);
+                                              skew_data, inst->generate_handles());
         }
     }
 };

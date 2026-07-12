@@ -26,8 +26,8 @@ class ArtcodeBuffer {
     std::vector<std::vector<glm::vec2>> inst_vertex;
     std::vector<std::vector<uint32_t>>  inst_index;
 
-    std::vector<SkewData> skew_data;
-    std::vector<Handles>  handle_data;
+    std::vector<SkewData>             skew_data;
+    std::vector<std::vector<Handles>> handle_data;
 
     void create_vertex_buffer();
 
