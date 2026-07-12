@@ -179,6 +179,7 @@ void CanvasRenderer::update_artcode_buffers() {
         this->artcode_buffer->inst_vertex.push_back(vertex);
         this->artcode_buffer->inst_index.push_back(indices);
         this->artcode_buffer->skew_data.push_back(instance.skew_data);
+        // TODO:this is wrong...
         if (instance.handle_data.size != 0) {
             std::vector<Handles> handles(instance.handle_data.handles.begin(),
                                          instance.handle_data.handles.begin() +
