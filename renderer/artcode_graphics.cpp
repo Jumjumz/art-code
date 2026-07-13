@@ -74,6 +74,7 @@ void ArtcodeGraphics::create_shaders(Topology topology) {
     vert_shader_stage_info.module = this->vert_shader_module;
     vert_shader_stage_info.pName  = "main";
 
+    // TODO:remove geometry shader, vert shader for triangle and line topology is enough
     vk::PipelineShaderStageCreateInfo geom_shader_stage_info{};
     geom_shader_stage_info.stage = vk::ShaderStageFlagBits::eGeometry;
     switch (topology) {
