@@ -37,17 +37,17 @@ void VulkanCanvas::canvas_create_command_buffer() {
 };
 
 void VulkanCanvas::canvas_create_descriptor_pool() {
-    vk::DescriptorPoolSize poolSize(vk::DescriptorType::eUniformBuffer,
-                                    this->MAX_FRAMES_IN_FLIGHT);
+    vk::DescriptorPoolSize pool_size(vk::DescriptorType::eUniformBuffer,
+                                     this->MAX_FRAMES_IN_FLIGHT);
 
-    vk::DescriptorPoolCreateInfo poolInfo{};
-    poolInfo.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-    poolInfo.maxSets       = this->MAX_FRAMES_IN_FLIGHT;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes    = &poolSize;
+    vk::DescriptorPoolCreateInfo pool_info{};
+    pool_info.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
+    pool_info.maxSets       = this->MAX_FRAMES_IN_FLIGHT;
+    pool_info.poolSizeCount = 1;
+    pool_info.pPoolSizes    = &pool_size;
 
     this->canvas_descriptor_pool =
-        vk::raii::DescriptorPool{this->device, poolInfo, nullptr};
+        vk::raii::DescriptorPool{this->device, pool_info, nullptr};
 };
 
 void VulkanCanvas::canvas_create_descriptor_set() {

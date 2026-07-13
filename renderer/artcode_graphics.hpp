@@ -32,10 +32,10 @@ class ArtcodeGraphics {
     vk::raii::ShaderModule geom_shader_module = nullptr;
     vk::raii::ShaderModule frag_shader_module = nullptr;
 
-    std::vector<char> read_file(const std::string& file_name) const;
-
     [[nodiscard]]
     vk::raii::ShaderModule create_shader_module(const std::vector<char>& code) const;
+
+    std::vector<char> read_file(const std::string& file_name) const;
 
     void create_descriptor_set_layout();
 };

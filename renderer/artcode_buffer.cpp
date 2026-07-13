@@ -187,7 +187,7 @@ void ArtcodeBuffer::create_pen_buffer() {
 
     for (size_t i = 0; i < this->handle_data.size(); i++) {
         vk::BufferCreateInfo buffer_info{};
-        buffer_info.size        = sizeof(this->handle_data[0]);
+        buffer_info.size        = this->handle_data[0].size() * sizeof(Handles);
         buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
         buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
@@ -208,7 +208,7 @@ void ArtcodeBuffer::create_pen_buffer() {
 
         // map memory
         void* map_memory = this->handle_memories[i].mapMemory(0, buffer_info.size);
-        memcpy(map_memory, &this->handle_data[i], buffer_info.size);
+        memcpy(map_memory, this->handle_data[i].data(), buffer_info.size);
         this->handle_memories[i].unmapMemory();
 
         // write to the buffer per instance

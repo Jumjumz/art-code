@@ -125,8 +125,8 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
     dynamic_state_info.pDynamicStates    = dynamic_states.data();
 
     // vert and index bindings
-    const auto binding_desc   = Vertex::get_binding_description();
-    const auto attribute_desc = Vertex::get_attribute_description();
+    const auto& binding_desc   = Vertex::get_binding_description();
+    const auto& attribute_desc = Vertex::get_attribute_description();
 
     vk::PipelineVertexInputStateCreateInfo vertex_info{};
     vertex_info.vertexBindingDescriptionCount = 1;
@@ -178,7 +178,7 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
     rendering_info.colorAttachmentCount    = 1;
     rendering_info.pColorAttachmentFormats = &this->image_format;
 
-    // push constants for color
+    // push constants
     vk::PushConstantRange constant_range{};
     constant_range.stageFlags =
         vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eGeometry;

@@ -40,11 +40,10 @@ void ArtcodeCommands::artcode_create_command_buffer() {
 
 // TODO:move this somewhere! or have a better way for other buffers to access this
 void ArtcodeCommands::artcode_create_descriptor_pool() {
-    std::array<vk::DescriptorPoolSize, 3> pool_size{
+    std::array<vk::DescriptorPoolSize, 2> pool_size{
         vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer,
                                static_cast<uint32_t>(this->MAX_FRAMES_IN_FLIGHT)},
-        vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, this->max_instances},
-        vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, this->max_instances}};
+        vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, this->max_instances * 2}};
 
     vk::DescriptorPoolCreateInfo pool_info{};
     pool_info.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
@@ -67,6 +66,7 @@ void ArtcodeCommands::artcode_create_descriptor_set() {
 
     this->artcode_descriptor_sets = this->device.allocateDescriptorSets(set_alloc_info);
 
+    // TODO:move the write of ubo to different place
     for (uint32_t i = 0; i < this->max_instances; i++) {
         vk::DescriptorBufferInfo buffer_info{};
         buffer_info.buffer = *this->uniform_buffer;

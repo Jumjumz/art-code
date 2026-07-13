@@ -126,7 +126,10 @@ ArrayU32 DrawQuad::generate_indices() const {
     }
 };
 
-VectorT<Handles> DrawQuad::generate_handles() { return VectorT<Handles>{}; };
+VectorT<Handles> DrawQuad::generate_handles() {
+    // TODO:this will be used for warp in the future
+    return VectorT<Handles>{{Vec2{0, 0}, static_cast<int>(false)}};
+};
 
 // Circle
 DrawCircle::Circle() {
@@ -179,7 +182,9 @@ ArrayU32 DrawCircle::generate_indices() const {
     return indices;
 };
 
-VectorT<Handles> DrawCircle::generate_handles() { return VectorT<Handles>{}; };
+VectorT<Handles> DrawCircle::generate_handles() {
+    return VectorT<Handles>{{Vec2{0, 0}, static_cast<int>(false)}};
+};
 
 // TODO:have a way where compiler identifies the type first, then from there triangle
 // can only provide if user has access to base and height or only base if type is
@@ -234,7 +239,9 @@ ArrayU32 DrawTriangle::generate_indices() const {
     }
 };
 
-VectorT<Handles> DrawTriangle::generate_handles() { return VectorT<Handles>{}; };
+VectorT<Handles> DrawTriangle::generate_handles() {
+    return VectorT<Handles>{{Vec2{0, 0}, static_cast<int>(false)}};
+};
 
 DrawPen::Pen() {
     this->positions = {};
@@ -280,12 +287,16 @@ ArrayU32 DrawPen::generate_indices() const {
 };
 
 VectorT<Handles> DrawPen::generate_handles() {
-    this->position           = this->positions[0].position;
-    VectorT<Handles> handles = {};
-    for (const auto& handle : this->positions) {
-        handles.push_back(handle.handles);
+    this->position = this->positions[0].position;
+
+    VectorT<Handles> handle_data = {};
+    for (auto& position : this->positions) {
+        auto& handles = position.handles;
+        // static cast stays even though the current type of handle is an int
+        handles.handle = static_cast<int>(handles.handle);
+        handle_data.push_back(handles);
     }
-    return handles;
+    return handle_data;
 };
 
 // draw every shape instance registered

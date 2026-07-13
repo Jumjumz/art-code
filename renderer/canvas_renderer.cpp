@@ -171,21 +171,18 @@ void CanvasRenderer::update_artcode_buffers() {
     for (size_t i = 0; i < inst_size; i++) {
         const auto& instance = Shared::Memory::get_instance(i);
 
-        std::vector<Vec2> vertex(instance.vertex.element.begin(),
-                                 instance.vertex.element.begin() + instance.vertex.size);
-        std::vector<u32>  indices(instance.index.element.begin(),
-                                  instance.index.element.begin() + instance.index.size);
+        std::vector<Vec2>    vertex(instance.vertex.element.begin(),
+                                    instance.vertex.element.begin() + instance.vertex.size);
+        std::vector<u32>     indices(instance.index.element.begin(),
+                                     instance.index.element.begin() + instance.index.size);
+        std::vector<Handles> handles(instance.handle_data.handles.begin(),
+                                     instance.handle_data.handles.begin() +
+                                         instance.handle_data.size);
 
         this->artcode_buffer->inst_vertex.push_back(vertex);
         this->artcode_buffer->inst_index.push_back(indices);
         this->artcode_buffer->skew_data.push_back(instance.skew_data);
-        // TODO:this is wrong...
-        if (instance.handle_data.size != 0) {
-            std::vector<Handles> handles(instance.handle_data.handles.begin(),
-                                         instance.handle_data.handles.begin() +
-                                             instance.handle_data.size);
-            this->artcode_buffer->handle_data.push_back(handles);
-        }
+        this->artcode_buffer->handle_data.push_back(handles);
 
         this->push_constants.push_back(instance.constants);
     }
@@ -450,7 +447,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
     for (size_t i = inst_index.size(); i > 0; i--) {
         const auto idx = i - 1;
 
-        const PushConstants& cons = this->push_constants[idx];
+        const auto& cons = this->push_constants[idx];
         if (cons.fill) {
             cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
                              this->artcode_pipeline->pipeline_trianglelist);

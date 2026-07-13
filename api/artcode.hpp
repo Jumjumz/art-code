@@ -58,9 +58,22 @@ struct SkewPos {
     int _padding;
 };
 
+// TODO:handle needs to be a bool, the issue is memory alignment so it is an int for now
 struct Handles {
     Vec2 handlePosition;
-    bool handle;
+    int  handle;
+
+    Handles()
+        : handlePosition(0, 0),
+          handle(false),
+          _padding(0) {}
+    Handles(Vec2 hp, bool h)
+        : handlePosition(hp),
+          handle(h),
+          _padding(0) {}
+
+  private:
+    int _padding;
 };
 
 struct PenHandles {

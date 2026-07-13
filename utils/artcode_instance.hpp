@@ -39,12 +39,6 @@ struct SkewData {
     ArrayT<SkewPos, 8> skew_pos;
 };
 
-// TODO:test purpose only
-struct Handle {
-    Vec2 handle_position;
-    int  handle;
-};
-
 struct HandleData {
     size_t               size;
     ArrayT<Handles, 999> handles;
