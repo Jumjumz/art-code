@@ -220,6 +220,8 @@ layout(push_constant) uniform PushConstants {vec4 color;vec2 center;float stroke
 struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} ssbo;
+struct Handles{vec2 handle_pos;int handle;};
+layout (std430, set = 0, binding = 2) readonly buffer HandleBuffer {Handles data[];} handles;
 layout(location = 0) in vec2 art_pos[];
 vec2 calc_uv(vec2 pt, vec2 c0, vec2 c1, vec2 c2, vec2 c3) {
 vec2 min_bound = min(min(c0, c1), min(c2, c3));
@@ -297,6 +299,8 @@ layout(push_constant) uniform PushConstants {vec4 color;vec2 center;float stroke
 struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} ssbo;
+struct Handles{vec2 handle_pos;int handle;};
+layout (std430, set = 0, binding = 2) readonly buffer HandleBuffer {Handles data[];} handles;
 layout(location = 0) in vec2 art_pos[];
 layout(location = 1) out vec3 data;
 vec2 calc_uv(vec2 pt, vec2 c0, vec2 c1, vec2 c2, vec2 c3) {

@@ -16,7 +16,7 @@ struct Vertex {
         return {0, sizeof(Vertex), vk::VertexInputRate::eVertex};
     };
 
-    static std::array<vk::VertexInputAttributeDescription, 1> get_attribute_description() {
+    static ArrayT<vk::VertexInputAttributeDescription, 1> get_attribute_description() {
         return {
             vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32Sfloat,
                                                 offsetof(Vertex, pos)},
@@ -63,8 +63,8 @@ namespace Shared {
     };
 
     struct Region {
-        size_t           size = 0;
-        Shared::Instance instance[500];
+        size_t                        size = 0;
+        ArrayT<Shared::Instance, 500> instance;
     };
 
     struct Memory {

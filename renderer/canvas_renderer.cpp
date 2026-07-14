@@ -1,5 +1,4 @@
 #include "canvas_renderer.hpp"
-#include "artcode_instance.hpp"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
 #include "json.hpp"
@@ -146,7 +145,6 @@ void CanvasRenderer::reload_pipeline() {
     }
 };
 
-// TODO:add handle data to a buffer
 void CanvasRenderer::update_artcode_buffers() {
     // wait gpu to finish using old buffers
     this->device.waitIdle();
@@ -187,7 +185,7 @@ void CanvasRenderer::update_artcode_buffers() {
         this->push_constants.push_back(instance.constants);
     }
 
-    // create buffer for each instance or shape
+    // create buffers for each instance or shape
     this->artcode_buffer->create_vertex_buffer();
     this->artcode_buffer->create_index_buffer();
     this->artcode_buffer->create_ssbo_buffer();
