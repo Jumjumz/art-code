@@ -36,6 +36,10 @@ typedef std::vector<u16>    ArrayU16;
 typedef std::vector<u32>    ArrayU32;
 typedef std::vector<u64>    ArrayU64;
 
+// squared and cubic
+template <typename T> T squared(T sq) { return sq * sq; };
+template <typename T> T cubic(T cb) { return cb * cb * cb; };
+
 // TODO:add predefined positions such as center, corner etc.
 
 enum class TriangleTypes { Equilateral, Right };

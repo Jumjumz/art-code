@@ -7,12 +7,13 @@
 
 TextEditorWrapper::TextEditorWrapper() {
     // setup project browser
-    ImGui::FileBrowser file_browser(
-        ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir |
-        ImGuiFileBrowserFlags_MultipleSelection | ImGuiFileBrowserFlags_NoModal |
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-    this->file_explorer = file_browser;
-
+    {
+        ImGui::FileBrowser file_browser(
+            ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir |
+            ImGuiFileBrowserFlags_MultipleSelection | ImGuiFileBrowserFlags_NoModal |
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+        this->file_explorer = file_browser;
+    }
     this->file_explorer.SetTitle("Explorer");
     this->file_explorer.SetDirectory(ProjectPath::get_project_path());
 
@@ -41,6 +42,7 @@ void TextEditorWrapper::render() {
     const float           panel_width  = 40.0f;
     std::filesystem::path active_tab;
 
+    // tab limit and setting active tab
     if (this->file_explorer.HasSelected()) {
         // pass the selected file
         this->selected_file = this->file_explorer.GetSelected();

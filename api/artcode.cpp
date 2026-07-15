@@ -83,6 +83,29 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
             shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
 };
 
+ArrayVec2 bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_vec) {
+    ArrayVec2        lerp;
+    constexpr size_t SEG = 8;
+
+    // generate lerp along bezier curve
+    for (size_t i = 0; i <= SEG; i++) {
+        float t   = i / (float)SEG;
+        float t2  = squared(t);
+        float t3  = cubic(t);
+        float mt  = 1.0f - t;
+        float mt2 = squared(mt);
+        float mt3 = cubic(mt);
+
+        Vec2 pt = {mt3 * st_vec.x + 3 * mt2 * t * handle.x + 3 * mt2 * t2 * handle.x +
+                       t3 * en_vec.x,
+                   mt3 * st_vec.y + 3 * mt2 * t * handle.y + 3 * mt2 * t2 * handle.y +
+                       t3 * en_vec.y};
+
+        lerp.push_back(pt);
+    }
+    return lerp;
+};
+
 using DrawQuad     = Art::Quad;
 using DrawCircle   = Art::Circle;
 using DrawTriangle = Art::Triangle;
@@ -286,6 +309,8 @@ ArrayU32 DrawPen::generate_indices() const {
     return indices;
 };
 
+// TODO:make this a lerp and just pass the data to gpu
+// have a way to identify the vertices to curve
 VectorT<Handles> DrawPen::generate_handles() {
     this->position = this->positions[0].position;
 
