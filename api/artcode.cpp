@@ -1,7 +1,6 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
 #include <cmath>
-#include <cstring>
 #include <glm/common.hpp>
 
 struct ShapeRegistry {
@@ -86,9 +85,9 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
 };
 
 ArrayVec2 bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_vec) {
-    ArrayVec2        lerp;
-    constexpr size_t SEG = 8;
+    constexpr size_t SEG = 5;
 
+    ArrayVec2 lerp;
     // generate lerp along bezier curve
     for (size_t i = 0; i <= SEG; i++) {
         float t   = i / (float)SEG;
@@ -97,7 +96,9 @@ ArrayVec2 bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_ve
         float mt2 = squared(mt);
 
         // quardratic bezier formula
-        Vec2 pt = (mt2 * st_vec) + (2 * mt * t * handle) + (t2 * en_vec);
+        const auto& pt =
+            Vec2{(mt2 * st_vec.x) + (2 * mt * t * handle.x) + (t2 * en_vec.x),
+                 (mt2 * st_vec.y) + (2 * mt * t * handle.y) + (t2 * en_vec.y)};
 
         lerp.push_back(pt);
     }
@@ -280,6 +281,8 @@ DrawPen::Pen() {
 
 DrawPen::~Pen() { ShapeRegistry::delete_registry(this); };
 
+// TODO:add the bezier curve function to generate vertices to pass the entire vertices all
+// in one buffer with the curves
 ArrayVec2 DrawPen::generate_vertices() const {
     ArrayVec2 vertex;
     for (const auto& vets : this->positions) {
@@ -307,8 +310,7 @@ ArrayU32 DrawPen::generate_indices() const {
     return indices;
 };
 
-// TODO:make this a lerp and just pass the data to gpu
-// have a way to identify the vertices to curve
+// TODO:remove generate handles and the entire config, it is not needed as bezeir curve is passed from CPU anyways
 VectorT<Handles> DrawPen::generate_handles() {
     this->position = this->positions[0].position;
 
