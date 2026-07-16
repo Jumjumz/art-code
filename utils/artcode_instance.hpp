@@ -137,8 +137,7 @@ namespace Shared {
 
         static void reset_instance() {
             region->size = 0;
-            std::fill(std::begin(region->instance), std::end(region->instance),
-                      Shared::Instance{});
+            std::fill(region->instance.begin(), region->instance.end(), Shared::Instance{});
         }
     };
 } // namespace Shared

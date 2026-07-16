@@ -20,6 +20,8 @@ struct ShapeRegistry {
     }
 
   private:
+    // TODO:find a way where instances throws a compiler error if num of instance exceeds
+    // 500 to avoid error in shared memory
     static inline VectorT<detail::IPen*> instances;
 };
 
@@ -91,15 +93,11 @@ ArrayVec2 bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_ve
     for (size_t i = 0; i <= SEG; i++) {
         float t   = i / (float)SEG;
         float t2  = squared(t);
-        float t3  = cubic(t);
         float mt  = 1.0f - t;
         float mt2 = squared(mt);
-        float mt3 = cubic(mt);
 
-        Vec2 pt = {mt3 * st_vec.x + 3 * mt2 * t * handle.x + 3 * mt2 * t2 * handle.x +
-                       t3 * en_vec.x,
-                   mt3 * st_vec.y + 3 * mt2 * t * handle.y + 3 * mt2 * t2 * handle.y +
-                       t3 * en_vec.y};
+        // quardratic bezier formula
+        Vec2 pt = (mt2 * st_vec) + (2 * mt * t * handle) + (t2 * en_vec);
 
         lerp.push_back(pt);
     }
