@@ -148,11 +148,6 @@ ArrayU32 DrawQuad::generate_indices() const {
     }
 };
 
-VectorT<Handles> DrawQuad::generate_handles() {
-    // TODO:this will be used for warp in the future
-    return VectorT<Handles>{{Vec2{0, 0}, static_cast<int>(false)}};
-};
-
 // Circle
 DrawCircle::Circle() {
     this->radius   = 100.f;
@@ -202,10 +197,6 @@ ArrayU32 DrawCircle::generate_indices() const {
         }
     }
     return indices;
-};
-
-VectorT<Handles> DrawCircle::generate_handles() {
-    return VectorT<Handles>{{Vec2{0, 0}, static_cast<int>(false)}};
 };
 
 // TODO:have a way where compiler identifies the type first, then from there triangle
@@ -261,10 +252,6 @@ ArrayU32 DrawTriangle::generate_indices() const {
     }
 };
 
-VectorT<Handles> DrawTriangle::generate_handles() {
-    return VectorT<Handles>{{Vec2{0, 0}, static_cast<int>(false)}};
-};
-
 DrawPen::Pen() {
     this->positions = {};
     this->position  = Vec2{200, 200};
@@ -307,7 +294,7 @@ ArrayVec2 DrawPen::generate_vertices() const {
 ArrayU32 DrawPen::generate_indices() const {
     ArrayU32   indices  = {};
     const auto pos_size = generate_vertices().size();
-    std::cout << pos_size << std::endl;
+
     if (this->fill) {
         for (size_t i = 0; i < pos_size - 1; i++) {
             indices.push_back(0);
@@ -322,20 +309,6 @@ ArrayU32 DrawPen::generate_indices() const {
     }
 
     return indices;
-};
-
-// TODO:remove generate handles and the entire config, it is not needed as bezeir curve is passed from CPU anyways
-VectorT<Handles> DrawPen::generate_handles() {
-    this->position = this->positions[0].position;
-
-    VectorT<Handles> handle_data = {};
-    for (auto& position : this->positions) {
-        auto& handles = position.handles;
-        // static cast stays even though the current type of handle is an int
-        handles.handle = static_cast<int>(handles.handle);
-        handle_data.push_back(handles);
-    }
-    return handle_data;
 };
 
 // draw every shape instance registered
@@ -367,9 +340,8 @@ void Art::Draw() {
 
             // TODO:remove handles in register instance, and its buffers
             //  register resources per instance
-            Shared::Memory::register_instance(inst->generate_vertices(),
-                                              inst->generate_indices(), constants,
-                                              skew_data, inst->generate_handles());
+            Shared::Memory::register_instance(
+                inst->generate_vertices(), inst->generate_indices(), constants, skew_data);
         }
     }
 };

@@ -43,7 +43,7 @@ void ArtcodeCommands::artcode_create_descriptor_pool() {
     std::array<vk::DescriptorPoolSize, 2> pool_size{
         vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer,
                                static_cast<uint32_t>(this->MAX_FRAMES_IN_FLIGHT)},
-        vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, this->max_instances * 2}};
+        vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, this->max_instances}};
 
     vk::DescriptorPoolCreateInfo pool_info{};
     pool_info.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;

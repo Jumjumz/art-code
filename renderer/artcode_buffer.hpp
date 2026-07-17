@@ -20,22 +20,16 @@ class ArtcodeBuffer {
     std::vector<vk::raii::Buffer>       ssbo_buffers;
     std::vector<vk::raii::DeviceMemory> ssbo_memories;
 
-    std::vector<vk::raii::Buffer>       handle_buffers;
-    std::vector<vk::raii::DeviceMemory> handle_memories;
-
     std::vector<std::vector<glm::vec2>> inst_vertex;
     std::vector<std::vector<uint32_t>>  inst_index;
 
-    std::vector<SkewData>             skew_data;
-    std::vector<std::vector<Handles>> handle_data;
+    std::vector<SkewData> skew_data;
 
     void create_vertex_buffer();
 
     void create_index_buffer();
 
     void create_ssbo_buffer();
-
-    void create_pen_buffer();
 
   private:
     const vk::raii::PhysicalDevice& phys_device;

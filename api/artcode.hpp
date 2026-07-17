@@ -104,9 +104,8 @@ namespace detail {
         ArrayT<SkewPos, 8> skewPos;
 
         // must implement
-        virtual ArrayVec2        generate_vertices() const = 0;
-        virtual ArrayU32         generate_indices() const  = 0;
-        virtual VectorT<Handles> generate_handles()        = 0;
+        virtual ArrayVec2 generate_vertices() const = 0;
+        virtual ArrayU32  generate_indices() const  = 0;
 
         // centroid vertices
         Vec2 get_center() const {
@@ -131,9 +130,8 @@ namespace Art {
         float l, w;
 
       private:
-        ArrayVec2        generate_vertices() const override;
-        ArrayU32         generate_indices() const override;
-        VectorT<Handles> generate_handles() override;
+        ArrayVec2 generate_vertices() const override;
+        ArrayU32  generate_indices() const override;
     };
 
     struct Circle : detail::IPen {
@@ -148,9 +146,8 @@ namespace Art {
         // num of triangles to make a circle, also defines the smoothness
         static constexpr int SEGMENTS = 32;
 
-        ArrayVec2        generate_vertices() const override;
-        ArrayU32         generate_indices() const override;
-        VectorT<Handles> generate_handles() override;
+        ArrayVec2 generate_vertices() const override;
+        ArrayU32  generate_indices() const override;
     };
 
     struct Triangle : detail::IPen {
@@ -164,9 +161,8 @@ namespace Art {
         TriangleTypes type;
 
       private:
-        ArrayVec2        generate_vertices() const override;
-        ArrayU32         generate_indices() const override;
-        VectorT<Handles> generate_handles() override;
+        ArrayVec2 generate_vertices() const override;
+        ArrayU32  generate_indices() const override;
     };
 
     struct Pen : detail::IPen {
@@ -178,9 +174,8 @@ namespace Art {
         VectorT<PenHandles> positions;
 
       private:
-        ArrayVec2        generate_vertices() const override;
-        ArrayU32         generate_indices() const override;
-        VectorT<Handles> generate_handles() override;
+        ArrayVec2 generate_vertices() const override;
+        ArrayU32  generate_indices() const override;
     };
 
     void Draw();
