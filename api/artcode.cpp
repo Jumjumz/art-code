@@ -87,7 +87,7 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
 ArrayVec2 bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_vec) {
     constexpr size_t SEG = 8;
 
-    ArrayVec2 lerp;
+    ArrayVec2 lerp = {};
     // generate lerp along bezier curve
     for (size_t i = 0; i <= SEG; i++) {
         float t   = i / (float)SEG;
@@ -185,7 +185,7 @@ ArrayVec2 DrawCircle::generate_vertices() const {
 };
 
 ArrayU32 DrawCircle::generate_indices() const {
-    ArrayU32 indices;
+    ArrayU32 indices = {};
 
     if (this->fill) {
         // triangles
@@ -231,7 +231,7 @@ DrawTriangle::Triangle() {
 DrawTriangle::~Triangle() { ShapeRegistry::delete_registry(this); };
 
 ArrayVec2 DrawTriangle::generate_vertices() const {
-    ArrayVec2 vertex;
+    ArrayVec2 vertex = {};
 
     switch (this->type) {
     case TriangleTypes::Equilateral: {
@@ -284,7 +284,7 @@ DrawPen::~Pen() { ShapeRegistry::delete_registry(this); };
 // TODO:add the bezier curve function to generate vertices to pass the entire vertices all
 // in one buffer with the curves
 ArrayVec2 DrawPen::generate_vertices() const {
-    ArrayVec2 vertex;
+    ArrayVec2 vertex = {};
     for (size_t i = 0; i < this->positions.size(); i++) {
         const auto& pos = this->positions[i];
         if (pos.handles.handle == 1) {
@@ -305,8 +305,9 @@ ArrayVec2 DrawPen::generate_vertices() const {
 };
 
 ArrayU32 DrawPen::generate_indices() const {
-    ArrayU32   indices;
+    ArrayU32   indices  = {};
     const auto pos_size = generate_vertices().size();
+    std::cout << pos_size << std::endl;
     if (this->fill) {
         for (size_t i = 0; i < pos_size - 1; i++) {
             indices.push_back(0);
@@ -364,7 +365,8 @@ void Art::Draw() {
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = inst->skewPos;
 
-            // register resources per instance
+            // TODO:remove handles in register instance, and its buffers
+            //  register resources per instance
             Shared::Memory::register_instance(inst->generate_vertices(),
                                               inst->generate_indices(), constants,
                                               skew_data, inst->generate_handles());
