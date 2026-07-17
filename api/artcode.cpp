@@ -85,7 +85,7 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
 };
 
 ArrayVec2 bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_vec) {
-    constexpr size_t SEG = 5;
+    constexpr size_t SEG = 8;
 
     ArrayVec2 lerp;
     // generate lerp along bezier curve
@@ -285,15 +285,28 @@ DrawPen::~Pen() { ShapeRegistry::delete_registry(this); };
 // in one buffer with the curves
 ArrayVec2 DrawPen::generate_vertices() const {
     ArrayVec2 vertex;
-    for (const auto& vets : this->positions) {
-        vertex.push_back(vets.position);
+    for (size_t i = 0; i < this->positions.size(); i++) {
+        const auto& pos = this->positions[i];
+        if (pos.handles.handle == 1) {
+            const auto& pos2 = this->positions[i + 1];
+            const auto& bezier =
+                bezier_curve(pos.handles.handlePosition, pos.position, pos2.position);
+
+            // flatten the bezeir array
+            vertex.push_back(pos.position);
+            for (const auto& bez : bezier) {
+                vertex.push_back(bez);
+            }
+        } else {
+            vertex.push_back(pos.position);
+        }
     }
     return vertex;
 };
 
 ArrayU32 DrawPen::generate_indices() const {
     ArrayU32   indices;
-    const auto pos_size = this->positions.size();
+    const auto pos_size = generate_vertices().size();
     if (this->fill) {
         for (size_t i = 0; i < pos_size - 1; i++) {
             indices.push_back(0);
