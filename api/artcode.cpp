@@ -268,8 +268,6 @@ DrawPen::Pen() {
 
 DrawPen::~Pen() { ShapeRegistry::delete_registry(this); };
 
-// TODO:add the bezier curve function to generate vertices to pass the entire vertices all
-// in one buffer with the curves
 ArrayVec2 DrawPen::generate_vertices() const {
     ArrayVec2 vertex = {};
     for (size_t i = 0; i < this->positions.size(); i++) {
@@ -279,8 +277,7 @@ ArrayVec2 DrawPen::generate_vertices() const {
             const auto& bezier =
                 bezier_curve(pos.handles.handlePosition, pos.position, pos2.position);
 
-            // flatten the bezeir array
-            vertex.push_back(pos.position);
+            // flatten the bezier array
             for (const auto& bez : bezier) {
                 vertex.push_back(bez);
             }
@@ -337,8 +334,6 @@ void Art::Draw() {
             SkewData skew_data;
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = inst->skewPos;
-
-            // TODO:remove handles in register instance, and its buffers
             //  register resources per instance
             Shared::Memory::register_instance(
                 inst->generate_vertices(), inst->generate_indices(), constants, skew_data);

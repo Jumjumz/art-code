@@ -1,0 +1,20 @@
+{
+    "artboard_size": {
+        "height": 1080.0,
+        "ppi": 72.0,
+        "width": 1920.0
+    },
+    "includes": [],
+    "project_path": "/absolute/path/to/project",
+    "shaders": [
+        "shaders/artcode.vert",
+        "shaders/artcode.frag",
+        "shaders/artcode.tri.geom",
+        "shaders/artcode.line.geom"
+    ],
+    "solution_file": ""project-name".rcd",
+    "sources": [
+        "main.cpp",
+        "components/comp.cpp"
+    ]
+}

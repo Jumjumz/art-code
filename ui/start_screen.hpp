@@ -52,13 +52,13 @@ class StartScreen {
     virtual void get_artboard_solution() {
         if (this->file_dialog.HasSelected()) {
             nlohmann::json js;
-            const auto     solution = this->file_dialog.GetSelected();
+            const auto&    solution = this->file_dialog.GetSelected();
 
             if (solution.extension() == this->build.sln_ext) {
                 // read and parse solution file
                 std::ifstream read(solution);
-                js                 = nlohmann::json::parse(read);
-                auto artboard_size = js["artboard_size"];
+                js            = nlohmann::json::parse(read);
+                auto art_size = js["artboard_size"];
 
                 // set the project path for text editor
                 ProjectPath::set_project_path(js["project_path"]);
@@ -67,14 +67,16 @@ class StartScreen {
                 ProjectPath::set_solution_file(solution);
 
                 // get width and height
-                const auto dimensions = glm::vec3{
-                    artboard_size["width"], artboard_size["height"], artboard_size["ppi"]};
+                const auto& dimensions =
+                    glm::vec3{art_size["width"], art_size["height"], art_size["ppi"]};
 
                 read.close();
 
                 set_artboard_dimensions(dimensions);
             } else {
-                std::cerr << "File not readable for this program" << std::endl;
+                std::cerr
+                    << "File not readable for this program, please select a .rcd file"
+                    << std::endl;
             }
             this->file_dialog.ClearSelected();
         }
