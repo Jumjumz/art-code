@@ -70,5 +70,4 @@ data = vec3(1.0f);
 EmitVertex();
 }
 EndPrimitive();
-
 }

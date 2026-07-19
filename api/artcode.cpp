@@ -169,7 +169,8 @@ ArrayVec2 DrawCircle::generate_vertices() const {
     ArrayVec2 vertex;
     // center of the circle
     vertex.push_back(this->position);
-
+    // TODO:apply arccos to generate a better sides of the circle, as the current
+    // implementation requires to have more vertices
     for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
         float angle = i * 2.0f * M_PI / DrawCircle::SEGMENTS;
 
