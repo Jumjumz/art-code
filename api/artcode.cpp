@@ -42,9 +42,7 @@ Vec4 convert_color(const string& color, float opacity) {
 
 // find length and width of any shapes (forms a quad)
 Vec2 skew_mesh_size(const ArrayVec2& vertices, const Vec2& center) {
-    Vec2 len_width = Vec2{0.0f, 0.0f};
-    Vec2 v_x       = Vec2{0.0f, 0.0f};
-    Vec2 v_y       = Vec2{0.0f, 0.0f};
+    Vec2 len_width, v_x, v_y = Vec2{0.0f, 0.0f};
     for (const auto& vertex : vertices) {
         // get min and max
         float max_x = glm::max(vertex.x - center.x, vertex.x);
@@ -72,6 +70,7 @@ Vec2 skew_mesh_size(const ArrayVec2& vertices, const Vec2& center) {
     return len_width;
 };
 
+// TODO:reduce the size to 4, only indices 0 - 4 is needed
 ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
     // return skew mesh quad
     return {shape_pos,
@@ -273,7 +272,7 @@ ArrayVec2 DrawPen::generate_vertices() const {
     ArrayVec2 vertex = {};
     for (size_t i = 0; i < this->positions.size(); i++) {
         const auto& pos = this->positions[i];
-        if (pos.handles.handle == 1) {
+        if (pos.handles.handle) {
             const auto& pos2 = this->positions[i + 1];
             const auto& bezier =
                 bezier_curve(pos.handles.handlePosition, pos.position, pos2.position);

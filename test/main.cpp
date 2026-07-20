@@ -1,16 +1,16 @@
 // Example and test on how to use the Artcode API, subject to change
 #include "components/comp.hpp"
 #include <artcode.hpp>
-#include <iostream>
 
 int main() {
+    // quad i.e a square
     Art::Quad qd;
     qd.w        = 100;
     qd.l        = 100;
     qd.position = {300, 300};
     qd.color    = "#322322";
 
-    // skewed quad example i.e rectangle
+    // skewed quad example i.e rectangle, skewPos is a std::array
     Art::Quad rc;
     rc.w        = 300;
     rc.l        = 100;

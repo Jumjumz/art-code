@@ -62,24 +62,19 @@ struct SkewPos {
     int _padding;
 };
 
-// TODO:handle needs to be a bool, the issue is memory alignment so it is an int for now
 struct Handles {
     bool handle;
     Vec2 handlePosition;
 
     Handles()
         : handle(false),
-          handlePosition(0, 0),
-          _padding(0) {}
+          handlePosition(0, 0) {}
     Handles(bool h, Vec2 hp)
         : handle(h),
-          handlePosition(hp),
-          _padding(0) {}
-
-  private:
-    int _padding;
+          handlePosition(hp) {}
 };
 
+// TODO:replace struct name, can be more general name as other shapes will use it
 struct PenHandles {
     Vec2    position;
     Handles handles;
@@ -88,12 +83,14 @@ struct PenHandles {
 template <typename T, size_t size> using ArrayT = std::array<T, size>;
 template <typename T> using VectorT             = std::vector<T>;
 
+// TODO:replace struct with class, classes might be the better representation of each instances
 namespace detail {
     struct IPen {
         virtual ~IPen() = default;
 
         // TODO:make skewPos a function.. or change the way skew pos syntax wise
         // uses camel case for users, snake case for api implementation
+        // TODO: replace position with PenHeandles struct, as in the future a warp feature will be added
         Vec2               position;
         Color              color;
         float              stroke;

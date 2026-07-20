@@ -9,6 +9,9 @@
 #include <unistd.h>
 #include <vulkan/vulkan_raii.hpp>
 
+// this header uses the artcode typedef such as Vec2, ArrayT and such,
+// to avoid confusion and for the sake of consistency, only this header file uses the
+// artcode typedef and nothing else
 struct Vertex {
     Vec2 pos;
 
@@ -87,6 +90,9 @@ namespace Shared {
                 Shared::Memory::reset_instance();
         }
 
+        // TODO:currently this function only runs if the program "safely" exits, this
+        // means program crashes and other things this function doesnt get executed, find
+        // a way to execute this no matter what happen!
         static void cleanup() {
             munmap(region, sizeof(Shared::Region));
             shm_unlink("/artcode_instances");

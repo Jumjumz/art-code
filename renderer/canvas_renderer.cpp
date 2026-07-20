@@ -36,15 +36,15 @@ CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
 void CanvasRenderer::compile_shader() {
     nlohmann::json js;
     {
-        const auto    shader_file = ProjectPath::get_solution_file();
+        const auto&   shader_file = ProjectPath::get_solution_file();
         std::ifstream read(shader_file);
         js = nlohmann::json::parse(read);
     }
 
     std::string result;
     {
-        const auto project_dir = ProjectPath::get_project_path();
-        const auto shaders     = js["shaders"].get<std::vector<std::filesystem::path>>();
+        const auto& project_dir = ProjectPath::get_project_path();
+        const auto  shaders     = js["shaders"].get<std::vector<std::filesystem::path>>();
         for (const auto& shader : shaders) {
             const auto shader_dir = shader.parent_path();
             const auto shader_in  = shader_dir / shader.filename();
@@ -116,7 +116,7 @@ void CanvasRenderer::reload_pipeline() {
     const auto inst_size = Shared::Memory::get_intance_size();
     // recreate graphics_pipeline
     for (size_t i = 0; i < inst_size; i++) {
-        const auto cons = Shared::Memory::get_constants(i);
+        const auto& cons = Shared::Memory::get_constants(i);
         if (!cons.fill) {
             need_linelist = true;
         } else {
@@ -434,6 +434,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
                                                        this->vk_buffers.extent.height}});
 
     // draw in reverse order for shape instances
+    // this makes the first shape instance declared will always be the most front shape in artboard
     for (size_t i = inst_index.size(); i > 0; i--) {
         const auto idx = i - 1;
 

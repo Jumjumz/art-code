@@ -43,9 +43,9 @@ void ArtcodeBuffer::create_vertex_buffer() {
         staging_buffer_mem.unmapMemory();
 
         vk::BufferCreateInfo buffer_info{};
-        buffer_info.size  = buffer_size;
-        buffer_info.usage = vk::BufferUsageFlagBits::eVertexBuffer |
-                            vk::BufferUsageFlagBits::eTransferDst;
+        buffer_info.size        = buffer_size;
+        buffer_info.usage       = vk::BufferUsageFlagBits::eVertexBuffer |
+                                  vk::BufferUsageFlagBits::eTransferDst;
         buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
         this->vertex_buffers.push_back(vk::raii::Buffer{this->device, buffer_info, nullptr});

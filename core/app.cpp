@@ -87,7 +87,7 @@ void Application::loop() {
         reset_buffers();
         std::vector<vk::CommandBuffer> buffers;
 
-        // pre allocate once
+        // pre allocate to 3 as that is the max number of cmd buffers there is
         if (buffers.size() == 0)
             buffers.reserve(3);
 
