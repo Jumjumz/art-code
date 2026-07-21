@@ -129,7 +129,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
     std::string cmd;
     // execute and use gcc compiler
     {
-        const auto        project_dir = ProjectPath::get_project_path();
+        const auto&       project_dir = ProjectPath::get_project_path();
         const std::string build       = project_dir / "build/artcode";
 
         // TODO:might need to move the shader compilation to compile

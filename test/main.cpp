@@ -30,6 +30,8 @@ int main() {
     cr.color    = "#184184";
 
     // rotate triangle, rotate == degrees
+    // this draws an equilateral triangle, to change the type of triangle the type member
+    // needs to be updated i.e members = TriangleTypes::Right
     Art::Triangle tr;
     tr.base     = 100;
     tr.height   = 300;
@@ -38,12 +40,23 @@ int main() {
     tr.rotate   = 30;
     tr.color    = "#454647";
 
-    // pen tool exmaple where handle is enabled and have a vec2 position
+    // pen tool example where handle is enabled and have a vec2 position
+    // because this is fill = true the last vertex of the pen automatically closes and
+    // connects to the first vertex making it a shape with a filled color
     Art::Pen pn;
     pn.posiions = {
         {Vec2{100, 100}, {true, Vec2{100, 500}}}, {Vec2{400, 500}}, {Vec2{100, 500}}};
     pn.fill  = true;
     pn.color = "#7FD644";
+
+    // the instances declared in comp will now be created after the pen instance
+    // this api follows order of declaration as the identifier of whose shape appears on
+    // front first where the first instance declared will always be on front of the
+    // artboard declaring the class Component before the Quad qd instance makes the right
+    // triangles be the first to render specifucally member rt1
+    Component comp;
+    // run the right triangles for the function Draw() to draw them
+    comp.rightTriangles();
 
     // draw function is called alaways at the end of all shape instances
     // the draw function is responsible for taking displaying all instances to artboard
