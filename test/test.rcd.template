@@ -15,6 +15,7 @@
     "solution_file": ""project-name".rcd",
     "sources": [
         "main.cpp",
-        "components/comp.cpp"
+        "components/comp.cpp",
+        "components/addon.cpp"
     ]
 }

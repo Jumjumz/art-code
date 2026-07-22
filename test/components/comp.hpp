@@ -14,6 +14,7 @@ class Component {
     Art::Triangle rt1;
     Art::Triangle rt2;
 
+    // config of the triangles will be in here
     void rightTriangles();
 
   private:
