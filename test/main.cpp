@@ -19,7 +19,7 @@ int main() {
     // axis, the od numbers i.e the bridge between the even numbered instances can only
     // move in there respective axis i.e indices 1 and 5 can only move in x axis while
     // indices 3 and 7 is in y axis
-    Art::Quad rc;
+    Art::Quad rc; 
     rc.w        = 300;
     rc.l        = 100;
     rc.fill     = true;
@@ -52,7 +52,7 @@ int main() {
     // because this is fill = true the last vertex of the pen automatically closes and
     // connects to the first vertex making it a shape with a filled color
     Art::Pen pn;
-    pn.posiions = {
+    pn.positions = {
         {Vec2{100, 100}, {true, Vec2{100, 500}}}, {Vec2{400, 500}}, {Vec2{100, 500}}};
     pn.fill  = true;
     pn.color = "#7FD644";
