@@ -140,11 +140,10 @@ namespace Art {
         float radius;
 
       private:
-        // num of triangles to make a circle, also defines the smoothness
-        static constexpr int SEGMENTS = 32;
-
         ArrayVec2 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
+        // num of triangles to make a circle, also defines the smoothness
+        size_t get_num_vert() const;
     };
 
     struct Triangle : detail::IPen {

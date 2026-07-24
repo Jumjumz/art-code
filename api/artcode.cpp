@@ -70,7 +70,7 @@ Vec2 skew_mesh_size(const ArrayVec2& vertices, const Vec2& center) {
     return len_width;
 };
 
-// TODO:reduce the size to 4, only indices 0 - 4 is needed
+// TODO:might need to reduce this to size 4 as 0-4 indices are only needed.. though this is still in consideration
 ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
     // return skew mesh quad
     return {shape_pos,
@@ -164,14 +164,23 @@ DrawCircle::Circle() {
 
 DrawCircle::~Circle() { ShapeRegistry::delete_registry(this); };
 
+size_t DrawCircle::get_num_vert() const {
+    // get the number of vertices by calculating th
+    // this is adaptive tesselatation
+    // the formula is th = arccos(2 * squared(1 - e / r) - 1) where e is tolerance and error acceptable
+    const float th    = std::acos(2 * squared(1 - 0.33 / this->radius) - 1);
+    const auto  num_v = std::ceil(2 * M_PI / th);
+    return static_cast<size_t>(num_v);
+};
+
 ArrayVec2 DrawCircle::generate_vertices() const {
     ArrayVec2 vertex;
     // center of the circle
     vertex.push_back(this->position);
-    // TODO:apply arccos to generate a better sides of the circle, as the current
-    // implementation requires to have more vertices
-    for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
-        float angle = i * 2.0f * M_PI / DrawCircle::SEGMENTS;
+
+    const auto& num_seg = get_num_vert();
+    for (size_t i = 0; i < num_seg; i++) {
+        float angle = i * 2.0f * M_PI / num_seg;
 
         vertex.push_back(Vec2{this->position.x + cos(angle) * this->radius,
                               this->position.y + sin(angle) * this->radius});
@@ -182,18 +191,19 @@ ArrayVec2 DrawCircle::generate_vertices() const {
 ArrayU32 DrawCircle::generate_indices() const {
     ArrayU32 indices = {};
 
+    const auto& num_seg = get_num_vert();
     if (this->fill) {
         // triangles
-        for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
+        for (size_t i = 0; i < num_seg; i++) {
             indices.push_back(0);
             indices.push_back(i + 1);
-            indices.push_back((i + 1) % DrawCircle::SEGMENTS + 1);
+            indices.push_back((i + 1) % num_seg + 1);
         }
     } else {
         // lines
-        for (int i = 0; i < DrawCircle::SEGMENTS; i++) {
+        for (size_t i = 0; i < num_seg; i++) {
             indices.push_back(i + 1);
-            indices.push_back((i + 1) % DrawCircle::SEGMENTS + 1);
+            indices.push_back((i + 1) % num_seg + 1);
         }
     }
     return indices;

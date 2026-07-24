@@ -8,7 +8,7 @@ int main() {
     qd.w        = 100;
     qd.l        = 100;
     qd.position = {300, 300};
-    qd.color    = "#322322";
+    qd.color    = "#BE1A1A";
 
     // skewed quad example i.e rectangle, skewPos is a std::array
     // skew follows the "photoshop" model or close as behind the scenes there is a quad
@@ -19,23 +19,23 @@ int main() {
     // axis, the od numbers i.e the bridge between the even numbered instances can only
     // move in there respective axis i.e indices 1 and 5 can only move in x axis while
     // indices 3 and 7 is in y axis
-    Art::Quad rc; 
+    Art::Quad rc;
     rc.w        = 300;
     rc.l        = 100;
     rc.fill     = true;
     rc.position = {400, 300};
     rc.skew     = true;
-    rc.skewPos  = {{{Vec2{100, 200}, 2}, {Vec2{-200, 400}, 4}, {Vec2{200, 0}, 1}}};
-    rc.color    = "#696969";
+    rc.skewPos  = {{{Vec2{100, 200}, 2}, {Vec2{200, 200}, 4}, {Vec2{200, 0}, 1}}};
+    rc.color    = "#FFD400";
 
     // circle with opacity, it ranges from 0.0 to 1.0
     // fill is false by default, no need to add or configure
     Art::Circle cr;
-    cr.radius   = 100;
-    cr.position = {500, 500};
-    cr.stroke   = 5.0f;
+    cr.radius   = 300;
+    cr.position = {700, 500};
+    cr.stroke   = 3.0f;
     cr.opacity  = 0.5f;
-    cr.color    = "#184184";
+    cr.color    = "#5B7E3C";
 
     // rotate triangle, rotate == degrees
     // this draws an equilateral triangle, to change the type of triangle the type member
@@ -43,19 +43,19 @@ int main() {
     Art::Triangle tr;
     tr.base     = 100;
     tr.height   = 300;
-    tr.position = {600, 300};
+    tr.position = {1000, 500};
     tr.fill     = true;
     tr.rotate   = 30;
-    tr.color    = "#454647";
+    tr.color    = "#EC6530";
 
     // pen tool example where handle is enabled and have a vec2 position
     // because this is fill = true the last vertex of the pen automatically closes and
     // connects to the first vertex making it a shape with a filled color
     Art::Pen pn;
     pn.positions = {
-        {Vec2{100, 100}, {true, Vec2{100, 500}}}, {Vec2{400, 500}}, {Vec2{100, 500}}};
-    pn.fill  = true;
-    pn.color = "#7FD644";
+        {Vec2{500, 100}, {true, Vec2{-200, 100}}}, {Vec2{700, 900}}, {Vec2{1500, 700}}};
+    pn.fill  = false;
+    pn.color = "#4A4466";
 
     // the instances declared in comp will now be created after the pen instance
     // this api follows order of declaration as the identifier of whose shape appears on
