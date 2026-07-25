@@ -25,7 +25,7 @@ int main() {
     rc.fill     = true;
     rc.position = {400, 300};
     rc.skew     = true;
-    rc.skewPos  = {{{Vec2{100, 200}, 2}, {Vec2{200, 200}, 4}, {Vec2{200, 0}, 1}}};
+    rc.skewPos  = {{{Vec2{100, 100}, 2}, {Vec2{200, 200}, 4}, {Vec2{200, 0}, 1}}};
     rc.color    = "#FFD400";
 
     // circle with opacity, it ranges from 0.0 to 1.0
