@@ -16,9 +16,6 @@ class ArtcodeGraphics {
 
     std::vector<vk::PipelineShaderStageCreateInfo> shader_stages;
 
-    std::vector<vk::Pipeline> artcode_pipelines = {*this->pipeline_trianglelist,
-                                                   *this->pipeline_linelist};
-
     void create_shaders(Topology topology);
     void create_pipeline(Topology topology);
 
@@ -29,7 +26,6 @@ class ArtcodeGraphics {
 
     // shader module
     vk::raii::ShaderModule vert_shader_module = nullptr;
-    vk::raii::ShaderModule geom_shader_module = nullptr;
     vk::raii::ShaderModule frag_shader_module = nullptr;
 
     [[nodiscard]]

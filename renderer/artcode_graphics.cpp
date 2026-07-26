@@ -38,12 +38,10 @@ std::vector<char> ArtcodeGraphics::read_file(const std::string& file_name) const
 void ArtcodeGraphics::create_descriptor_set_layout() {
     vk::DescriptorSetLayoutBinding ubo_layout_binding(
         0, vk::DescriptorType::eUniformBuffer, 1,
-        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment |
-            vk::ShaderStageFlagBits::eGeometry,
-        nullptr);
+        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, nullptr);
 
     vk::DescriptorSetLayoutBinding ssbo_layout_binding(
-        1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eGeometry,
+        1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex,
         nullptr);
 
     std::array<vk::DescriptorSetLayoutBinding, 2> layout_bindings = {ubo_layout_binding,
@@ -59,44 +57,40 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
 
 void ArtcodeGraphics::create_shaders(Topology topology) {
     const auto& shader_execs = ProjectPath::get_project_path() / "shaders";
-    const auto  vert_exec    = shader_execs / "artcode.vert.spv";
-    const auto  frag_exec    = shader_execs / "artcode.frag.spv";
 
-    this->vert_shader_module = create_shader_module(read_file(vert_exec));
-    this->frag_shader_module = create_shader_module(read_file(frag_exec));
-
+    // create vert shader that depends on what is used, the line or triangle topology
     vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
-    vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;
-    vert_shader_stage_info.module = this->vert_shader_module;
-    vert_shader_stage_info.pName  = "main";
-
-    // TODO:remove geometry shader, vert shader for triangle and line topology is enough
-    vk::PipelineShaderStageCreateInfo geom_shader_stage_info{};
-    geom_shader_stage_info.stage = vk::ShaderStageFlagBits::eGeometry;
     switch (topology) {
     case Topology::TriangleList: {
-        const auto tri_exec           = shader_execs / "artcode.tri.geom.spv";
-        this->geom_shader_module      = create_shader_module(read_file(tri_exec));
-        geom_shader_stage_info.module = this->geom_shader_module;
-        geom_shader_stage_info.pName  = "main";
+        const auto tri_exec      = shader_execs / "artcode.tri.vert.spv";
+        this->vert_shader_module = create_shader_module(read_file(tri_exec));
+
+        vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;
+        vert_shader_stage_info.module = this->vert_shader_module;
+        vert_shader_stage_info.pName  = "main";
         break;
     }
     case Topology::LineList: {
-        const auto line_exec          = shader_execs / "artcode.line.geom.spv";
-        this->geom_shader_module      = create_shader_module(read_file(line_exec));
-        geom_shader_stage_info.module = this->geom_shader_module;
-        geom_shader_stage_info.pName  = "main";
+        const auto line_exec     = shader_execs / "artcode.line.vert.spv";
+        this->vert_shader_module = create_shader_module(read_file(line_exec));
+
+        vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;
+        vert_shader_stage_info.module = this->vert_shader_module;
+        vert_shader_stage_info.pName  = "main";
         break;
     }
     }
+
+    // create frag shader
+    const auto frag_exec     = shader_execs / "artcode.frag.spv";
+    this->frag_shader_module = create_shader_module(read_file(frag_exec));
 
     vk::PipelineShaderStageCreateInfo frag_shader_stage_info{};
     frag_shader_stage_info.stage  = vk::ShaderStageFlagBits::eFragment;
     frag_shader_stage_info.module = this->frag_shader_module;
     frag_shader_stage_info.pName  = "main";
 
-    this->shader_stages = {vert_shader_stage_info, geom_shader_stage_info,
-                           frag_shader_stage_info};
+    this->shader_stages = {vert_shader_stage_info, frag_shader_stage_info};
 };
 
 void ArtcodeGraphics::create_pipeline(Topology topology) {
@@ -206,6 +200,7 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
     pipeline_info.basePipelineHandle  = nullptr;
     pipeline_info.basePipelineIndex   = -1;
 
+    // create pipeline depending on the topology
     switch (topology) {
     case Topology::TriangleList: {
         this->pipeline_trianglelist =
