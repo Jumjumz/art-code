@@ -128,8 +128,8 @@ void CanvasRenderer::reload_pipeline() {
             break;
     }
 
+    this->artcode_pipeline->shader_stages.clear();
     if (need_linelist) {
-        this->artcode_pipeline->shader_stages.clear();
         this->artcode_pipeline->pipeline_linelist.clear();
         // create shaders
         this->artcode_pipeline->create_shaders(Topology::LineList);
@@ -137,7 +137,6 @@ void CanvasRenderer::reload_pipeline() {
     }
 
     if (need_trilist) {
-        this->artcode_pipeline->shader_stages.clear();
         this->artcode_pipeline->pipeline_trianglelist.clear();
         // create shaders
         this->artcode_pipeline->create_shaders(Topology::TriangleList);
@@ -452,7 +451,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
             *this->artcode_commands->artcode_descriptor_sets[idx], nullptr);
 
         cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
-                                         vk::ShaderStageFlagBits::eGeometry |
+                                         vk::ShaderStageFlagBits::eVertex |
                                              vk::ShaderStageFlagBits::eFragment,
                                          0, cons);
 
