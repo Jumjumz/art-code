@@ -46,8 +46,7 @@ bool Build::create_project_content() const {
         {
             // create files inside respective directories
             const std::array<fs::path, 3> shaders = {
-                content_directories[1] / "artcode.tri.vert",
-                content_directories[1] / "artcode.line.vert",
+                content_directories[1] / "artcode.vert",
                 content_directories[1] / "artcode.frag",
             };
 
@@ -68,9 +67,8 @@ bool Build::create_project_content() const {
 
             // write shaders for triangle and line topology
             write_vert_shader(shaders[0]);
-            write_vert_shader(shaders[1]);
 
-            write_frag_shader(shaders[2]);
+            write_frag_shader(shaders[1]);
         }
 
         // create config folder
@@ -128,9 +126,7 @@ void Build::write_solution_file(const fs::path& solution_file) const {
                          },
                          {"sources", {"main.cpp", "components/comp.cpp"}},
                          {"includes", nlohmann::json::array()},
-                         {"shaders",
-                          {"shaders/artcode.line.vert", "shaders/artcode.tri.vert",
-                           "shaders/artcode.frag"}}};
+                         {"shaders", {"shaders/artcode.vert", "shaders/artcode.frag"}}};
 
     // write
     std::ofstream write(solution_file);
@@ -210,16 +206,15 @@ vec2 def_c2 = c2;
 vec2 def_c3 = c3;
 for (int i = 0; i < 8; i++) {
 int idx = ssbo.data.skew_pos[i].index;
-vec2 ssbo_pos = ssbo.data.skew_pos[i].pos;
-vec2 pts = vec2(ssbo_pos.x, -ssbo_pos.y);
-if (idx == 0) def_c0 += pts;
-if (idx == 1) { def_c0 += vec2(pts.x, 0.0); def_c1 += vec2(pts.x, 0.0);}
-if (idx == 2) def_c1 += pts;
-if (idx == 3) { def_c1 += vec2(0.0, pts.y); def_c2 += vec2(0.0, pts.y);}
-if (idx == 4) def_c2 += pts;
-if (idx == 5) { def_c2 += vec2(pts.x, 0.0); def_c3 += vec2(pts.x, 0.0);}
-if (idx == 6) def_c3 += pts;
-if (idx == 7) { def_c3 += vec2(0.0, pts.y); def_c0 += vec2(0.0, pts.y);}
+vec2 offset = ssbo.data.skew_pos[i].pos;
+if (idx == 0) def_c0 += offset;
+if (idx == 1) { def_c0 += vec2(offset.x, 0.0); def_c1 += vec2(offset.x, 0.0);}
+if (idx == 2) def_c1 += offset;
+if (idx == 3) { def_c1 += vec2(0.0, offset.y); def_c2 += vec2(0.0, offset.y);}
+if (idx == 4) def_c2 += offset;
+if (idx == 5) { def_c2 += vec2(offset.x, 0.0); def_c3 += vec2(offset.x, 0.0);}
+if (idx == 6) def_c3 += offset;
+if (idx == 7) { def_c3 += vec2(0.0, offset.y); def_c0 += vec2(0.0, offset.y);}
 }
 vec2 uv = calc_uv(pos, c0, c1, c2, c3);
 return bilinear(uv, def_c0, def_c1, def_c2, def_c3);
@@ -244,7 +239,7 @@ art_pos = skew(art_pos);
 if (constant.rotate != 0) {
 art_pos = rotate(art_pos);
 }
-gl_Position = ubo.proj * ubo.view * ubo.model * vec4(art_pos, 0.0f, 1.0f));
+gl_Position = ubo.proj * ubo.view * ubo.model * vec4(art_pos, 0.0f, 1.0f);
 })";
 };
 
@@ -258,8 +253,6 @@ layout(location = 0) out vec4 frag_color;
 void main() {
 vec3 color = constant.color.rgb;
 color = pow(color, vec3(2.2));
-if (constant.fill == 0) {frag_color = vec4(color, constant.color.a);}
-else if (constant.fill == 1) {frag_color = vec4(color, constant.color.a);}
-else {discard;}
+frag_color = vec4(color, constant.color.a);
 })";
 };

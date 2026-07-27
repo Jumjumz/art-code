@@ -17,9 +17,9 @@ ArtcodeGraphics::create_shader_module(const std::vector<char>& code) const {
     shader_info.codeSize = code.size();
     shader_info.pCode    = reinterpret_cast<const uint32_t*>(code.data());
 
-    vk::raii::ShaderModule vert_shader_module{this->device, shader_info, nullptr};
+    vk::raii::ShaderModule shader_module{this->device, shader_info, nullptr};
 
-    return vert_shader_module;
+    return shader_module;
 };
 
 std::vector<char> ArtcodeGraphics::read_file(const std::string& file_name) const {
@@ -55,35 +55,19 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
         vk::raii::DescriptorSetLayout{this->device, descriptor_info, nullptr};
 };
 
-void ArtcodeGraphics::create_shaders(Topology topology) {
+void ArtcodeGraphics::create_shaders() {
     const auto& shader_execs = ProjectPath::get_project_path() / "shaders";
+    const auto  vert_shader  = shader_execs / "artcode.vert.spv";
+    const auto  frag_exec    = shader_execs / "artcode.frag.spv";
 
-    // create vert shader that depends on what is used, the line or triangle topology
-    vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
-    switch (topology) {
-    case Topology::TriangleList: {
-        const auto tri_exec      = shader_execs / "artcode.tri.vert.spv";
-        this->vert_shader_module = create_shader_module(read_file(tri_exec));
-
-        vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;
-        vert_shader_stage_info.module = this->vert_shader_module;
-        vert_shader_stage_info.pName  = "main";
-        break;
-    }
-    case Topology::LineList: {
-        const auto line_exec     = shader_execs / "artcode.line.vert.spv";
-        this->vert_shader_module = create_shader_module(read_file(line_exec));
-
-        vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;
-        vert_shader_stage_info.module = this->vert_shader_module;
-        vert_shader_stage_info.pName  = "main";
-        break;
-    }
-    }
-
-    // create frag shader
-    const auto frag_exec     = shader_execs / "artcode.frag.spv";
+    // create shaders
+    this->vert_shader_module = create_shader_module(read_file(vert_shader));
     this->frag_shader_module = create_shader_module(read_file(frag_exec));
+
+    vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
+    vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;
+    vert_shader_stage_info.module = this->vert_shader_module;
+    vert_shader_stage_info.pName  = "main";
 
     vk::PipelineShaderStageCreateInfo frag_shader_stage_info{};
     frag_shader_stage_info.stage  = vk::ShaderStageFlagBits::eFragment;

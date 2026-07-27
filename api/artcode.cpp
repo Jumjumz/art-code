@@ -42,7 +42,8 @@ Vec4 convert_color(const string& color, float opacity) {
 
 // find length and width of any shapes (forms a quad)
 Vec2 skew_mesh_size(const ArrayVec2& vertices, const Vec2& center) {
-    Vec2 len_width, v_x, v_y = Vec2{0.0f, 0.0f};
+    Vec2 len_width = Vec2{0.0f, 0.0f}, v_x = Vec2{0.0f, 0.0f}, v_y = Vec2{0.0f, 0.0f};
+
     for (const auto& vertex : vertices) {
         // get min and max
         float max_x = glm::max(vertex.x - center.x, vertex.x);

@@ -16,7 +16,7 @@ class ArtcodeGraphics {
 
     std::vector<vk::PipelineShaderStageCreateInfo> shader_stages;
 
-    void create_shaders(Topology topology);
+    void create_shaders();
     void create_pipeline(Topology topology);
 
   private:
