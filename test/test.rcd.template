@@ -8,9 +8,7 @@
     "project_path": "/absolute/path/to/project",
     "shaders": [
         "shaders/artcode.vert",
-        "shaders/artcode.frag",
-        "shaders/artcode.tri.geom",
-        "shaders/artcode.line.geom"
+        "shaders/artcode.frag"
     ],
     "solution_file": ""project-name".rcd",
     "sources": [
