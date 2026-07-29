@@ -1,10 +1,14 @@
 #pragma once
 
+#include "imgui.h"
+#include <imfilebrowser.h>
+
 class MainNavigation {
   public:
     MainNavigation();
 
-    void render() const;
+    void render();
 
   private:
+    ImGui::FileBrowser file_dialog;
 };

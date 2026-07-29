@@ -25,7 +25,12 @@ FetchContent_Declare(
   GIT_TAG 0.9.9.8
 )
 
-FetchContent_MakeAvailable(glfw glm)
+FetchContent_Declare(
+  stb
+  GIT_REPOSITORY https://github.com/nothings/stb.git
+)
+
+FetchContent_MakeAvailable(glfw glm stb)
 
 set(SOURCES
   src/main.cpp

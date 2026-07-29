@@ -11,7 +11,8 @@ using NavMenu      = std::tuple<const std::string, NavMenuItems>;
 // All menu and menu items for main naviation
 struct NavMainItems {
     static inline const std::vector<NavMenu> MENUS = {
-        {"File", {{"New", "Ctrl+n"}, {"Open", "Ctrl+o"}}},
+        {"File",
+         {{"New", "Ctrl+n"}, {"Open", "Ctrl+o"}, {"Save", "Ctrl+s"}, {"Save as", "Ctrl+x"}}},
         {"Edit", {{"Artboard", "Ctrl+ar"}}},
         {"Window", {{"Panel", "Ctrl+p"}}},
         {"Help", {{"Documentation", "Ctrl+dd"}, {"About", ""}, {"Version", ""}}}};

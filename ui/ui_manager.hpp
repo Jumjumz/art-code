@@ -18,7 +18,7 @@ class UIManager {
     glm::vec3 artboard_size;
 
   private:
-    const MainNavigation main_nav;
+    MainNavigation main_nav;
 
     std::vector<std::unique_ptr<StartScreen>> start_ui     = {};
     std::vector<std::unique_ptr<WorkSpace>>   workspace_ui = {};
