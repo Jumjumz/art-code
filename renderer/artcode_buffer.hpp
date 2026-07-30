@@ -31,6 +31,8 @@ class ArtcodeBuffer {
 
     void create_ssbo_buffer();
 
+    void create_export_image_buffer();
+
   private:
     const vk::raii::PhysicalDevice& phys_device;
     const vk::raii::Device&         device;

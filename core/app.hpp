@@ -76,16 +76,6 @@ class Application {
 
     void record_imgui_command();
 
-    void transition_image_layout(const vk::Image&               image,
-                                 const vk::CommandBuffer&       cmd_buffer,
-                                 const vk::ImageLayout&         old_layout,
-                                 const vk::ImageLayout&         new_layout,
-                                 const vk::AccessFlags2&        src_access_mask,
-                                 const vk::AccessFlags2&        dst_accessmask,
-                                 const vk::PipelineStageFlags2& src_stage_mask,
-                                 const vk::PipelineStageFlags2& dst_stage_mask,
-                                 const vk::ImageAspectFlags&    image_aspect_flags);
-
     void clean_swapchain();
 
     void cleanup();

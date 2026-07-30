@@ -1,4 +1,5 @@
 #include "artcode_buffer.hpp"
+#include "transition_image.hpp"
 #include <cstring>
 
 ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice&             phys_device,
@@ -173,6 +174,49 @@ void ArtcodeBuffer::create_ssbo_buffer() {
     }
     // update descriptor sets for entire writes
     this->device.updateDescriptorSets(writes, {});
+};
+
+// TODO:create the buffer for art drawings
+void ArtcodeBuffer::create_export_image_buffer() {
+    // wait for the gpu to finish
+    this->device.waitIdle();
+
+    vk::BufferCreateInfo buffer_info{};
+    buffer_info.size        = 0; // TODO:replace with actual size
+    buffer_info.usage       = vk::BufferUsageFlagBits::eTransferDst;
+    buffer_info.sharingMode = vk::SharingMode::eExclusive;
+
+    vk::raii::Buffer staging_buffer{this->device, buffer_info, nullptr};
+
+    vk::MemoryRequirements mem_req = staging_buffer.getMemoryRequirements();
+
+    vk::MemoryAllocateInfo mem_alloc_info{};
+    mem_alloc_info.allocationSize  = mem_req.size;
+    mem_alloc_info.memoryTypeIndex = find_memory_type(
+        mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
+                                    vk::MemoryPropertyFlagBits::eHostCoherent);
+
+    vk::raii::DeviceMemory staging_memory{this->device, mem_alloc_info, nullptr};
+
+    staging_buffer.bindMemory(staging_memory, 0);
+
+    // create command buffer
+    vk::CommandBufferAllocateInfo cmd_alloc_info{};
+    cmd_alloc_info.commandPool        = this->cmd_pool;
+    cmd_alloc_info.level              = vk::CommandBufferLevel::ePrimary;
+    cmd_alloc_info.commandBufferCount = 1;
+
+    vk::raii::CommandBuffer cmd =
+        std::move(this->device.allocateCommandBuffers(cmd_alloc_info).front());
+
+    // begin commands
+    vk::CommandBufferBeginInfo cmd_begin_info{};
+    cmd_begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+
+    cmd.begin(cmd_begin_info);
+
+    // TODO:integrate transition image layout here
+    // transition_image_layout();
 };
 
 uint32_t ArtcodeBuffer::find_memory_type(uint32_t                type_filter,

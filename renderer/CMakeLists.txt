@@ -3,6 +3,7 @@ add_library(renderer
   artcode_buffer.cpp
   artcode_commands.cpp
   artcode_graphics.cpp
+  save_canvas.cpp
 )
 
 target_include_directories(renderer

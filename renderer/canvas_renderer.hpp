@@ -77,13 +77,4 @@ class CanvasRenderer {
 
     const vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
     const vk::Offset2D        offset      = {0, 0};
-
-    void transition_image(const vk::Image& image, const vk::CommandBuffer& cmd_buffer,
-                          const vk::ImageLayout&         old_layout,
-                          const vk::ImageLayout&         new_layout,
-                          const vk::AccessFlags2&        src_access_mask,
-                          const vk::AccessFlags2&        dst_accessmask,
-                          const vk::PipelineStageFlags2& src_stage_mask,
-                          const vk::PipelineStageFlags2& dst_stage_mask,
-                          const vk::ImageAspectFlags&    image_aspect_flags);
 };
