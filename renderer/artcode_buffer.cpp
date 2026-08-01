@@ -1,5 +1,4 @@
 #include "artcode_buffer.hpp"
-#include "transition_image.hpp"
 #include <cstring>
 
 ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice&             phys_device,
@@ -176,13 +175,14 @@ void ArtcodeBuffer::create_ssbo_buffer() {
     this->device.updateDescriptorSets(writes, {});
 };
 
-// TODO:create the buffer for art drawings
-void ArtcodeBuffer::create_export_image_buffer() {
+// NOTE:this is not finalized! missing: canvas size
+[[nodiscard]]
+vk::raii::DeviceMemory ArtcodeBuffer::create_export_image_buffer() {
     // wait for the gpu to finish
     this->device.waitIdle();
 
     vk::BufferCreateInfo buffer_info{};
-    buffer_info.size        = 0; // TODO:replace with actual size
+    buffer_info.size        = 0; // TODO:replace with actual extent size
     buffer_info.usage       = vk::BufferUsageFlagBits::eTransferDst;
     buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
@@ -215,8 +215,59 @@ void ArtcodeBuffer::create_export_image_buffer() {
 
     cmd.begin(cmd_begin_info);
 
-    // TODO:integrate transition image layout here
-    // transition_image_layout();
+    // Transition image to transfer src
+    vk::ImageMemoryBarrier barrier{};
+    barrier.oldLayout           = vk::ImageLayout::eShaderReadOnlyOptimal;
+    barrier.newLayout           = vk::ImageLayout::eTransferSrcOptimal;
+    barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
+    barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
+    // barrier.image                           = *this->vk_buffers.canvas_image;
+    barrier.subresourceRange.aspectMask     = vk::ImageAspectFlagBits::eColor;
+    barrier.subresourceRange.baseMipLevel   = 0;
+    barrier.subresourceRange.levelCount     = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount     = 1;
+    barrier.srcAccessMask                   = vk::AccessFlagBits::eShaderRead;
+    barrier.dstAccessMask                   = vk::AccessFlagBits::eTransferRead;
+
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eFragmentShader,
+                        vk::PipelineStageFlagBits::eTransfer, {}, {}, {}, barrier);
+
+    // copy image to buffer
+    vk::BufferImageCopy region{};
+    region.bufferOffset                    = 0;
+    region.bufferRowLength                 = 0;
+    region.bufferImageHeight               = 0;
+    region.imageSubresource.aspectMask     = vk::ImageAspectFlagBits::eColor;
+    region.imageSubresource.mipLevel       = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount     = 1;
+    region.imageOffset                     = vk::Offset3D{0, 0, 0};
+    // region.imageExtent                     = vk::Extent3D{width, height, 1};
+
+    // TODO:complete this
+    /*cmd.copyImageToBuffer(*this->vk_buffers.canvas_image,
+                          vk::ImageLayout::eTransferSrcOptimal, *staging_buffer, region);*/
+
+    // Transition back
+    barrier.oldLayout     = vk::ImageLayout::eTransferSrcOptimal;
+    barrier.newLayout     = vk::ImageLayout::eShaderReadOnlyOptimal;
+    barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+    barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
+                        vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {}, barrier);
+
+    cmd.end();
+
+    // submit from gpu to cpu
+    vk::SubmitInfo submit_info{};
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers    = &*cmd;
+    this->graphics_queue.submit(submit_info, nullptr);
+    this->graphics_queue.waitIdle();
+
+    return staging_memory;
 };
 
 uint32_t ArtcodeBuffer::find_memory_type(uint32_t                type_filter,
