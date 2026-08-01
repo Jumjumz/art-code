@@ -5,11 +5,13 @@ ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice&             phys_de
                              const vk::raii::Device&                     device,
                              const vk::raii::Queue&                      graphics_queue,
                              const vk::raii::CommandPool&                cmd_pool,
+                             const vk::raii::Image&                      canvas_image,
                              const std::vector<vk::raii::DescriptorSet>& descriptor_sets)
     : phys_device(phys_device),
       device(device),
       graphics_queue(graphics_queue),
       cmd_pool(cmd_pool),
+      canvas_image(canvas_image),
       descriptor_sets(descriptor_sets) {};
 
 void ArtcodeBuffer::create_vertex_buffer() {
@@ -175,14 +177,19 @@ void ArtcodeBuffer::create_ssbo_buffer() {
     this->device.updateDescriptorSets(writes, {});
 };
 
-// NOTE:this is not finalized! missing: canvas size
 [[nodiscard]]
-vk::raii::DeviceMemory ArtcodeBuffer::create_export_image_buffer() {
+vk::raii::DeviceMemory
+ArtcodeBuffer::create_export_image_buffer(const glm::vec2&     dimensions,
+                                          const vk::DeviceSize image_size) {
     // wait for the gpu to finish
     this->device.waitIdle();
 
+    // start cpu operations
+    const auto width  = static_cast<uint32_t>(dimensions.x);
+    const auto height = static_cast<uint32_t>(dimensions.y);
+
     vk::BufferCreateInfo buffer_info{};
-    buffer_info.size        = 0; // TODO:replace with actual extent size
+    buffer_info.size        = image_size;
     buffer_info.usage       = vk::BufferUsageFlagBits::eTransferDst;
     buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
@@ -243,11 +250,10 @@ vk::raii::DeviceMemory ArtcodeBuffer::create_export_image_buffer() {
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount     = 1;
     region.imageOffset                     = vk::Offset3D{0, 0, 0};
-    // region.imageExtent                     = vk::Extent3D{width, height, 1};
+    region.imageExtent                     = vk::Extent3D{width, height, 1};
 
-    // TODO:complete this
-    /*cmd.copyImageToBuffer(*this->vk_buffers.canvas_image,
-                          vk::ImageLayout::eTransferSrcOptimal, *staging_buffer, region);*/
+    cmd.copyImageToBuffer(*this->canvas_image, vk::ImageLayout::eTransferSrcOptimal,
+                          *staging_buffer, region);
 
     // Transition back
     barrier.oldLayout     = vk::ImageLayout::eTransferSrcOptimal;

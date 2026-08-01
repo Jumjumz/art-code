@@ -104,7 +104,7 @@ void CanvasRenderer::set_canvas_commands() {
     // vert and index buffer
     this->artcode_buffer = std::make_unique<ArtcodeBuffer>(
         this->physical_device, this->device, this->graphics_queue,
-        this->artcode_commands->artcode_command_pool,
+        this->artcode_commands->artcode_command_pool, this->vk_buffers.images,
         this->artcode_commands->artcode_descriptor_sets);
 };
 
