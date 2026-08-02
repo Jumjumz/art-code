@@ -66,3 +66,17 @@ struct ExecuteResult {
     static inline std::string result;
     static inline int exit_code; // 0 = success, 1 = compilation errors, -1 = command error
 };
+
+struct SaveFile {
+  public:
+    static inline bool file_saved = false;
+
+    static inline std::filesystem::path get_save_path() { return SaveFile::file_path; };
+
+    static inline void set_save_path(const std::filesystem::path& path) {
+        SaveFile::file_path = path;
+    };
+
+  private:
+    static inline std::filesystem::path file_path;
+};
