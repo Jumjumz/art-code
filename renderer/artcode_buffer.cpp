@@ -224,11 +224,11 @@ ArtcodeBuffer::create_export_image_buffer(const glm::vec2&     dimensions,
 
     // Transition image to transfer src
     vk::ImageMemoryBarrier barrier{};
-    barrier.oldLayout           = vk::ImageLayout::eShaderReadOnlyOptimal;
-    barrier.newLayout           = vk::ImageLayout::eTransferSrcOptimal;
-    barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
-    barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
-    // barrier.image                           = *this->vk_buffers.canvas_image;
+    barrier.oldLayout                       = vk::ImageLayout::eShaderReadOnlyOptimal;
+    barrier.newLayout                       = vk::ImageLayout::eTransferSrcOptimal;
+    barrier.srcQueueFamilyIndex             = vk::QueueFamilyIgnored;
+    barrier.dstQueueFamilyIndex             = vk::QueueFamilyIgnored;
+    barrier.image                           = *this->canvas_image;
     barrier.subresourceRange.aspectMask     = vk::ImageAspectFlagBits::eColor;
     barrier.subresourceRange.baseMipLevel   = 0;
     barrier.subresourceRange.levelCount     = 1;

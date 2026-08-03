@@ -69,7 +69,7 @@ struct ExecuteResult {
 
 struct SaveFile {
   public:
-    static inline bool file_saved = false;
+    static inline bool has_path = false;
 
     static inline std::filesystem::path get_save_path() { return SaveFile::file_path; };
 

@@ -1,7 +1,5 @@
 #include "main_nav.hpp"
-#include "imgui.h"
 #include "nav_items.hpp"
-#include <iostream>
 
 // TODO:create a util file for home directory and other related things
 MainNavigation::MainNavigation() {
@@ -17,7 +15,6 @@ void MainNavigation::render() {
         for (const auto& [menus, items] : NavMainItems::MENUS) {
             if (ImGui::BeginMenu(menus.c_str())) {
                 for (const auto& [item_label, item_shortcut] : items) {
-                    // TODO:create global variable for path
                     if (ImGui::MenuItem(item_label.c_str(), item_shortcut.c_str())) {
                         if (item_label == "Save") {
                             this->file_dialog.SetTitle("Save art");
@@ -38,7 +35,12 @@ void MainNavigation::render() {
 
     this->file_dialog.Display();
 
+    // pass the selected dir for saving
     if (this->file_dialog.HasSelected()) {
-        std::cout << this->file_dialog.GetSelected() << std::endl;
+        SaveFile::set_save_path(this->file_dialog.GetSelected());
+        SaveFile::has_path = true;
+
+        this->file_dialog.ClearSelected();
+        this->file_dialog.Close();
     }
-};
+}

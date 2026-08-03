@@ -88,7 +88,7 @@ void Application::loop() {
         reset_buffers();
         std::vector<vk::CommandBuffer> buffers;
 
-        // pre allocate to 3 as that is the max number of cmd buffers there is
+        // pre allocate to 3 as that is the max number of cmd buffers configured
         if (buffers.size() == 0)
             buffers.reserve(3);
 
@@ -111,9 +111,14 @@ void Application::loop() {
 
             buffers.push_back(
                 *this->canvas.canvas_commands->canvas_command_buffers[this->current_frame]);
-            if (this->canvas.buffer_exist())
+
+            // can only save image if buffer has been initialized..
+            if (this->canvas.buffer_exist()) {
                 buffers.push_back(*this->canvas.artcode_commands
                                        ->artcode_command_buffers[this->current_frame]);
+
+                this->canvas.save_art();
+            }
         } else {
             record_imgui_command();
         }

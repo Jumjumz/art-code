@@ -1,3 +1,6 @@
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #include "canvas_renderer.hpp"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
@@ -180,6 +183,34 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->create_vertex_buffer();
     this->artcode_buffer->create_index_buffer();
     this->artcode_buffer->create_ssbo_buffer();
+};
+
+// FIXME:this is not saving at all! save path is not configured
+//  the save path var is not being used as a path but instead a file name of the image..
+void CanvasRenderer::save_art() {
+    // TODO:not sure if the if statement should be inside this funciton or in the place where hte function is called
+    if (SaveFile::has_path) {
+        const auto width      = static_cast<int>(this->vk_buffers.extent.width);
+        const auto height     = static_cast<int>(this->vk_buffers.extent.height);
+        const auto image_size = width * height * 4;
+
+        // create staging memory and its buffers
+        auto staging_memory = this->artcode_buffer->create_export_image_buffer(
+            glm::vec2{width, height}, image_size);
+
+        void* data = staging_memory.mapMemory(0, image_size);
+
+        const auto& save_path = SaveFile::get_save_path();
+
+        // NOTE:first param should be the file name not the save dir!
+        stbi_write_png(save_path.c_str(), width, height, 4, data, width * 4);
+
+        // unmap after saving
+        staging_memory.unmapMemory();
+
+        // return has path to orig state
+        SaveFile::has_path = false;
+    }
 };
 
 // this is used only for checking if both buffer exist to push the artcode command buffers in render loop

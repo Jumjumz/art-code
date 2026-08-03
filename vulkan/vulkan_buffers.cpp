@@ -22,8 +22,9 @@ void VulkanBuffers::canvas_create_image(const uint32_t& width, const uint32_t& h
     image_info.arrayLayers = 1;
     image_info.samples     = vk::SampleCountFlagBits::e1;
     image_info.tiling      = vk::ImageTiling::eOptimal;
-    image_info.usage =
-        vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
+    image_info.usage       = vk::ImageUsageFlagBits::eColorAttachment |
+                       vk::ImageUsageFlagBits::eSampled |
+                       vk::ImageUsageFlagBits::eTransferSrc;
     image_info.initialLayout = vk::ImageLayout::eUndefined;
 
     this->images = vk::raii::Image{this->device, image_info, nullptr};

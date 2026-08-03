@@ -8,6 +8,7 @@ add_library(renderer
 
 target_include_directories(renderer
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+  PRIVATE ${stb_SOURCE_DIR}
 )
 
 target_link_libraries(renderer

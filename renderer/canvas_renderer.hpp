@@ -41,6 +41,8 @@ class CanvasRenderer {
 
     void update_artcode_buffers();
 
+    void save_art();
+
     bool buffer_exist() const;
 
     void workspace_events(GLFWwindow* app_window);
