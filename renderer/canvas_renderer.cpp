@@ -185,28 +185,24 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->create_ssbo_buffer();
 };
 
-// FIXME:this is not saving at all! save path is not configured
-//  the save path var is not being used as a path but instead a file name of the image..
+// NOTE:this can now save art in gpu to png, issue is it depends on canvas size and not on artboard
 void CanvasRenderer::save_art() {
-    // TODO:not sure if the if statement should be inside this funciton or in the place where hte function is called
+    // TODO:not sure if the if statement should be inside this funciton or in the place where the function is called
     if (SaveFile::has_path) {
         const auto width      = static_cast<int>(this->vk_buffers.extent.width);
         const auto height     = static_cast<int>(this->vk_buffers.extent.height);
         const auto image_size = width * height * 4;
 
         // create staging memory and its buffers
-        auto staging_memory = this->artcode_buffer->create_export_image_buffer(
+        const auto& staging_memory = this->artcode_buffer->create_export_image_buffer(
             glm::vec2{width, height}, image_size);
 
         void* data = staging_memory.mapMemory(0, image_size);
 
         const auto& save_path = SaveFile::get_save_path();
+        const auto& file_name = save_path / "image.png";
 
-        // NOTE:first param should be the file name not the save dir!
-        auto t = stbi_write_png(save_path.c_str(), width, height, 4, data, width * 4);
-
-        // NOTE: this returns 0
-        std::cout << t << std::endl;
+        stbi_write_png(file_name.c_str(), width, height, 4, data, width * 4);
 
         // unmap after saving
         staging_memory.unmapMemory();
