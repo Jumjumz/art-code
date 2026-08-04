@@ -203,7 +203,10 @@ void CanvasRenderer::save_art() {
         const auto& save_path = SaveFile::get_save_path();
 
         // NOTE:first param should be the file name not the save dir!
-        stbi_write_png(save_path.c_str(), width, height, 4, data, width * 4);
+        auto t = stbi_write_png(save_path.c_str(), width, height, 4, data, width * 4);
+
+        // NOTE: this returns 0
+        std::cout << t << std::endl;
 
         // unmap after saving
         staging_memory.unmapMemory();
