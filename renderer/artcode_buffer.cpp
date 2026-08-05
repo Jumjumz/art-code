@@ -177,16 +177,13 @@ void ArtcodeBuffer::create_ssbo_buffer() {
     this->device.updateDescriptorSets(writes, {});
 };
 
+// TODO:might need to create a vk::Image just for saving the artboard
 [[nodiscard]]
 vk::raii::DeviceMemory
 ArtcodeBuffer::create_export_image_buffer(const glm::vec2&     dimensions,
                                           const vk::DeviceSize image_size) {
     // wait for the gpu to finish
     this->device.waitIdle();
-
-    // start cpu operations
-    const auto width  = static_cast<uint32_t>(dimensions.x);
-    const auto height = static_cast<uint32_t>(dimensions.y);
 
     vk::BufferCreateInfo buffer_info{};
     buffer_info.size        = image_size;
@@ -250,7 +247,12 @@ ArtcodeBuffer::create_export_image_buffer(const glm::vec2&     dimensions,
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount     = 1;
     region.imageOffset                     = vk::Offset3D{0, 0, 0};
-    region.imageExtent                     = vk::Extent3D{width, height, 1};
+
+    // start cpu operations
+    const auto width  = static_cast<uint32_t>(dimensions.x);
+    const auto height = static_cast<uint32_t>(dimensions.y);
+
+    region.imageExtent = vk::Extent3D{width, height, 1};
 
     cmd.copyImageToBuffer(*this->canvas_image, vk::ImageLayout::eTransferSrcOptimal,
                           *staging_buffer, region);

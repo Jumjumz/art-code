@@ -185,17 +185,31 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->create_ssbo_buffer();
 };
 
-// NOTE:this can now save art in gpu to png, issue is it depends on canvas size and not on artboard
+// FIXME:this crashes.. using artboard size errors out because vk::Image is not the same dimensions
 void CanvasRenderer::save_art() {
     // TODO:not sure if the if statement should be inside this funciton or in the place where the function is called
     if (SaveFile::has_path) {
-        const auto width      = static_cast<int>(this->vk_buffers.extent.width);
-        const auto height     = static_cast<int>(this->vk_buffers.extent.height);
+        glm::vec2 artboard;
+        // get the solution file as it contains artboard meta data
+        {
+            const auto    sln_file = ProjectPath::get_solution_file();
+            std::ifstream read(sln_file);
+
+            auto js = nlohmann::json::parse(read);
+            // get the key from solution file
+            auto ab_size = js["artboard_size"];
+
+            // assign artboard size
+            artboard = {ab_size["width"], ab_size["height"]};
+        }
+
+        const auto width      = static_cast<int>(artboard.x);
+        const auto height     = static_cast<int>(artboard.y);
         const auto image_size = width * height * 4;
 
         // create staging memory and its buffers
-        const auto& staging_memory = this->artcode_buffer->create_export_image_buffer(
-            glm::vec2{width, height}, image_size);
+        const auto& staging_memory =
+            this->artcode_buffer->create_export_image_buffer(artboard, image_size);
 
         void* data = staging_memory.mapMemory(0, image_size);
 
