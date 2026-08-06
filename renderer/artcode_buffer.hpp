@@ -33,7 +33,8 @@ class ArtcodeBuffer {
     void create_ssbo_buffer();
 
     [[nodiscard]]
-    vk::raii::DeviceMemory create_export_image_buffer(const glm::vec2&     dimensions,
+    vk::raii::DeviceMemory create_export_image_buffer(const vk::Extent3D&  extent,
+                                                      const glm::vec2&     artboard,
                                                       const vk::DeviceSize image_size);
 
   private:

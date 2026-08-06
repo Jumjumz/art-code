@@ -185,7 +185,8 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->create_ssbo_buffer();
 };
 
-// FIXME:this crashes.. using artboard size errors out because vk::Image is not the same dimensions
+// FIXME:the artboard size in application doesnt match to what the image looks, when
+// inspecting the image it matches the artboard dimensions but the look doesnt
 void CanvasRenderer::save_art() {
     // TODO:not sure if the if statement should be inside this funciton or in the place where the function is called
     if (SaveFile::has_path) {
@@ -200,7 +201,7 @@ void CanvasRenderer::save_art() {
             auto ab_size = js["artboard_size"];
 
             // assign artboard size
-            artboard = {ab_size["width"], ab_size["height"]};
+            artboard = glm::vec2{ab_size["width"], ab_size["height"]};
         }
 
         const auto width      = static_cast<int>(artboard.x);
@@ -208,8 +209,8 @@ void CanvasRenderer::save_art() {
         const auto image_size = width * height * 4;
 
         // create staging memory and its buffers
-        const auto& staging_memory =
-            this->artcode_buffer->create_export_image_buffer(artboard, image_size);
+        const auto& staging_memory = this->artcode_buffer->create_export_image_buffer(
+            this->vk_buffers.extent, artboard, image_size);
 
         void* data = staging_memory.mapMemory(0, image_size);
 
