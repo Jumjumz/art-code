@@ -247,9 +247,9 @@ ArtcodeBuffer::create_export_image_buffer(const vk::Extent3D&  extent,
                      1}; // artboard size
 
     vk::MemoryAllocateInfo alloc_info{};
-    alloc_info.allocationSize = mem_req.size;
-    alloc_info.memoryTypeIndex =
-        find_memory_type(mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+    alloc_info.allocationSize  = artboard_req.size;
+    alloc_info.memoryTypeIndex = find_memory_type(
+        artboard_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
     vk::raii::DeviceMemory artboard_image_memory{this->device, alloc_info, nullptr};
 

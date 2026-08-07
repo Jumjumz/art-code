@@ -5,6 +5,7 @@
 #include "artcode_graphics.hpp"
 #include "artcode_instance.hpp"
 #include "imgui_impl_glfw.h"
+#include "vk_types.hpp"
 #include "vulkan_buffers.hpp"
 #include "vulkan_canvas.hpp"
 #include "vulkan_graphics.hpp"
@@ -75,8 +76,14 @@ class CanvasRenderer {
     bool spacebar_pressed   = false;
     bool left_click_pressed = false;
 
+    ArtboardBuffer a_ubo = {};
+
     std::vector<PushConstants> push_constants;
 
     const vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
     const vk::Offset2D        offset      = {0, 0};
+
+    ArtboardBuffer artboard_ubo(const glm::mat4& proj, const glm::mat4& view,
+                                const glm::mat4& model, const glm::vec2& reso,
+                                const glm::vec2& viewport) const;
 };

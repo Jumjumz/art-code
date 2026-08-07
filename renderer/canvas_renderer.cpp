@@ -1,3 +1,4 @@
+#include "vk_types.hpp"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
@@ -7,7 +8,6 @@
 #include "json.hpp"
 #include "nav_items.hpp"
 #include "transition_image.hpp"
-#include "vk_types.hpp"
 
 #include <GLFW/glfw3.h>
 #include <fstream>
@@ -185,48 +185,6 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->create_ssbo_buffer();
 };
 
-// FIXME:the artboard size in application doesnt match to what the image looks, when
-// inspecting the image it matches the artboard dimensions but the look doesnt
-void CanvasRenderer::save_art() {
-    // TODO:not sure if the if statement should be inside this funciton or in the place where the function is called
-    if (SaveFile::has_path) {
-        glm::vec2 artboard;
-        // get the solution file as it contains artboard meta data
-        {
-            const auto    sln_file = ProjectPath::get_solution_file();
-            std::ifstream read(sln_file);
-
-            auto js = nlohmann::json::parse(read);
-            // get the key from solution file
-            auto ab_size = js["artboard_size"];
-
-            // assign artboard size
-            artboard = glm::vec2{ab_size["width"], ab_size["height"]};
-        }
-
-        const auto width      = static_cast<int>(artboard.x);
-        const auto height     = static_cast<int>(artboard.y);
-        const auto image_size = width * height * 4;
-
-        // create staging memory and its buffers
-        const auto& staging_memory = this->artcode_buffer->create_export_image_buffer(
-            this->vk_buffers.extent, artboard, image_size);
-
-        void* data = staging_memory.mapMemory(0, image_size);
-
-        const auto& save_path = SaveFile::get_save_path();
-        const auto& file_name = save_path / "image.png";
-
-        stbi_write_png(file_name.c_str(), width, height, 4, data, width * 4);
-
-        // unmap after saving
-        staging_memory.unmapMemory();
-
-        // return has path to orig state
-        SaveFile::has_path = false;
-    }
-};
-
 // this is used only for checking if both buffer exist to push the artcode command buffers in render loop
 bool CanvasRenderer::buffer_exist() const {
     if (!this->artcode_buffer->vertex_buffers.empty() &&
@@ -339,9 +297,9 @@ void CanvasRenderer::workspace_events(GLFWwindow* app_window) {
 };
 
 void CanvasRenderer::canvas_setup(const glm::vec3& artboard_size, bool show_main_ui) {
+    // transfer data
     this->show_main_ui = show_main_ui;
 
-    // identity matrix
     glm::mat4 view = glm::mat4(1.0f);
     {
         // get canvas center
@@ -366,18 +324,82 @@ void CanvasRenderer::canvas_setup(const glm::vec3& artboard_size, bool show_main
     const auto width  = artboard_size.x;
     const auto height = artboard_size.y;
 
-    ArtboardBuffer a_ubo{
-        .proj = glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
-                           (float)this->vk_buffers.extent.height, 0.0f, -1.0f, 1.0f),
-        .view = view,
-        .model =
-            glm::translate(glm::mat4(1.0f),
-                           glm::vec3((this->vk_buffers.extent.width - width) / 2,
-                                     (this->vk_buffers.extent.height - height) / 2, 0.0f)),
-        .reso     = {width, height},
-        .viewport = {this->vk_buffers.extent.width, this->vk_buffers.extent.height}};
+    this->a_ubo = ArtboardBuffer{
+        glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
+                   (float)this->vk_buffers.extent.height, 0.0f, -1.0f, 1.0f),
+        view,
+        glm::translate(glm::mat4(1.0f),
+                       glm::vec3((this->vk_buffers.extent.width - width) / 2,
+                                 (this->vk_buffers.extent.height - height) / 2, 0.0f)),
+        glm::vec2{width, height},
+        {this->vk_buffers.extent.width, this->vk_buffers.extent.height}};
 
-    memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &a_ubo, sizeof(a_ubo));
+    memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &this->a_ubo,
+           sizeof(this->a_ubo));
+};
+
+ArtboardBuffer CanvasRenderer::artboard_ubo(const glm::mat4& proj, const glm::mat4& view,
+                                            const glm::mat4& model, const glm::vec2& reso,
+                                            const glm::vec2& viewport) const {
+    return ArtboardBuffer{
+        .proj = proj, .view = view, .model = model, .reso = reso, .viewport = viewport};
+};
+
+// FIXME:the artboard size in application doesnt match to what the image looks, when
+// inspecting the image it matches the artboard dimensions but the look doesnt
+void CanvasRenderer::save_art() {
+    // TODO:not sure if the if statement should be inside this funciton or in the place where the function is called
+    if (SaveFile::has_path) {
+        glm::vec2 artboard;
+        // get the solution file as it contains artboard meta data
+        {
+            const auto    sln_file = ProjectPath::get_solution_file();
+            std::ifstream read(sln_file);
+
+            auto js = nlohmann::json::parse(read);
+            // get the key from solution file
+            auto ab_size = js["artboard_size"];
+
+            // assign artboard size
+            artboard = glm::vec2{ab_size["width"], ab_size["height"]};
+        }
+
+        const auto width      = static_cast<int>(artboard.x);
+        const auto height     = static_cast<int>(artboard.y);
+        const auto image_size = width * height * 4;
+
+        // TODO:complete this
+        //  ubo
+        auto exp_ubo = ArtboardBuffer{.proj     = glm::mat4(1.0f),
+                                      .view     = glm::mat4(1.0f),
+                                      .model    = glm::mat4(1.0f),
+                                      .reso     = artboard,
+                                      .viewport = artboard};
+
+        memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &exp_ubo, sizeof(exp_ubo));
+
+        // NOTE:might need to have a separate frame for the artboard itself
+        //  create staging memory and its buffers
+        const auto& staging_memory = this->artcode_buffer->create_export_image_buffer(
+            this->vk_buffers.extent, artboard, image_size);
+
+        void* data = staging_memory.mapMemory(0, image_size);
+
+        const auto& save_path = SaveFile::get_save_path();
+        const auto& file_name = save_path / "image.png";
+
+        stbi_write_png(file_name.c_str(), width, height, 4, data, width * 4);
+
+        // unmap after saving
+        staging_memory.unmapMemory();
+
+        // return the orig state of ubo
+        memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &this->a_ubo,
+               sizeof(this->a_ubo));
+
+        // return has path to orig state
+        SaveFile::has_path = false;
+    }
 };
 
 void CanvasRenderer::record_canvas_command(const uint32_t current_frame) {
