@@ -5,7 +5,6 @@
 #include "artcode_graphics.hpp"
 #include "artcode_instance.hpp"
 #include "imgui_impl_glfw.h"
-#include "vk_types.hpp"
 #include "vulkan_buffers.hpp"
 #include "vulkan_canvas.hpp"
 #include "vulkan_graphics.hpp"
@@ -75,8 +74,6 @@ class CanvasRenderer {
     bool ctrl_pressed       = false;
     bool spacebar_pressed   = false;
     bool left_click_pressed = false;
-
-    ArtboardBuffer a_ubo = {};
 
     std::vector<PushConstants> push_constants;
 

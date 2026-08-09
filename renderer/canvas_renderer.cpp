@@ -324,7 +324,7 @@ void CanvasRenderer::canvas_setup(const glm::vec3& artboard_size, bool show_main
     const auto width  = artboard_size.x;
     const auto height = artboard_size.y;
 
-    this->a_ubo = ArtboardBuffer{
+    ArtboardBuffer ab_ubo{
         glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
                    (float)this->vk_buffers.extent.height, 0.0f, -1.0f, 1.0f),
         view,
@@ -333,8 +333,7 @@ void CanvasRenderer::canvas_setup(const glm::vec3& artboard_size, bool show_main
                                  (this->vk_buffers.extent.height - height) / 2, 0.0f)),
         artboard_size, artboard_size};
 
-    memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &this->a_ubo,
-           sizeof(this->a_ubo));
+    memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &ab_ubo, sizeof(ab_ubo));
 };
 
 // FIXME:the artboard size in application doesnt match to what the image looks, when
@@ -361,12 +360,6 @@ void CanvasRenderer::save_art() {
         const auto height     = static_cast<int>(artboard.y);
         const auto image_size = width * height * 4;
 
-        // TODO:might need a different implementation
-        {
-            ArtboardBuffer exp_ubo{
-                glm::ortho(0.0f, artboard.x, artboard.y, 0.0f, -1.0f, 1.0f),
-                glm::mat4(1.0f), glm::mat4(1.0f), artboard, artboard};
-        }
         // NOTE:might need to have a separate frame for the artboard itself
         //  create staging memory and its buffers
         const auto& staging_memory = this->artcode_buffer->create_export_image_buffer(
@@ -381,10 +374,6 @@ void CanvasRenderer::save_art() {
 
         // unmap after saving
         staging_memory.unmapMemory();
-
-        // return the orig state of ubo
-        memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &this->a_ubo,
-               sizeof(this->a_ubo));
 
         // return has path to orig state
         SaveFile::has_path = false;
@@ -535,23 +524,33 @@ void CanvasRenderer::update_canvas() {
     const auto& canvas = ImGui::FindWindowByName("##canvas-begin");
 
     if (canvas) {
-        const auto width  = static_cast<uint32_t>(canvas->Size.x);
-        const auto height = static_cast<uint32_t>(canvas->Size.y);
+        glm::vec2 artboard;
+        // get the solution file as it contains artboard meta data
+        {
+            const auto&   sln_file = ProjectPath::get_solution_file();
+            std::ifstream read(sln_file);
 
-        if (width != this->vk_buffers.extent.width ||
-            height != this->vk_buffers.extent.height) {
-            this->device.waitIdle();
+            auto js = nlohmann::json::parse(read);
+            // get the key from solution file
+            auto ab_size = js["artboard_size"];
 
-            this->vk_buffers.canvas_create_image(width, height);
-            this->vk_buffers.canvas_create_image_views();
-
-            // remove the old texture at canvas resize
-            ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
-
-            // run again after texture removal
-            CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
-                *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            // assign artboard size
+            artboard = glm::vec2{ab_size["width"], ab_size["height"]};
         }
+        const auto width  = artboard.x;
+        const auto height = artboard.y;
+
+        this->device.waitIdle();
+
+        this->vk_buffers.canvas_create_image(width, height);
+        this->vk_buffers.canvas_create_image_views();
+
+        // remove the old texture at canvas resize
+        ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
+
+        // run again after texture removal
+        CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
+            *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
 };

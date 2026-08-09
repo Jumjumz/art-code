@@ -29,8 +29,8 @@ void UIManager::render() {
                 this->start_ui.shrink_to_fit();
 
                 // it only needs to init if start ui is done rendering and data is ready
-                this->workspace_ui.push_back(std::make_unique<Development>());
                 this->workspace_ui.push_back(std::make_unique<Canvas>());
+                this->workspace_ui.push_back(std::make_unique<Development>());
 
                 this->show_main_ui = true;
                 break;
