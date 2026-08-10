@@ -64,11 +64,6 @@ class CanvasRenderer {
 
     const uint32_t* app_width;
 
-    // mouse pointers controls
-    static float     zoom;
-    static glm::vec2 panning;
-    static glm::vec2 mouse_last_pos;
-
     bool show_main_ui = false;
     // key inputs
     bool ctrl_pressed       = false;

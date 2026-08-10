@@ -12,12 +12,6 @@
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
-
-// definition
-float     CanvasRenderer::zoom           = 1;
-glm::vec2 CanvasRenderer::panning        = {0.0f, 0.0f};
-glm::vec2 CanvasRenderer::mouse_last_pos = {0.0f, 0.0f};
 
 CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
                                const vk::raii::Device&         device,
@@ -207,26 +201,26 @@ void CanvasRenderer::workspace_events(GLFWwindow* app_window) {
             if (!canvas->show_main_ui)
                 return;
 
-            auto dx = static_cast<float>(x_pos) - CanvasRenderer::mouse_last_pos.x;
-            auto dy = static_cast<float>(y_pos) - CanvasRenderer::mouse_last_pos.y;
+            auto dx = static_cast<float>(x_pos) - CanvasControls::mouse_last_pos.x;
+            auto dy = static_cast<float>(y_pos) - CanvasControls::mouse_last_pos.y;
 
             // update last position
-            CanvasRenderer::mouse_last_pos.x = static_cast<float>(x_pos);
-            CanvasRenderer::mouse_last_pos.y = static_cast<float>(y_pos);
+            CanvasControls::mouse_last_pos.x = static_cast<float>(x_pos);
+            CanvasControls::mouse_last_pos.y = static_cast<float>(y_pos);
 
             // uses swapchain width (window width) for the save controls
-            if (CanvasRenderer::mouse_last_pos.x < *canvas->app_width) {
+            if (CanvasControls::mouse_last_pos.x < *canvas->app_width) {
                 if (canvas->spacebar_pressed && canvas->left_click_pressed) {
-                    CanvasRenderer::panning.x += dx * 1.0f;
-                    CanvasRenderer::panning.y += -dy * 1.0f;
+                    CanvasControls::panning.x += dx * 1.0f;
+                    CanvasControls::panning.y += -dy * 1.0f;
 
                     // add extra space in both ends of width and height
                     static constexpr float EXTRA_SPACE = 50.0f;
                     auto width  = static_cast<float>(canvas->vk_buffers.extent.width);
                     auto height = static_cast<float>(canvas->vk_buffers.extent.height);
 
-                    CanvasRenderer::panning =
-                        glm::clamp(CanvasRenderer::panning,
+                    CanvasControls::panning =
+                        glm::clamp(CanvasControls::panning,
                                    glm::vec2(-width + EXTRA_SPACE, -height + EXTRA_SPACE),
                                    glm::vec2(width + EXTRA_SPACE, height + EXTRA_SPACE));
                 }
@@ -273,8 +267,8 @@ void CanvasRenderer::workspace_events(GLFWwindow* app_window) {
             return;
 
         if (canvas->ctrl_pressed) {
-            CanvasRenderer::zoom += y * 0.10;
-            CanvasRenderer::zoom  = glm::clamp(CanvasRenderer::zoom, 0.1f, 10.0f);
+            CanvasControls::zoom += y * 0.10;
+            CanvasControls::zoom  = glm::clamp(CanvasControls::zoom, 0.1f, 10.0f);
         }
     });
 
@@ -299,39 +293,16 @@ void CanvasRenderer::workspace_events(GLFWwindow* app_window) {
 void CanvasRenderer::canvas_setup(const glm::vec3& artboard_size, bool show_main_ui) {
     // transfer data
     this->show_main_ui = show_main_ui;
+    const auto width   = artboard_size.x;
+    const auto height  = artboard_size.y;
 
-    glm::mat4 view = glm::mat4(1.0f);
-    {
-        // get canvas center
-        const float center_x = this->vk_buffers.extent.width / 2.0f;
-        const float center_y = this->vk_buffers.extent.height / 2.0f;
-
-        // translate to center
-        view = glm::translate(view, glm::vec3(center_x, center_y, 0.0f));
-
-        // scale to center
-        view =
-            glm::scale(view, glm::vec3(CanvasRenderer::zoom, CanvasRenderer::zoom, 1.0f));
-
-        // tanslate back
-        view = glm::translate(view, glm::vec3(-center_x, -center_y, 0.0f));
-
-        // translate to the panning position
-        view = glm::translate(
-            view, glm::vec3(CanvasRenderer::panning.x, CanvasRenderer::panning.y, 0.0f));
-    }
-
-    const auto width  = artboard_size.x;
-    const auto height = artboard_size.y;
-
-    ArtboardBuffer ab_ubo{
-        glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
-                   (float)this->vk_buffers.extent.height, 0.0f, -1.0f, 1.0f),
-        view,
-        glm::translate(glm::mat4(1.0f),
-                       glm::vec3((this->vk_buffers.extent.width - width) / 2,
-                                 (this->vk_buffers.extent.height - height) / 2, 0.0f)),
-        artboard_size, artboard_size};
+    ArtboardBuffer ab_ubo{.proj  = glm::ortho(0.0f, (float)this->vk_buffers.extent.width,
+                                              (float)this->vk_buffers.extent.height, 0.0f,
+                                              -1.0f, 1.0f),
+                          .view  = glm::mat4(1.0f),
+                          .model = glm::mat4(1.0f),
+                          .reso  = artboard_size,
+                          .viewport = artboard_size};
 
     memcpy(this->vk_buffers.canvas_uniform_buffer_mapped, &ab_ubo, sizeof(ab_ubo));
 };
@@ -342,19 +313,7 @@ void CanvasRenderer::save_art() {
     // TODO:not sure if the if statement should be inside this funciton or in the
     // place where the function is called
     if (SaveFile::has_path) {
-        glm::vec2 artboard;
-        // get the solution file as it contains artboard meta data
-        {
-            const auto&   sln_file = ProjectPath::get_solution_file();
-            std::ifstream read(sln_file);
-
-            auto js = nlohmann::json::parse(read);
-            // get the key from solution file
-            auto ab_size = js["artboard_size"];
-
-            // assign artboard size
-            artboard = glm::vec2{ab_size["width"], ab_size["height"]};
-        }
+        const glm::vec2 artboard = {vk_buffers.extent.width, vk_buffers.extent.height};
 
         const auto width      = static_cast<int>(artboard.x);
         const auto height     = static_cast<int>(artboard.y);
@@ -524,6 +483,8 @@ void CanvasRenderer::update_canvas() {
     const auto& canvas = ImGui::FindWindowByName("##canvas-begin");
 
     if (canvas) {
+        // FIXME:TEST PURPOSE ONLY!, UPDATE THIS!
+        // this parse the sln file in render loop as the function is executed there
         glm::vec2 artboard;
         // get the solution file as it contains artboard meta data
         {
@@ -546,10 +507,10 @@ void CanvasRenderer::update_canvas() {
         this->vk_buffers.canvas_create_image_views();
 
         // remove the old texture at canvas resize
-        ImGui_ImplVulkan_RemoveTexture(CanvasUtils::canvas_texture);
+        ImGui_ImplVulkan_RemoveTexture(ArtboardUtils::artboard_texture);
 
         // run again after texture removal
-        CanvasUtils::canvas_texture = ImGui_ImplVulkan_AddTexture(
+        ArtboardUtils::artboard_texture = ImGui_ImplVulkan_AddTexture(
             *this->vk_buffers.canvas_sampler, *this->vk_buffers.image_views,
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }

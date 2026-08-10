@@ -14,8 +14,8 @@ struct ArtboardBuffer {
 };
 
 // used in canvas renderer and canvas class
-struct CanvasUtils {
-    static inline VkDescriptorSet canvas_texture = VK_NULL_HANDLE;
+struct ArtboardUtils {
+    static inline VkDescriptorSet artboard_texture = VK_NULL_HANDLE;
 };
 
 // used in canvas renderer and text editor wrapper class
@@ -26,4 +26,10 @@ struct TextEditorUtils {
 // used in build panel and canvas renderer class
 struct ShadersCompiled {
     static inline bool compiled = false;
+};
+
+struct CanvasControls {
+    static inline float     zoom           = 1.0f;
+    static inline glm::vec2 panning        = {0.0f, 0.0f};
+    static inline glm::vec2 mouse_last_pos = {0.0f, 0.0f};
 };

@@ -17,12 +17,36 @@ void Canvas::render() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
     ImGui::Begin("##canvas-begin", nullptr,
                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-                     ImGuiWindowFlags_NoTitleBar);
-    const ImVec2 size = ImGui::GetContentRegionAvail();
+                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar |
+                     ImGuiWindowFlags_NoScrollWithMouse);
 
-    // TODO: should be the artboard size
-    if (CanvasUtils::canvas_texture != VK_NULL_HANDLE) {
-        ImGui::Image((ImTextureID)CanvasUtils::canvas_texture, {1920, 1080});
+    ImDrawList*  draw_list = ImGui::GetWindowDrawList();
+    const ImVec2 panel_pos = ImGui::GetCursorScreenPos();
+    const ImVec2 size      = ImGui::GetContentRegionAvail();
+    // TODO:should be dynamic width and height
+    const float width  = 1920;
+    const float height = 1080;
+
+    // canvas background
+    draw_list->AddRectFilled(panel_pos, ImVec2(panel_pos.x + size.x, panel_pos.y + size.y),
+                             IM_COL32(0, 0, 0, 255));
+
+    // render artboard as a rect
+    // calculate artboard position based on zoom/pan
+    float ab_x = panel_pos.x + (size.x - width * CanvasControls::zoom) / 2.0f +
+                 CanvasControls::panning.x;
+    float ab_y = panel_pos.y + (size.y - height * CanvasControls::zoom) / 2.0f -
+                 CanvasControls::panning.y;
+    float ab_w = width * CanvasControls::zoom;
+    float ab_h = height * CanvasControls::zoom;
+
+    draw_list->AddRectFilled(ImVec2(ab_x, ab_y), ImVec2(ab_x + ab_w, ab_y + ab_h),
+                             IM_COL32(255, 255, 255, 255));
+
+    if (ArtboardUtils::artboard_texture != VK_NULL_HANDLE) {
+        // Texture on top
+        draw_list->AddImage((ImTextureID)ArtboardUtils::artboard_texture,
+                            ImVec2(ab_x, ab_y), ImVec2(ab_x + ab_w, ab_y + ab_h));
     }
 
     ImGui::End();
