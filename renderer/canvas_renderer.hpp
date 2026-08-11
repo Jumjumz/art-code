@@ -5,8 +5,8 @@
 #include "artcode_graphics.hpp"
 #include "artcode_instance.hpp"
 #include "imgui_impl_glfw.h"
+#include "vulkan_artboard.hpp"
 #include "vulkan_buffers.hpp"
-#include "vulkan_canvas.hpp"
 #include "vulkan_graphics.hpp"
 
 #include <glm/glm.hpp>
@@ -25,7 +25,7 @@ class CanvasRenderer {
     std::unique_ptr<ArtcodeGraphics> artcode_pipeline;
     std::unique_ptr<ArtcodeBuffer>   artcode_buffer;
 
-    std::unique_ptr<VulkanCanvas>    canvas_commands;
+    std::unique_ptr<VulkanArtboard>  artboard_commands;
     std::unique_ptr<ArtcodeCommands> artcode_commands;
 
     bool vulkan_init = true;
@@ -45,15 +45,15 @@ class CanvasRenderer {
 
     bool buffer_exist() const;
 
-    void workspace_events(GLFWwindow* app_window);
+    void canvas_events(GLFWwindow* app_window);
 
-    void canvas_setup(const glm::vec3& artboard_size, bool show_main_ui);
+    void artboard_setup(const glm::vec3& artboard_size, bool show_main_ui);
 
-    void record_canvas_command(const uint32_t current_frame);
+    void record_artboard_command(const uint32_t current_frame);
 
     void record_artcode_command(const uint32_t current_frame);
 
-    void update_canvas();
+    void update_arboard();
 
   private:
     const vk::raii::PhysicalDevice& physical_device;

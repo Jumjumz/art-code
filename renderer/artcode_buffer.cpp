@@ -177,6 +177,7 @@ void ArtcodeBuffer::create_ssbo_buffer() {
     this->device.updateDescriptorSets(writes, {});
 };
 
+// TODO: update this!
 [[nodiscard]]
 vk::raii::DeviceMemory
 ArtcodeBuffer::create_export_image_buffer(const vk::Extent3D&  extent,

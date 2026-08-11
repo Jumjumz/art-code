@@ -21,3 +21,5 @@ struct ArtboardTemplates {
         {"Web Medium", TemplateSizes::WEB_MEDIUM},
         {"Web Minimum", TemplateSizes::WEB_MINIMUM}};
 };
+
+struct ArtboardSize {};

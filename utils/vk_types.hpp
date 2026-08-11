@@ -33,3 +33,15 @@ struct CanvasControls {
     static inline glm::vec2 panning        = {0.0f, 0.0f};
     static inline glm::vec2 mouse_last_pos = {0.0f, 0.0f};
 };
+
+struct Artboard {
+  public:
+    static inline void set_artboard_size(const glm::vec2 artboard) {
+        Artboard::artboard_size = artboard;
+    }
+
+    static inline glm::vec2 get_artboard_size() { return Artboard::artboard_size; }
+
+  private:
+    static inline glm::vec2 artboard_size = {};
+};

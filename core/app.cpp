@@ -10,7 +10,7 @@ Application::Application() {};
 
 void Application::run() {
     // set the workspace events first
-    this->canvas.workspace_events(this->window.app_window);
+    this->canvas.canvas_events(this->window.app_window);
     imgui_init();
     loop();
     cleanup();
@@ -28,10 +28,10 @@ void Application::loop() {
                 break;
 
             // ensure canvas functions are only executed if canvas commands is not nullptr
-            if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
-                this->canvas.canvas_setup(this->ui_manager.artboard_size,
-                                          this->ui_manager.show_main_ui);
-                this->canvas.record_canvas_command(this->current_frame);
+            if (this->ui_manager.show_main_ui && this->canvas.artboard_commands) {
+                this->canvas.artboard_setup(this->ui_manager.artboard_size,
+                                            this->ui_manager.show_main_ui);
+                this->canvas.record_artboard_command(this->current_frame);
                 if (this->canvas.buffer_exist())
                     // artcode command
                     this->canvas.record_artcode_command(this->current_frame);
@@ -65,7 +65,7 @@ void Application::loop() {
         }
 
         // update canvas and texture first
-        if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
+        if (this->ui_manager.show_main_ui && this->canvas.artboard_commands) {
             if (ShadersCompiled::compiled) {
                 this->canvas.reload_pipeline();
                 // update artcode buffer
@@ -73,7 +73,7 @@ void Application::loop() {
 
                 ShadersCompiled::compiled = false;
             }
-            this->canvas.update_canvas();
+            this->canvas.update_arboard();
         }
 
         ImGui_ImplVulkan_NewFrame();
@@ -92,7 +92,7 @@ void Application::loop() {
         if (buffers.size() == 0)
             buffers.reserve(3);
 
-        if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
+        if (this->ui_manager.show_main_ui && this->canvas.artboard_commands) {
             // signal canvas thread to start recording
             {
                 std::lock_guard<std::mutex> lock{this->canvas_mutex};
@@ -109,8 +109,8 @@ void Application::loop() {
                 lock, [this]() -> bool { return this->canvas_ready || !this->running; });
             lock.unlock();
 
-            buffers.push_back(
-                *this->canvas.canvas_commands->canvas_command_buffers[this->current_frame]);
+            buffers.push_back(*this->canvas.artboard_commands
+                                   ->artboard_command_buffers[this->current_frame]);
 
             // can only save image if buffer has been initialized..
             if (this->canvas.buffer_exist()) {
@@ -190,9 +190,9 @@ void Application::reset_buffers() {
 
     this->ctx.device.resetFences(*this->commands.in_flight_fences[this->current_frame]);
 
-    // resets all command buffers
-    if (this->ui_manager.show_main_ui && this->canvas.canvas_commands) {
-        this->canvas.canvas_commands->canvas_command_buffers[this->current_frame].reset();
+    // resets workspace command buffers
+    if (this->ui_manager.show_main_ui && this->canvas.artboard_commands) {
+        this->canvas.artboard_commands->artboard_command_buffers[this->current_frame].reset();
         if (this->canvas.buffer_exist())
             this->canvas.artcode_commands->artcode_command_buffers[this->current_frame].reset();
     }

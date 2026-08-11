@@ -23,9 +23,10 @@ void Canvas::render() {
     ImDrawList*  draw_list = ImGui::GetWindowDrawList();
     const ImVec2 panel_pos = ImGui::GetCursorScreenPos();
     const ImVec2 size      = ImGui::GetContentRegionAvail();
-    // TODO:should be dynamic width and height
-    const float width  = 1920;
-    const float height = 1080;
+    // uses global variable
+    const auto& artboard = Artboard::get_artboard_size();
+    const float width    = artboard.x;
+    const float height   = artboard.y;
 
     // canvas background
     draw_list->AddRectFilled(panel_pos, ImVec2(panel_pos.x + size.x, panel_pos.y + size.y),

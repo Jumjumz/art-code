@@ -5,13 +5,13 @@ VulkanBuffers::VulkanBuffers(const vk::raii::PhysicalDevice& physical_device,
                              const vk::raii::Device&         device)
     : physical_device(physical_device),
       device(device) {
-    canvas_create_image(500, 500);
-    canvas_create_image_views();
-    canvas_create_buffer();
-    canvas_create_sampler();
+    artboard_create_image(500, 500);
+    artboard_create_image_views();
+    artboard_create_buffer();
+    artboard_create_sampler();
 };
 
-void VulkanBuffers::canvas_create_image(const uint32_t& width, const uint32_t& height) {
+void VulkanBuffers::artboard_create_image(const uint32_t& width, const uint32_t& height) {
     this->extent = vk::Extent3D{width, height, 1};
 
     vk::ImageCreateInfo image_info{};
@@ -29,10 +29,10 @@ void VulkanBuffers::canvas_create_image(const uint32_t& width, const uint32_t& h
 
     this->images = vk::raii::Image{this->device, image_info, nullptr};
 
-    canvas_create_image_memory();
+    artboard_create_image_memory();
 };
 
-void VulkanBuffers::canvas_create_image_memory() {
+void VulkanBuffers::artboard_create_image_memory() {
     auto mem_req = this->images.getMemoryRequirements();
 
     vk::MemoryAllocateInfo alloc_info{};
@@ -40,12 +40,12 @@ void VulkanBuffers::canvas_create_image_memory() {
     alloc_info.memoryTypeIndex =
         find_memory_type(mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-    this->canvas_image_memory = vk::raii::DeviceMemory{this->device, alloc_info, nullptr};
+    this->artboard_image_memory = vk::raii::DeviceMemory{this->device, alloc_info, nullptr};
     // destroy old memory
-    this->images.bindMemory(this->canvas_image_memory, 0);
+    this->images.bindMemory(this->artboard_image_memory, 0);
 };
 
-void VulkanBuffers::canvas_create_image_views() {
+void VulkanBuffers::artboard_create_image_views() {
     this->image_format = vk::Format::eR8G8B8A8Srgb;
 
     vk::ImageViewCreateInfo image_view_info{};
@@ -61,17 +61,17 @@ void VulkanBuffers::canvas_create_image_views() {
     this->image_views = vk::raii::ImageView{this->device, image_view_info, nullptr};
 };
 
-void VulkanBuffers::canvas_create_buffer() {
+void VulkanBuffers::artboard_create_buffer() {
     vk::BufferCreateInfo buffer_info{};
     buffer_info.size        = sizeof(ArtboardBuffer);
     buffer_info.usage       = vk::BufferUsageFlagBits::eUniformBuffer;
     buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
-    this->canvas_uniform_buffer = vk::raii::Buffer{this->device, buffer_info, nullptr};
+    this->artboard_uniform_buffer = vk::raii::Buffer{this->device, buffer_info, nullptr};
 
     // allocate memory to the uniform buffer
     vk::MemoryRequirements mem_requirements =
-        this->canvas_uniform_buffer.getMemoryRequirements();
+        this->artboard_uniform_buffer.getMemoryRequirements();
 
     vk::MemoryAllocateInfo mem_alloc_info{};
     mem_alloc_info.allocationSize  = mem_requirements.size;
@@ -79,22 +79,22 @@ void VulkanBuffers::canvas_create_buffer() {
         mem_requirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
                                              vk::MemoryPropertyFlagBits::eHostCoherent);
 
-    this->canvas_uniform_buffer_memory =
+    this->artboard_uniform_buffer_memory =
         vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr};
 
-    this->canvas_uniform_buffer.bindMemory(this->canvas_uniform_buffer_memory, 0);
-    this->canvas_uniform_buffer_mapped =
-        this->canvas_uniform_buffer_memory.mapMemory(0, sizeof(ArtboardBuffer));
+    this->artboard_uniform_buffer.bindMemory(this->artboard_uniform_buffer_memory, 0);
+    this->artboard_uniform_buffer_mapped =
+        this->artboard_uniform_buffer_memory.mapMemory(0, sizeof(ArtboardBuffer));
 };
 
-void VulkanBuffers::canvas_create_sampler() {
+void VulkanBuffers::artboard_create_sampler() {
     vk::SamplerCreateInfo sampler_info{};
     sampler_info.magFilter    = vk::Filter::eLinear;
     sampler_info.minFilter    = vk::Filter::eLinear;
     sampler_info.addressModeU = vk::SamplerAddressMode::eClampToEdge;
     sampler_info.addressModeV = vk::SamplerAddressMode::eClampToEdge;
 
-    this->canvas_sampler = vk::raii::Sampler{this->device, sampler_info, nullptr};
+    this->artboard_sampler = vk::raii::Sampler{this->device, sampler_info, nullptr};
 };
 
 uint32_t VulkanBuffers::find_memory_type(const uint32_t&                type_filter,
