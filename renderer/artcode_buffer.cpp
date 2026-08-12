@@ -5,13 +5,13 @@ ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice&             phys_de
                              const vk::raii::Device&                     device,
                              const vk::raii::Queue&                      graphics_queue,
                              const vk::raii::CommandPool&                cmd_pool,
-                             const vk::raii::Image&                      canvas_image,
+                             const vk::raii::Image&                      artboard_image,
                              const std::vector<vk::raii::DescriptorSet>& descriptor_sets)
     : phys_device(phys_device),
       device(device),
       graphics_queue(graphics_queue),
       cmd_pool(cmd_pool),
-      canvas_image(canvas_image),
+      artboard_image(artboard_image),
       descriptor_sets(descriptor_sets) {};
 
 void ArtcodeBuffer::create_vertex_buffer() {
@@ -177,13 +177,11 @@ void ArtcodeBuffer::create_ssbo_buffer() {
     this->device.updateDescriptorSets(writes, {});
 };
 
-// TODO: update this!
 [[nodiscard]]
 vk::raii::DeviceMemory
 ArtcodeBuffer::create_export_image_buffer(const vk::Extent3D&  extent,
-                                          const glm::vec2&     artboard,
                                           const vk::DeviceSize image_size) {
-    // wait for the gpu to finish
+    // wait for the gpu
     this->device.waitIdle();
 
     vk::BufferCreateInfo buffer_info{};
@@ -205,58 +203,6 @@ ArtcodeBuffer::create_export_image_buffer(const vk::Extent3D&  extent,
 
     staging_buffer.bindMemory(staging_memory, 0);
 
-    // create the image and its memory
-    const auto          artboard_extent = vk::Extent3D{static_cast<uint32_t>(artboard.x),
-                                              static_cast<uint32_t>(artboard.y), 1};
-    vk::ImageCreateInfo image_info{};
-    image_info.imageType   = vk::ImageType::e2D;
-    image_info.format      = vk::Format::eR8G8B8A8Srgb;
-    image_info.extent      = artboard_extent;
-    image_info.mipLevels   = 1;
-    image_info.arrayLayers = 1;
-    image_info.samples     = vk::SampleCountFlagBits::e1;
-    image_info.tiling      = vk::ImageTiling::eOptimal;
-    image_info.usage =
-        vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled |
-        vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst;
-    image_info.initialLayout = vk::ImageLayout::eUndefined;
-
-    vk::raii::Image artboard_image{this->device, image_info, nullptr};
-
-    // create memory
-    auto artboard_req = artboard_image.getMemoryRequirements();
-
-    // NOTE:using this as offset for src does provide the correct aspect ratio look of the artboard,
-    //  problem is the image quality is not good, or hte image looks smaller
-    /*const int32_t offset_x = (extent.width - artboard.x) / 2;
-    const int32_t offset_y = (extent.height - artboard.y) / 2;*/
-
-    // create blit image
-    vk::ImageBlit blit{};
-    blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-    blit.srcSubresource.layerCount = 1;
-    blit.srcOffsets[0]             = vk::Offset3D{0, 0, 0};
-    blit.srcOffsets[1] =
-        vk::Offset3D{static_cast<int32_t>(extent.width),
-                     static_cast<int32_t>(extent.height), 1}; // canvas size
-
-    blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-    blit.dstSubresource.layerCount = 1;
-    blit.dstOffsets[0]             = vk::Offset3D{0, 0, 0};
-    blit.dstOffsets[1] =
-        vk::Offset3D{static_cast<int32_t>(artboard.x), static_cast<int32_t>(artboard.y),
-                     1}; // artboard size
-
-    vk::MemoryAllocateInfo alloc_info{};
-    alloc_info.allocationSize  = artboard_req.size;
-    alloc_info.memoryTypeIndex = find_memory_type(
-        artboard_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
-
-    vk::raii::DeviceMemory artboard_image_memory{this->device, alloc_info, nullptr};
-
-    // destroy old memory
-    artboard_image.bindMemory(artboard_image_memory, 0);
-
     // create command buffer
     vk::CommandBufferAllocateInfo cmd_alloc_info{};
     cmd_alloc_info.commandPool        = this->cmd_pool;
@@ -272,13 +218,13 @@ ArtcodeBuffer::create_export_image_buffer(const vk::Extent3D&  extent,
 
     cmd.begin(cmd_begin_info);
 
-    // transition canvas image to transfer src
+    // transition artboard image
     vk::ImageMemoryBarrier barrier{};
-    barrier.oldLayout                       = vk::ImageLayout::eShaderReadOnlyOptimal;
+    barrier.oldLayout                       = vk::ImageLayout::eUndefined;
     barrier.newLayout                       = vk::ImageLayout::eTransferSrcOptimal;
     barrier.srcQueueFamilyIndex             = vk::QueueFamilyIgnored;
     barrier.dstQueueFamilyIndex             = vk::QueueFamilyIgnored;
-    barrier.image                           = *this->canvas_image;
+    barrier.image                           = *this->artboard_image;
     barrier.subresourceRange.aspectMask     = vk::ImageAspectFlagBits::eColor;
     barrier.subresourceRange.baseMipLevel   = 0;
     barrier.subresourceRange.levelCount     = 1;
@@ -288,31 +234,6 @@ ArtcodeBuffer::create_export_image_buffer(const vk::Extent3D&  extent,
     barrier.dstAccessMask                   = vk::AccessFlagBits::eTransferRead;
 
     cmd.pipelineBarrier(vk::PipelineStageFlagBits::eFragmentShader,
-                        vk::PipelineStageFlagBits::eTransfer, {}, {}, {}, barrier);
-
-    // transition artboard image to transfer dst
-    barrier.image         = *artboard_image;
-    barrier.oldLayout     = vk::ImageLayout::eUndefined;
-    barrier.newLayout     = vk::ImageLayout::eTransferDstOptimal;
-    barrier.srcAccessMask = vk::AccessFlagBits::eNone;
-    barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
-
-    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
-                        vk::PipelineStageFlagBits::eTransfer, {}, {}, {}, barrier);
-
-    // use blit
-    cmd.blitImage(*this->canvas_image, vk::ImageLayout::eTransferSrcOptimal,
-                  *artboard_image, vk::ImageLayout::eTransferDstOptimal, blit,
-                  vk::Filter::eLinear);
-
-    // transition artboard image to transfer src
-    barrier.image         = *artboard_image;
-    barrier.oldLayout     = vk::ImageLayout::eTransferDstOptimal;
-    barrier.newLayout     = vk::ImageLayout::eTransferSrcOptimal;
-    barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-    barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
-
-    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
                         vk::PipelineStageFlagBits::eTransfer, {}, {}, {}, barrier);
 
     // copy image to buffer
@@ -325,13 +246,13 @@ ArtcodeBuffer::create_export_image_buffer(const vk::Extent3D&  extent,
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount     = 1;
     region.imageOffset                     = vk::Offset3D{0, 0, 0};
-    region.imageExtent                     = artboard_extent;
+    region.imageExtent                     = extent;
 
     cmd.copyImageToBuffer(*artboard_image, vk::ImageLayout::eTransferSrcOptimal,
                           *staging_buffer, region);
 
-    // transition back to canavas_image (to GPU)
-    barrier.image         = *this->canvas_image;
+    // transition again back to gpu
+    barrier.image         = *this->artboard_image;
     barrier.oldLayout     = vk::ImageLayout::eTransferSrcOptimal;
     barrier.newLayout     = vk::ImageLayout::eShaderReadOnlyOptimal;
     barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;

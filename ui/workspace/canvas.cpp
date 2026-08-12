@@ -3,8 +3,6 @@
 
 Canvas::Canvas() {};
 
-// TODO:update this.. instead of passing the whole canvas as a texture, make it as a
-// viewport isntead, pass the artboard as the texture
 void Canvas::render() {
     this->viewport  = ImGui::GetMainViewport();
     this->work_size = this->viewport->WorkSize;
@@ -33,19 +31,19 @@ void Canvas::render() {
                              IM_COL32(0, 0, 0, 255));
 
     // render artboard as a rect
-    // calculate artboard position based on zoom/pan
-    float ab_x = panel_pos.x + (size.x - width * CanvasControls::zoom) / 2.0f +
-                 CanvasControls::panning.x;
-    float ab_y = panel_pos.y + (size.y - height * CanvasControls::zoom) / 2.0f -
-                 CanvasControls::panning.y;
-    float ab_w = width * CanvasControls::zoom;
-    float ab_h = height * CanvasControls::zoom;
+    // calculate artboard position based on zoom/pan and size of the canvas
+    const float ab_x = panel_pos.x + (size.x - width * CanvasControls::zoom) / 2.0f +
+                       CanvasControls::panning.x;
+    const float ab_y = panel_pos.y + (size.y - height * CanvasControls::zoom) / 2.0f -
+                       CanvasControls::panning.y;
+    const float ab_w = width * CanvasControls::zoom;
+    const float ab_h = height * CanvasControls::zoom;
 
     draw_list->AddRectFilled(ImVec2(ab_x, ab_y), ImVec2(ab_x + ab_w, ab_y + ab_h),
                              IM_COL32(255, 255, 255, 255));
 
     if (ArtboardUtils::artboard_texture != VK_NULL_HANDLE) {
-        // Texture on top
+        // Texture on top of the rect
         draw_list->AddImage((ImTextureID)ArtboardUtils::artboard_texture,
                             ImVec2(ab_x, ab_y), ImVec2(ab_x + ab_w, ab_y + ab_h));
     }

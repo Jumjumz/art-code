@@ -305,25 +305,18 @@ void CanvasRenderer::artboard_setup(const glm::vec3& artboard_size, bool show_ma
     memcpy(this->vk_buffers.artboard_uniform_buffer_mapped, &ab_ubo, sizeof(ab_ubo));
 };
 
-// FIXME:the artboard size in application doesnt match to what the image looks, when
-// inspecting the image it matches the artboard dimensions but the look doesnt
 void CanvasRenderer::save_art() {
-    // TODO:not sure if the if statement should be inside this funciton or in the
-    // place where the function is called
     if (SaveFile::has_path) {
-        const glm::vec2 artboard = {vk_buffers.extent.width, vk_buffers.extent.height};
+        const auto& width      = static_cast<int>(vk_buffers.extent.width);
+        const auto& height     = static_cast<int>(vk_buffers.extent.height);
+        const auto  image_size = width * height * 4;
 
-        const auto width      = static_cast<int>(artboard.x);
-        const auto height     = static_cast<int>(artboard.y);
-        const auto image_size = width * height * 4;
-
-        // NOTE:might need to have a separate frame for the artboard itself
-        //  create staging memory and its buffers
         const auto& staging_memory = this->artcode_buffer->create_export_image_buffer(
-            this->vk_buffers.extent, artboard, image_size);
+            this->vk_buffers.extent, image_size);
 
         void* data = staging_memory.mapMemory(0, image_size);
 
+        // TODO:have a way where users can save image with a custom file name
         const auto& save_path = SaveFile::get_save_path();
         const auto& file_name = save_path / "image.png";
 
@@ -332,7 +325,7 @@ void CanvasRenderer::save_art() {
         // unmap after saving
         staging_memory.unmapMemory();
 
-        // return has path to orig state
+        // return to orig state
         SaveFile::has_path = false;
     }
 };

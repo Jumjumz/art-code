@@ -10,7 +10,7 @@ class ArtcodeBuffer {
     ArtcodeBuffer(const vk::raii::PhysicalDevice& phys_device,
                   const vk::raii::Device& device, const vk::raii::Queue& graphics_queue,
                   const vk::raii::CommandPool&                cmd_pool,
-                  const vk::raii::Image&                      canvas_image,
+                  const vk::raii::Image&                      artboard_image,
                   const std::vector<vk::raii::DescriptorSet>& descriptor_sets);
     std::vector<vk::raii::Buffer>       vertex_buffers;
     std::vector<vk::raii::DeviceMemory> vertex_memories;
@@ -34,7 +34,6 @@ class ArtcodeBuffer {
 
     [[nodiscard]]
     vk::raii::DeviceMemory create_export_image_buffer(const vk::Extent3D&  extent,
-                                                      const glm::vec2&     artboard,
                                                       const vk::DeviceSize image_size);
 
   private:
@@ -42,7 +41,7 @@ class ArtcodeBuffer {
     const vk::raii::Device&         device;
     const vk::raii::Queue&          graphics_queue;
     const vk::raii::CommandPool&    cmd_pool;
-    const vk::raii::Image&          canvas_image;
+    const vk::raii::Image&          artboard_image;
 
     const std::vector<vk::raii::DescriptorSet>& descriptor_sets;
 
