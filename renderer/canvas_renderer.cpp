@@ -1,6 +1,6 @@
-#include "vk_types.hpp"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+#include "vk_types.hpp"
 
 #include "canvas_renderer.hpp"
 #include "imgui_impl_vulkan.h"
@@ -30,7 +30,7 @@ CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
 };
 
 // TODO:improve this, result should go somewhere
-// used for new created project
+// compiles newly created project that will generate the .spv files
 void CanvasRenderer::compile_shader() {
     nlohmann::json js;
     {
@@ -317,10 +317,12 @@ void CanvasRenderer::save_art() {
         void* data = staging_memory.mapMemory(0, image_size);
 
         // TODO:have a way where users can save image with a custom file name
+        // implement a proper saving to image feature where the save path can be remember
+        // over and over again if aplication is still open
+        // save path also includes the image name
         const auto& save_path = SaveFile::get_save_path();
-        const auto& file_name = save_path / "image.png";
 
-        stbi_write_png(file_name.c_str(), width, height, 4, data, width * 4);
+        stbi_write_png(save_path.c_str(), width, height, 4, data, width * 4);
 
         // unmap after saving
         staging_memory.unmapMemory();

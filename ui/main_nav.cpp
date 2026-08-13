@@ -5,7 +5,7 @@
 MainNavigation::MainNavigation() {
     ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
                                 ImGuiFileBrowserFlags_CreateNewDir,
-                            getenv("HOME"));
+                            this->home_dir);
 
     this->file_dialog = file;
 };
@@ -17,14 +17,26 @@ void MainNavigation::render() {
                 for (const auto& [item_label, item_shortcut] : items) {
                     if (ImGui::MenuItem(item_label.c_str(), item_shortcut.c_str())) {
                         if (item_label == "Save") {
+                            if (SaveFile::get_save_path().empty()) {
+                                this->file_dialog = ImGui::FileBrowser{
+                                    ImGuiFileBrowserFlags_EnterNewFilename, this->home_dir};
+                            } else {
+                                this->file_dialog = ImGui::FileBrowser{
+                                    ImGuiFileBrowserFlags_EnterNewFilename,
+                                    SaveFile::get_save_path().parent_path()};
+                            }
+                            // sets input name
+                            this->file_dialog.SetInputName("image.png");
                             this->file_dialog.SetTitle("Save art");
                             this->file_dialog.Open();
                             break;
-                        } else if (item_label == "Save as") {
-                            this->file_dialog.SetTitle("Save art as");
-                            this->file_dialog.Open();
-                            break;
                         }
+                        // NOTE:commented to do png for now
+                        /*else if (item_label == "Save as") {
+                                      this->file_dialog.SetTitle("Save art as");
+                                      this->file_dialog.Open();
+                                      break;
+                                  }*/
                     }
                 }
                 ImGui::EndMenu();
@@ -32,7 +44,6 @@ void MainNavigation::render() {
         }
         ImGui::EndMainMenuBar();
     }
-
     this->file_dialog.Display();
 
     // pass the selected dir for saving
