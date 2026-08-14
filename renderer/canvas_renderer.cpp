@@ -316,11 +316,9 @@ void CanvasRenderer::save_art() {
 
         void* data = staging_memory.mapMemory(0, image_size);
 
-        // TODO:have a way where users can save image with a custom file name
-        // implement a proper saving to image feature where the save path can be remember
-        // over and over again if aplication is still open
-        // save path also includes the image name
-        const auto& save_path = SaveFile::get_save_path();
+        auto save_path = SaveFile::get_save_path();
+        // concatenate file extension
+        save_path += ".png";
 
         stbi_write_png(save_path.c_str(), width, height, 4, data, width * 4);
 

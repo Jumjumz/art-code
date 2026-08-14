@@ -21,13 +21,14 @@ void MainNavigation::render() {
                                 this->file_dialog = ImGui::FileBrowser{
                                     ImGuiFileBrowserFlags_EnterNewFilename, this->home_dir};
                             } else {
+                                // get the latest save path for dialog
                                 this->file_dialog = ImGui::FileBrowser{
                                     ImGuiFileBrowserFlags_EnterNewFilename,
                                     SaveFile::get_save_path().parent_path()};
                             }
-                            // sets input name
-                            this->file_dialog.SetInputName("image.png");
-                            this->file_dialog.SetTitle("Save art");
+                            // sets init name, can be renamed
+                            this->file_dialog.SetInputName("image");
+                            this->file_dialog.SetTitle("Save art as png");
                             this->file_dialog.Open();
                             break;
                         }
