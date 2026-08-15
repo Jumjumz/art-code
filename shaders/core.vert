@@ -5,6 +5,7 @@ layout(binding = 0) uniform ArtboardBuffer {
   mat4 view;
   mat4 model;
   vec2 reso;
+  float ppi;
 } ubo;
 
 layout(location = 0) out vec2 artboard_pos;

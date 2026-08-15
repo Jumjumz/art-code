@@ -296,11 +296,12 @@ void CanvasRenderer::artboard_setup(const glm::vec3& artboard_size, bool show_ma
 
     // set ubo
     ArtboardBuffer ab_ubo{
-        .proj     = glm::ortho(0.0f, artboard_size.x, artboard_size.y, 0.0f, -1.0f, 1.0f),
-        .view     = glm::mat4(1.0f),
-        .model    = glm::mat4(1.0f),
-        .reso     = artboard_size,
-        .viewport = artboard_size};
+        .proj  = glm::ortho(0.0f, artboard_size.x, artboard_size.y, 0.0f, -1.0f, 1.0f),
+        .view  = glm::mat4(1.0f),
+        .model = glm::mat4(1.0f),
+        .reso  = artboard_size,
+        // third data in artboard is ppi
+        .ppi = artboard_size.z};
 
     memcpy(this->vk_buffers.artboard_uniform_buffer_mapped, &ab_ubo, sizeof(ab_ubo));
 };
@@ -317,8 +318,9 @@ void CanvasRenderer::save_art() {
         void* data = staging_memory.mapMemory(0, image_size);
 
         auto save_path = SaveFile::get_save_path();
-        // concatenate file extension
-        save_path += ".png";
+        // avoids duplicate extension i.e image.png.png, also adds if extension is
+        // missing, also sets to .png if passed extension is wrong
+        save_path.replace_extension(".png");
 
         stbi_write_png(save_path.c_str(), width, height, 4, data, width * 4);
 
