@@ -121,9 +121,13 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
     rasterization_state_info.cullMode         = vk::CullModeFlagBits::eNone;
     rasterization_state_info.lineWidth        = 1.0f;
 
+    // NOTE: trying MSAA
+    // creates a validation error
+    // color sample count must match sampler count
     vk::PipelineMultisampleStateCreateInfo multismapling_state_info{};
-    multismapling_state_info.rasterizationSamples = vk::SampleCountFlagBits::e1;
-    multismapling_state_info.sampleShadingEnable  = vk::False;
+    multismapling_state_info.rasterizationSamples = vk::SampleCountFlagBits::e4;
+    multismapling_state_info.sampleShadingEnable  = vk::True;
+    multismapling_state_info.minSampleShading     = 0.25f;
 
     vk::PipelineDepthStencilStateCreateInfo stencil_state_info{};
     stencil_state_info.depthTestEnable       = vk::False;

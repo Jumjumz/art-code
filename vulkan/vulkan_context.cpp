@@ -14,7 +14,7 @@ VulkanContext::VulkanContext(GLFWwindow* window)
 
 void VulkanContext::create_instance() {
     static constexpr vk::ApplicationInfo app_info{
-        "Art Code", VK_MAKE_VERSION(0, 0, 1), "Jumz Art Engine", VK_MAKE_VERSION(0, 0, 1),
+        "Art Code", VK_MAKE_VERSION(0, 0, 1), "Artcode Engine", VK_MAKE_VERSION(0, 0, 1),
         vk::ApiVersion13};
 
     uint32_t extension_count = 0;
@@ -133,6 +133,7 @@ void VulkanContext::create_logical_device() {
     features.features.dualSrcBlend       = vk::True;
     features.features.robustBufferAccess = vk::True;
     features.features.wideLines          = vk::True;
+    features.features.sampleRateShading  = vk::True;
 
     auto& dynamic_rendering = feature_chain.get<vk::PhysicalDeviceVulkan13Features>();
     dynamic_rendering.dynamicRendering = vk::True;
@@ -143,7 +144,7 @@ void VulkanContext::create_logical_device() {
     dynamic_state.extendedDynamicState = vk::True;
 
     // get swapchains extensions
-    const std::vector<const char*> device_extensions = {
+    const std::array<const char*, 2> device_extensions = {
         vk::KHRSwapchainExtensionName, vk::EXTExtendedDynamicState3ExtensionName};
 
     vk::DeviceCreateInfo device_info{};

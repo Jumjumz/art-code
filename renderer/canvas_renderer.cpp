@@ -1,5 +1,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+
+#include "artcode_instance.hpp"
 #include "vk_types.hpp"
 
 #include "canvas_renderer.hpp"
@@ -8,10 +10,10 @@
 #include "json.hpp"
 #include "nav_items.hpp"
 #include "transition_image.hpp"
-
 #include <GLFW/glfw3.h>
-#include <fstream>
 #include <glm/ext/matrix_clip_space.hpp>
+
+#include <fstream>
 
 CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
                                const vk::raii::Device&         device,
