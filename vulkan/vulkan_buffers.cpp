@@ -20,7 +20,7 @@ void VulkanBuffers::artboard_create_image(const uint32_t& width, const uint32_t&
     image_info.extent      = this->extent;
     image_info.mipLevels   = 1;
     image_info.arrayLayers = 1;
-    image_info.samples     = vk::SampleCountFlagBits::e4;
+    image_info.samples     = vk::SampleCountFlagBits::e1;
     image_info.tiling      = vk::ImageTiling::eOptimal;
     image_info.usage       = vk::ImageUsageFlagBits::eColorAttachment |
                        vk::ImageUsageFlagBits::eSampled |

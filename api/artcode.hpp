@@ -36,7 +36,8 @@ typedef std::vector<u16>    ArrayU16;
 typedef std::vector<u32>    ArrayU32;
 typedef std::vector<u64>    ArrayU64;
 
-// squared and cubic
+// TODO:currently this can receive chars or strings, update to only receive NUMBERS
+//  squared and cubic
 template <typename T> T squared(T sq) { return sq * sq; };
 template <typename T> T cubic(T cb) { return cb * cb * cb; };
 
@@ -85,7 +86,8 @@ template <typename T> using VectorT             = std::vector<T>;
 
 // TODO:replace struct with class, classes might be the better representation of each instances
 namespace detail {
-    struct IPen {
+    class IPen {
+      public:
         virtual ~IPen() = default;
 
         // TODO:make skewPos a function.. or change the way skew pos syntax wise
@@ -118,7 +120,7 @@ namespace detail {
 } // namespace detail
 
 namespace Art {
-    struct Quad : detail::IPen {
+    class Quad : public detail::IPen {
       public:
         Quad();
 
@@ -131,7 +133,7 @@ namespace Art {
         ArrayU32  generate_indices() const override;
     };
 
-    struct Circle : detail::IPen {
+    class Circle : public detail::IPen {
       public:
         Circle();
 
@@ -146,7 +148,7 @@ namespace Art {
         size_t get_num_vert() const;
     };
 
-    struct Triangle : detail::IPen {
+    class Triangle : public detail::IPen {
       public:
         Triangle();
 
@@ -161,7 +163,7 @@ namespace Art {
         ArrayU32  generate_indices() const override;
     };
 
-    struct Pen : detail::IPen {
+    class Pen : public detail::IPen {
       public:
         Pen();
 

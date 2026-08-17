@@ -159,6 +159,7 @@ void CanvasRenderer::update_artcode_buffers() {
     // clear push constants
     this->push_constants.clear();
 
+    // set the buffers resources from shared memory
     const auto inst_size = Shared::Memory::get_intance_size();
     for (size_t i = 0; i < inst_size; i++) {
         const auto& instance = Shared::Memory::get_instance(i);
