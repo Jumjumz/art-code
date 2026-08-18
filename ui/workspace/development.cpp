@@ -1,7 +1,5 @@
 #include "development.hpp"
 
-Development::Development() {};
-
 void Development::render() {
     this->viewport  = ImGui::GetMainViewport();
     this->work_size = this->viewport->WorkSize;

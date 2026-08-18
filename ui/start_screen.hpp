@@ -23,10 +23,10 @@ class StartScreen {
 
   protected:
     ImGuiViewport* viewport  = nullptr;
-    ImVec2         work_size = ImVec2{0.0f, 0.0f};
-    ImVec2         work_pos  = ImVec2{0.0f, 0.0f};
+    ImVec2         work_size = {10.0f, 10.0f};
+    ImVec2         work_pos  = {10.0f, 10.0f};
 
-    glm::vec3 artboard_size  = {0.0f, 0.0f, 0.0f};
+    glm::vec3 artboard_size  = {100.0f, 100.0f, 72.0f};
     bool      has_dimensions = false;
 
     bool open_selected = false; // for open button
@@ -35,7 +35,9 @@ class StartScreen {
 
     const char* home = getenv("HOME"); // set home directory
 
-    ImGui::FileBrowser file_dialog;
+    ImGui::FileBrowser file_dialog = ImGui::FileBrowser(
+        ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_SelectDirectory,
+        this->home);
 
     virtual void set_artboard_dimensions(const glm::vec3& dimensions) {
         this->artboard_size  = dimensions;

@@ -1,15 +1,6 @@
 #include "main_nav.hpp"
 #include "nav_items.hpp"
 
-// TODO:create a util file for home directory and other related things
-MainNavigation::MainNavigation() {
-    ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
-                                ImGuiFileBrowserFlags_CreateNewDir,
-                            this->home_dir);
-
-    this->file_dialog = file;
-};
-
 void MainNavigation::render() {
     if (ImGui::BeginMainMenuBar()) {
         for (const auto& [menus, items] : NavMainItems::MENUS) {

@@ -14,7 +14,10 @@ class TextEditorWrapper {
 
     TextEditor editor;
 
-    ImGui::FileBrowser file_explorer;
+    ImGui::FileBrowser file_explorer = ImGui::FileBrowser(
+        ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir |
+        ImGuiFileBrowserFlags_MultipleSelection | ImGuiFileBrowserFlags_NoModal |
+        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
     std::filesystem::path selected_file;
 

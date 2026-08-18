@@ -8,8 +8,6 @@ namespace fs = std::filesystem;
 
 class BuildPanel {
   public:
-    BuildPanel();
-
     void render();
 
   private:

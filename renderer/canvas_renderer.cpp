@@ -255,9 +255,8 @@ void CanvasRenderer::canvas_events(GLFWwindow* app_window) {
             // for text editor
             if (canvas->ctrl_pressed) {
                 if (key == GLFW_KEY_S) {
-                    if (action == GLFW_PRESS) {
+                    if (action == GLFW_PRESS)
                         TextEditorUtils::file_save = true;
-                    }
                 }
             }
         });
@@ -303,7 +302,7 @@ void CanvasRenderer::artboard_setup(const glm::vec3& artboard_size, bool show_ma
         .view  = glm::mat4(1.0f),
         .model = glm::mat4(1.0f),
         .reso  = artboard_size,
-        // third data in artboard is ppi
+        // third value in artboard is ppi
         .ppi = artboard_size.z};
 
     memcpy(this->vk_buffers.artboard_uniform_buffer_mapped, &ab_ubo, sizeof(ab_ubo));
@@ -311,9 +310,9 @@ void CanvasRenderer::artboard_setup(const glm::vec3& artboard_size, bool show_ma
 
 void CanvasRenderer::save_art() {
     if (SaveFile::has_path) {
-        const auto& width      = static_cast<int>(vk_buffers.extent.width);
-        const auto& height     = static_cast<int>(vk_buffers.extent.height);
-        const auto  image_size = width * height * 4;
+        const auto width      = static_cast<int>(vk_buffers.extent.width);
+        const auto height     = static_cast<int>(vk_buffers.extent.height);
+        const auto image_size = width * height * 4;
 
         const auto& staging_memory = this->artcode_buffer->create_export_image_buffer(
             this->vk_buffers.extent, image_size);
@@ -327,7 +326,7 @@ void CanvasRenderer::save_art() {
 
         stbi_write_png(save_path.c_str(), width, height, 4, data, width * 4);
 
-        // unmap after saving
+        // unmap after creating
         staging_memory.unmapMemory();
 
         // return to orig state
@@ -432,7 +431,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
                                                        this->vk_buffers.extent.height}});
 
     // draw in reverse order for shape instances
-    // this makes the first shape instance declared will always be the most front shape in artboard
+    // this makes the first shape instance declared always be the front shape in artboard
     for (size_t i = inst_index.size(); i > 0; i--) {
         const auto idx = i - 1;
 
@@ -476,21 +475,20 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
 };
 
 void CanvasRenderer::update_arboard() {
+    // ##canvas-begin is in canvas.cpp file
     const auto& canvas = ImGui::FindWindowByName("##canvas-begin");
 
     // NOTE:this updates the images from vk buffers to match the artboard dimensions
     // also updates the texture for canvas to render the artboard
     if (canvas) {
-        const auto& width  = static_cast<uint32_t>(Artboard::get_artboard_size().x);
-        const auto& height = static_cast<uint32_t>(Artboard::get_artboard_size().y);
-
         this->device.waitIdle();
+
+        const auto& artboard = Artboard::get_artboard_size();
+        const auto  width    = static_cast<uint32_t>(artboard.x);
+        const auto  height   = static_cast<uint32_t>(artboard.y);
 
         this->vk_buffers.artboard_create_image(width, height);
         this->vk_buffers.artboard_create_image_views();
-
-        // remove the old texture at canvas resize
-        ImGui_ImplVulkan_RemoveTexture(ArtboardUtils::artboard_texture);
 
         // run again after texture removal
         ArtboardUtils::artboard_texture = ImGui_ImplVulkan_AddTexture(

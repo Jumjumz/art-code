@@ -13,8 +13,6 @@
 
 class Application {
   public:
-    Application();
-
     void run();
 
   private:
@@ -42,7 +40,7 @@ class Application {
 
     vk::Result draw_result;
 
-    uint32_t image_index, current_frame = 0;
+    uint32_t image_index = 0, current_frame = 0;
 
     bool frame_buffer_resize = false;
 

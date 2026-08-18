@@ -2,11 +2,6 @@
 #include "nav_items.hpp"
 
 TemplateGallery::TemplateGallery() {
-    ImGui::FileBrowser file(ImGuiFileBrowserFlags_SelectDirectory |
-                                ImGuiFileBrowserFlags_CreateNewDir,
-                            this->home);
-
-    this->file_dialog = file;
     this->file_dialog.SetTitle("Create Template Project");
 };
 

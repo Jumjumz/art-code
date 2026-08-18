@@ -1,8 +1,6 @@
 #include "console.hpp"
 #include "nav_items.hpp"
 
-Console::Console() {};
-
 void Console::render() {
     if (this->font == nullptr) {
         ImGuiIO& io = ImGui::GetIO();

@@ -5,8 +5,6 @@
 #include <iostream>
 #include <ostream>
 
-Build::Build() {};
-
 bool Build::set_project_directory(const fs::path& dir, const glm::vec3& artboard) {
     this->project_directory = dir;
     this->artboard_size     = artboard;

@@ -1,8 +1,6 @@
 #include "canvas.hpp"
 #include "vk_types.hpp"
 
-Canvas::Canvas() {};
-
 void Canvas::render() {
     this->viewport  = ImGui::GetMainViewport();
     this->work_size = this->viewport->WorkSize;

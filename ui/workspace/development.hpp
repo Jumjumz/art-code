@@ -7,8 +7,6 @@
 
 class Development : public WorkSpace {
   public:
-    Development();
-
     void render() override;
 
   private:

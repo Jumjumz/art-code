@@ -2,11 +2,6 @@
 #include "nav_items.hpp"
 
 ArtboardSettings::ArtboardSettings() {
-    ImGui::FileBrowser file(ImGuiFileBrowserFlags_CreateNewDir |
-                                ImGuiFileBrowserFlags_SelectDirectory,
-                            this->home);
-
-    this->file_dialog = file;
     this->file_dialog.SetTitle("Create Custom Project");
 };
 

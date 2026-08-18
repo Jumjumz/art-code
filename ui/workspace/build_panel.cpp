@@ -9,8 +9,6 @@
 #include <cstring>
 #include <fstream>
 
-BuildPanel::BuildPanel() {};
-
 void BuildPanel::render() {
     const auto& panel_size = ImGui::GetContentRegionAvail();
     const float width = 100.0f, height = 20.0f;

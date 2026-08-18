@@ -7,8 +7,6 @@ namespace fs = std::filesystem;
 
 class Build {
   public:
-    Build();
-
     static constexpr std::string sln_ext = ".rcd";
 
     bool set_project_directory(const fs::path& dir, const glm::vec3& artboard);
@@ -16,7 +14,7 @@ class Build {
   private:
     fs::path project_directory;
 
-    glm::vec3 artboard_size;
+    glm::vec3 artboard_size = {0.0f, 0.0f, 0.0f};
 
     const fs::path config_dir =
         fs::path(getenv("HOME")) / ".config" / "artcode" / "projects.json";

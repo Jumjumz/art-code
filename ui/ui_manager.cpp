@@ -5,8 +5,8 @@
 #include "workspace/canvas.hpp"
 #include "workspace/development.hpp"
 
-UIManager::UIManager() {
-    this->artboard_size = {0.0f, 0.0f, 0.0f};
+UIManager::UIManager()
+    : artboard_size(100.0f, 100.0f, 72.0f) {
     // init start screen
     this->start_ui.push_back(std::make_unique<TemplateGallery>());
     this->start_ui.push_back(std::make_unique<ArtboardSettings>());

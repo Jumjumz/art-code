@@ -6,8 +6,6 @@
 #include "transition_image.hpp"
 #include "vk_types.hpp"
 
-Application::Application() {};
-
 void Application::run() {
     // set the workspace events first
     this->canvas.canvas_events(this->window.app_window);

@@ -5,7 +5,7 @@
 #include <iostream>
 
 int main() {
-    Application art_code;
+    Application art_code{};
 
     try {
         art_code.run();

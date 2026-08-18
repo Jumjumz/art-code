@@ -111,18 +111,9 @@ using DrawTriangle = Art::Triangle;
 using DrawPen      = Art::Pen;
 
 // Quad
-DrawQuad::Quad() {
-    this->l        = 100.0f;
-    this->w        = 100.0f;
-    this->position = Vec2{200, 200};
-    this->color    = "#000000";
-    this->stroke   = 1.0f;
-    this->rotate   = 0.0f;
-    this->opacity  = 1.0f;
-    this->fill     = false;
-    this->skew     = false;
-    this->skewPos  = {};
-
+DrawQuad::Quad()
+    : l(100),
+      w(100) {
     ShapeRegistry::register_shape(this);
 };
 
@@ -149,17 +140,8 @@ ArrayU32 DrawQuad::generate_indices() const {
 };
 
 // Circle
-DrawCircle::Circle() {
-    this->radius   = 100.f;
-    this->position = Vec2{200, 200};
-    this->color    = "#000000";
-    this->stroke   = 1.0f;
-    this->rotate   = 0.0f;
-    this->opacity  = 1.0f;
-    this->fill     = false;
-    this->skew     = false;
-    this->skewPos  = {};
-
+DrawCircle::Circle()
+    : radius(100.0f) {
     ShapeRegistry::register_shape(this);
 };
 
@@ -214,19 +196,10 @@ ArrayU32 DrawCircle::generate_indices() const {
 // can only provide if user has access to base and height or only base if type is
 // equilateral
 // Triangle
-DrawTriangle::Triangle() {
-    this->base     = 100.0f;
-    this->height   = 100.0f;
-    this->type     = TriangleTypes::Equilateral;
-    this->position = Vec2{200, 200};
-    this->color    = "#000000";
-    this->stroke   = 1.0f;
-    this->rotate   = 0.0f;
-    this->opacity  = 1.0f;
-    this->fill     = false;
-    this->skew     = false;
-    this->skewPos  = {};
-
+DrawTriangle::Triangle()
+    : base(100.0f),
+      height(100.0f),
+      type(TriangleTypes::Equilateral) {
     ShapeRegistry::register_shape(this);
 };
 
@@ -263,17 +236,8 @@ ArrayU32 DrawTriangle::generate_indices() const {
     }
 };
 
-DrawPen::Pen() {
-    this->positions = {};
-    this->position  = Vec2{200, 200};
-    this->color     = "#000000";
-    this->stroke    = 1.0f;
-    this->rotate    = 0.0f;
-    this->opacity   = 1.0f;
-    this->fill      = false;
-    this->skew      = false;
-    this->skewPos   = {};
-
+DrawPen::Pen()
+    : positions({}) {
     ShapeRegistry::register_shape(this);
 };
 

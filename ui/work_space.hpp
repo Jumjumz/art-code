@@ -11,8 +11,8 @@ class WorkSpace {
   protected:
     ImGuiViewport* viewport = nullptr;
 
-    ImVec2 work_size = ImVec2{0.0f, 0.0f};
-    ImVec2 work_pos  = ImVec2{0.0f, 0.0f};
+    ImVec2 work_size = {0.0f, 0.0f};
+    ImVec2 work_pos  = {0.0f, 0.0f};
 
   private:
 };
