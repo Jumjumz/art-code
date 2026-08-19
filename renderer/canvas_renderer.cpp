@@ -349,11 +349,16 @@ void CanvasRenderer::record_artboard_command(const uint32_t current_frame) {
 
     // prepare to render canvas
     vk::RenderingAttachmentInfo canvas_attachement_info{};
-    canvas_attachement_info.imageView   = this->vk_buffers.image_views;
+    canvas_attachement_info.imageView   = this->vk_buffers.msaa_image_view;
     canvas_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
     canvas_attachement_info.loadOp      = vk::AttachmentLoadOp::eClear;
-    canvas_attachement_info.storeOp     = vk::AttachmentStoreOp::eStore;
+    canvas_attachement_info.storeOp     = vk::AttachmentStoreOp::eDontCare;
     canvas_attachement_info.clearValue  = this->clear_color;
+
+    // resolve
+    canvas_attachement_info.resolveMode        = vk::ResolveModeFlagBits::eAverage;
+    canvas_attachement_info.resolveImageView   = this->vk_buffers.image_views;
+    canvas_attachement_info.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
 
     vk::RenderingInfo canvas_rendering_info{};
     canvas_rendering_info.renderArea.offset = this->offset;
@@ -401,13 +406,18 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
     // render
     cmd.begin({});
 
-    // prepare to render artcode
+    // use MSAA
     vk::RenderingAttachmentInfo artcode_attachement_info{};
-    artcode_attachement_info.imageView   = this->vk_buffers.image_views;
+    artcode_attachement_info.imageView   = this->vk_buffers.msaa_image_view;
     artcode_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-    artcode_attachement_info.loadOp      = vk::AttachmentLoadOp::eLoad;
-    artcode_attachement_info.storeOp     = vk::AttachmentStoreOp::eStore;
+    artcode_attachement_info.loadOp      = vk::AttachmentLoadOp::eClear;
+    artcode_attachement_info.storeOp     = vk::AttachmentStoreOp::eDontCare;
     artcode_attachement_info.clearValue  = this->clear_color;
+
+    // resolve with image view
+    artcode_attachement_info.resolveMode      = vk::ResolveModeFlagBits::eAverage;
+    artcode_attachement_info.resolveImageView = this->vk_buffers.image_views;
+    artcode_attachement_info.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
 
     vk::RenderingInfo artcode_rendering_info{};
     artcode_rendering_info.renderArea.offset = this->offset;
@@ -430,6 +440,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
+    // NOTE: add MSAA
     // draw in reverse order for shape instances
     // this makes the first shape instance declared always be the front shape in artboard
     for (size_t i = inst_index.size(); i > 0; i--) {
@@ -474,21 +485,23 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
     cmd.end();
 };
 
-void CanvasRenderer::update_arboard() {
+void CanvasRenderer::update_artboard() {
     // ##canvas-begin is in canvas.cpp file
     const auto& canvas = ImGui::FindWindowByName("##canvas-begin");
 
     // NOTE:this updates the images from vk buffers to match the artboard dimensions
     // also updates the texture for canvas to render the artboard
+    const auto& artboard = Artboard::get_artboard_size();
     if (canvas) {
         this->device.waitIdle();
 
-        const auto& artboard = Artboard::get_artboard_size();
-        const auto  width    = static_cast<uint32_t>(artboard.x);
-        const auto  height   = static_cast<uint32_t>(artboard.y);
+        const auto width  = static_cast<uint32_t>(artboard.x);
+        const auto height = static_cast<uint32_t>(artboard.y);
 
+        // create image views and msaa image view
         this->vk_buffers.artboard_create_image(width, height);
         this->vk_buffers.artboard_create_image_views();
+        this->vk_buffers.artboard_create_msaa();
 
         // run again after texture removal
         ArtboardUtils::artboard_texture = ImGui_ImplVulkan_AddTexture(

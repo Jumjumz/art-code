@@ -53,7 +53,7 @@ class CanvasRenderer {
 
     void record_artcode_command(const uint32_t current_frame);
 
-    void update_arboard();
+    void update_artboard();
 
   private:
     const vk::raii::PhysicalDevice& physical_device;
@@ -72,6 +72,6 @@ class CanvasRenderer {
 
     std::vector<PushConstants> push_constants;
 
-    const vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
+    const vk::ClearColorValue clear_color = {1.0f, 1.0f, 1.0f, 1.0f};
     const vk::Offset2D        offset      = {0, 0};
 };

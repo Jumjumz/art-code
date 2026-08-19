@@ -68,10 +68,11 @@ void Application::loop() {
                 this->canvas.reload_pipeline();
                 // update artcode buffer
                 this->canvas.update_artcode_buffers();
+                // update texture
+                this->canvas.update_artboard();
 
                 ShadersCompiled::compiled = false;
             }
-            this->canvas.update_arboard();
         }
 
         ImGui_ImplVulkan_NewFrame();

@@ -171,7 +171,9 @@ class Component {
 };)";
 };
 
-// writes both triangle and line topology shaders
+// TODO:remove shaders in the project folder, the shaders will be part of the application
+// as every single art will have the same behaviour anyways, making it unnecessary to be
+// access in the project writes both triangle and line topology shaders
 void Build::write_vert_shader(const fs::path& shader) const {
     std::ofstream write(shader);
 

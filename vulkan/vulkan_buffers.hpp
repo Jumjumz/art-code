@@ -13,6 +13,9 @@ class VulkanBuffers {
     vk::raii::Buffer       artboard_uniform_buffer        = nullptr;
     vk::raii::DeviceMemory artboard_uniform_buffer_memory = nullptr;
     vk::raii::Sampler      artboard_sampler               = nullptr;
+    vk::raii::Image        msaa_image                     = nullptr;
+    vk::raii::DeviceMemory msaa_image_memory              = nullptr;
+    vk::raii::ImageView    msaa_image_view                = nullptr;
 
     void* artboard_uniform_buffer_mapped = nullptr;
 
@@ -23,6 +26,8 @@ class VulkanBuffers {
     void artboard_create_image(const uint32_t& width, const uint32_t& height);
 
     void artboard_create_image_views();
+
+    void artboard_create_msaa();
 
   private:
     const vk::raii::PhysicalDevice& physical_device;

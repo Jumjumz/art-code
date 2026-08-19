@@ -9,6 +9,7 @@ VulkanBuffers::VulkanBuffers(const vk::raii::PhysicalDevice& physical_device,
     artboard_create_image_views();
     artboard_create_buffer();
     artboard_create_sampler();
+    artboard_create_msaa();
 };
 
 void VulkanBuffers::artboard_create_image(const uint32_t& width, const uint32_t& height) {
@@ -95,6 +96,49 @@ void VulkanBuffers::artboard_create_sampler() {
     sampler_info.addressModeV = vk::SamplerAddressMode::eClampToEdge;
 
     this->artboard_sampler = vk::raii::Sampler{this->device, sampler_info, nullptr};
+};
+
+void VulkanBuffers::artboard_create_msaa() {
+    // set image info
+    vk::ImageCreateInfo msaa_image_info{};
+    msaa_image_info.imageType   = vk::ImageType::e2D;
+    msaa_image_info.format      = vk::Format::eR8G8B8A8Srgb;
+    msaa_image_info.extent      = this->extent;
+    msaa_image_info.mipLevels   = 1;
+    msaa_image_info.arrayLayers = 1;
+    msaa_image_info.samples     = vk::SampleCountFlagBits::e4;
+    msaa_image_info.tiling      = vk::ImageTiling::eOptimal;
+    msaa_image_info.usage       = vk::ImageUsageFlagBits::eColorAttachment |
+                            vk::ImageUsageFlagBits::eTransientAttachment;
+    msaa_image_info.initialLayout = vk::ImageLayout::eUndefined;
+
+    this->msaa_image = vk::raii::Image{this->device, msaa_image_info, nullptr};
+
+    // allocate memory
+    auto mem_req = this->msaa_image.getMemoryRequirements();
+
+    vk::MemoryAllocateInfo alloc_info{};
+    alloc_info.allocationSize = mem_req.size;
+    alloc_info.memoryTypeIndex =
+        find_memory_type(mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+    this->msaa_image_memory = vk::raii::DeviceMemory{this->device, alloc_info, nullptr};
+    // destroy old memory
+    this->msaa_image.bindMemory(this->msaa_image_memory, 0);
+
+    // create msaa image view
+    vk::ImageViewCreateInfo msaa_image_view_info{};
+    msaa_image_view_info.format                        = this->image_format;
+    msaa_image_view_info.image                         = *this->msaa_image;
+    msaa_image_view_info.viewType                      = vk::ImageViewType::e2D;
+    msaa_image_view_info.subresourceRange.aspectMask   = vk::ImageAspectFlagBits::eColor;
+    msaa_image_view_info.subresourceRange.baseMipLevel = 0;
+    msaa_image_view_info.subresourceRange.levelCount   = 1;
+    msaa_image_view_info.subresourceRange.baseArrayLayer = 0;
+    msaa_image_view_info.subresourceRange.layerCount     = 1;
+
+    this->msaa_image_view =
+        vk::raii::ImageView{this->device, msaa_image_view_info, nullptr};
 };
 
 uint32_t VulkanBuffers::find_memory_type(const uint32_t&                type_filter,

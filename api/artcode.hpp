@@ -89,17 +89,27 @@ namespace detail {
       public:
         virtual ~IPen() = default;
 
+        IPen()
+            : position(200, 200),
+              color("#000000"),
+              stroke(1.0f),
+              rotate(1.0f),
+              opacity(1.0f),
+              fill(true),
+              skew(false),
+              skewPos({}) {}
+
         // TODO:make skewPos a function.. or change the way skew pos syntax wise
         // uses camel case for users, snake case for api implementation
         // TODO: replace position with PenHeandles struct, as in the future a warp feature will be added
-        Vec2               position = {200, 200};
-        Color              color    = "#000000";
-        float              stroke   = 1.0f;
-        float              rotate   = 0.0f;
-        float              opacity  = 1.0f;
-        bool               fill     = true;
-        bool               skew     = false;
-        ArrayT<SkewPos, 8> skewPos  = {};
+        Vec2               position;
+        Color              color;
+        float              stroke;
+        float              rotate;
+        float              opacity;
+        bool               fill;
+        bool               skew;
+        ArrayT<SkewPos, 8> skewPos;
 
         // must implement
         virtual ArrayVec2 generate_vertices() const = 0;

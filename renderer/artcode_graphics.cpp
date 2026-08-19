@@ -56,6 +56,7 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
 };
 
 void ArtcodeGraphics::create_shaders() {
+    // TODO:transfer the artcode shaders to application
     const auto& shader_execs = ProjectPath::get_project_path() / "shaders";
     const auto  vert_shader  = shader_execs / "artcode.vert.spv";
     const auto  frag_exec    = shader_execs / "artcode.frag.spv";
@@ -122,8 +123,9 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
     rasterization_state_info.lineWidth        = 1.0f;
 
     vk::PipelineMultisampleStateCreateInfo multismapling_state_info{};
-    multismapling_state_info.rasterizationSamples = vk::SampleCountFlagBits::e1;
+    multismapling_state_info.rasterizationSamples = vk::SampleCountFlagBits::e4;
     multismapling_state_info.sampleShadingEnable  = vk::False;
+    // multismapling_state_info.minSampleShading     = 0.2f;
 
     vk::PipelineDepthStencilStateCreateInfo stencil_state_info{};
     stencil_state_info.depthTestEnable       = vk::False;
