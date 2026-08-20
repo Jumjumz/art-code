@@ -1,6 +1,5 @@
 #include "artcode_graphics.hpp"
 #include "artcode_instance.hpp"
-#include "nav_items.hpp"
 #include <array>
 #include <fstream>
 
@@ -56,14 +55,11 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
 };
 
 void ArtcodeGraphics::create_shaders() {
-    // TODO:transfer the artcode shaders to application
-    const auto& shader_execs = ProjectPath::get_project_path() / "shaders";
-    const auto  vert_shader  = shader_execs / "artcode.vert.spv";
-    const auto  frag_exec    = shader_execs / "artcode.frag.spv";
-
     // create shaders
-    this->vert_shader_module = create_shader_module(read_file(vert_shader));
-    this->frag_shader_module = create_shader_module(read_file(frag_exec));
+    this->vert_shader_module =
+        create_shader_module(read_file("shaders/artcode.vert.spv"));
+    this->frag_shader_module =
+        create_shader_module(read_file("shaders/artcode.frag.spv"));
 
     vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
     vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;

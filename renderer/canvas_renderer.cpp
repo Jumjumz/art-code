@@ -100,7 +100,7 @@ void CanvasRenderer::set_canvas_commands() {
         this->device, this->vk_buffers.artboard_uniform_buffer,
         this->artcode_pipeline->artcode_set_layout, this->graphics_family,
         this->MAX_FRAMES_IN_FLIGHT);
-    // vert and index buffer
+    // vert, index buffer, ssbo and export image
     this->artcode_buffer = std::make_unique<ArtcodeBuffer>(
         this->physical_device, this->device, this->graphics_queue,
         this->artcode_commands->artcode_command_pool, this->vk_buffers.images,
@@ -312,7 +312,7 @@ void CanvasRenderer::save_art() {
     if (SaveFile::has_path) {
         const auto width      = static_cast<int>(vk_buffers.extent.width);
         const auto height     = static_cast<int>(vk_buffers.extent.height);
-        const auto image_size = width * height * 4;
+        const int  image_size = width * height * 4;
 
         const auto& staging_memory = this->artcode_buffer->create_export_image_buffer(
             this->vk_buffers.extent, image_size);
@@ -440,7 +440,6 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
-    // NOTE: add MSAA
     // draw in reverse order for shape instances
     // this makes the first shape instance declared always be the front shape in artboard
     for (size_t i = inst_index.size(); i > 0; i--) {
@@ -491,17 +490,20 @@ void CanvasRenderer::update_artboard() {
 
     // NOTE:this updates the images from vk buffers to match the artboard dimensions
     // also updates the texture for canvas to render the artboard
-    const auto& artboard = Artboard::get_artboard_size();
     if (canvas) {
         this->device.waitIdle();
 
-        const auto width  = static_cast<uint32_t>(artboard.x);
-        const auto height = static_cast<uint32_t>(artboard.y);
+        const auto& artboard = Artboard::get_artboard_size();
+        const auto  width    = static_cast<uint32_t>(artboard.x);
+        const auto  height   = static_cast<uint32_t>(artboard.y);
 
         // create image views and msaa image view
         this->vk_buffers.artboard_create_image(width, height);
         this->vk_buffers.artboard_create_image_views();
         this->vk_buffers.artboard_create_msaa();
+
+        // remove old texture
+        ImGui_ImplVulkan_RemoveTexture(ArtboardUtils::artboard_texture);
 
         // run again after texture removal
         ArtboardUtils::artboard_texture = ImGui_ImplVulkan_AddTexture(
