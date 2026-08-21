@@ -287,8 +287,6 @@ ArrayU32 DrawPen::generate_indices() const {
 void Art::Draw() {
     // load shared memory
     Shared::Memory::load_shared_memory();
-    // reset/clear previous instances
-    Shared::Memory::reset_instance();
     {
         const auto& instances = ShapeRegistry::get_instances();
         for (const auto& inst : instances) {

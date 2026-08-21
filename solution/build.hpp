@@ -30,8 +30,4 @@ class Build {
     void write_comp_cpp(const fs::path& comp) const;
 
     void write_comp_hpp(const fs::path& comp) const;
-
-    void write_vert_shader(const fs::path& shader) const;
-
-    void write_frag_shader(const fs::path& shader) const;
 };

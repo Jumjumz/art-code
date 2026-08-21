@@ -87,8 +87,6 @@ void ArtboardSettings::create_new_project(const glm::vec3& dimensions) {
 
             set_artboard_dimensions(dimensions);
             get_solution_file(ProjectPath::get_project_path());
-            // enable flag for new project
-            ProjectPath::fresh_project = true;
         } else {
             this->file_dialog.ClearSelected();
             this->file_dialog.Close();

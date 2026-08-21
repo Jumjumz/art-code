@@ -9,6 +9,8 @@
 #include <cstring>
 #include <fstream>
 
+namespace fs = std::filesystem;
+
 void BuildPanel::render() {
     const auto& panel_size = ImGui::GetContentRegionAvail();
     const float width = 100.0f, height = 20.0f;
@@ -85,17 +87,6 @@ void BuildPanel::add_includes() const {
     write << js.dump(4);
 };
 
-std::vector<fs::path> BuildPanel::shader_files() const {
-    const auto&   shader_file = ProjectPath::get_solution_file();
-    std::ifstream read(shader_file);
-
-    nlohmann::json js;
-    js = nlohmann::json::parse(read);
-    read.close();
-
-    return js["shaders"].get<std::vector<fs::path>>();
-};
-
 std::string BuildPanel::executable_files() const {
     // read solution file
     std::vector<std::string> executables = {};
@@ -143,6 +134,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
                 fs::path exe_dir = fs::canonical("/proc/self/exe").parent_path();
                 fs::path api_dir = exe_dir / "api";
 
+                // NOTE:in the future support multiple compilers
                 // compile c++
                 cmd += "g++ -std=c++20 " + executables;
                 // compile main with artcode shared lib
@@ -161,26 +153,10 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
             break;
         };
         case BuildPanel::Flags::R: {
-            cmd  = build + " 2>&1";
-            cmd += " && ";
-            // executing runtime compile shaders
-            for (const auto& shader : shader_files()) {
-                const auto shader_dir = shader.parent_path();
-                const auto shader_in  = shader_dir / shader.filename();
-                const auto shader_out =
-                    shader_dir / (shader.filename().string() + ".spv");
-
-                // cd to shader dir first
-                std::string shader_cmd = cmd + "cd " + project_dir.string() + " && ";
-                // compile
-                shader_cmd += "glslangValidator -V ";
-                shader_cmd += shader_in.string() + " -o "; // shader in cmd
-                shader_cmd += shader_out;                  // shader out cmd
-                shader_cmd += " 2>&1";
-                int exit    = execute(shader_cmd);
-                if (exit != 0)
-                    break;
-            }
+            cmd      = build;
+            int exit = execute(cmd);
+            if (exit != 0)
+                break;
 
             ShadersCompiled::compiled = true;
             break;

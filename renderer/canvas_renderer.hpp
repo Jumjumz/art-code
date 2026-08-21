@@ -30,9 +30,6 @@ class CanvasRenderer {
 
     bool vulkan_init = true;
 
-    // compiles artcode shader the very first moment a new project is created
-    void compile_shader();
-
     void set_canvas_pipeline();
 
     void set_canvas_commands();

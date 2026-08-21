@@ -6,14 +6,10 @@
 
 #include "canvas_renderer.hpp"
 #include "imgui_impl_vulkan.h"
-#include "imgui_internal.h"
-#include "json.hpp"
 #include "nav_items.hpp"
 #include "transition_image.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/ext/matrix_clip_space.hpp>
-
-#include <fstream>
 
 CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
                                const vk::raii::Device&         device,
@@ -29,56 +25,6 @@ CanvasRenderer::CanvasRenderer(const vk::raii::PhysicalDevice& physical_device,
       vk_buffers(physical_device, device) {
     // initialize shared memory for artcode
     Shared::Memory::load_shared_memory();
-};
-
-// TODO:improve this, result should go somewhere
-// compiles newly created project that will generate the .spv files
-void CanvasRenderer::compile_shader() {
-    nlohmann::json js;
-    {
-        const auto&   shader_file = ProjectPath::get_solution_file();
-        std::ifstream read(shader_file);
-        js = nlohmann::json::parse(read);
-    }
-
-    std::string result;
-    {
-        const auto& project_dir = ProjectPath::get_project_path();
-        const auto  shaders     = js["shaders"].get<std::vector<std::filesystem::path>>();
-        for (const auto& shader : shaders) {
-            const auto shader_dir = shader.parent_path();
-            const auto shader_in  = shader_dir / shader.filename();
-            const auto shader_out = shader_dir / (shader.filename().string() + ".spv");
-
-            // cd to shader dir first
-            std::string cmd = "cd " + project_dir.string() + " && ";
-            // compile
-            cmd += "glslangValidator -V ";
-            cmd += shader_in.string() + " -o "; // shader in cmd
-            cmd += shader_out;                  // shader out cmd
-            cmd += " 2>&1";
-
-            FILE* pipe = popen(cmd.c_str(), "r");
-            if (!pipe) {
-                result = "Failed to run the command. Error occured somewhere";
-                return;
-            }
-
-            // temporary buffer to read chunks of result
-            char buffer[128];
-
-            // append buffer to result
-            while (fgets(buffer, sizeof(buffer), pipe)) {
-                result += buffer;
-            }
-
-            int exit_code = pclose(pipe);
-            if (exit_code != 0) {
-                result += "\nShader compilation failed: " + shader.filename().string();
-            }
-        }
-    }
-    std::cerr << result << std::endl;
 };
 
 void CanvasRenderer::set_canvas_pipeline() {
@@ -175,6 +121,9 @@ void CanvasRenderer::update_artcode_buffers() {
 
         this->push_constants.push_back(instance.constants);
     }
+
+    // reset all instances
+    Shared::Memory::reset_instance();
 
     // create buffers for each instance or shape
     this->artcode_buffer->create_vertex_buffer();
@@ -485,29 +434,24 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
 };
 
 void CanvasRenderer::update_artboard() {
-    // ##canvas-begin is in canvas.cpp file
-    const auto& canvas = ImGui::FindWindowByName("##canvas-begin");
+    this->device.waitIdle();
 
     // NOTE:this updates the images from vk buffers to match the artboard dimensions
-    // also updates the texture for canvas to render the artboard
-    if (canvas) {
-        this->device.waitIdle();
+    // also updates the texture for canvas to render the artboar
+    const auto& artboard = Artboard::get_artboard_size();
+    const auto  width    = static_cast<uint32_t>(artboard.x);
+    const auto  height   = static_cast<uint32_t>(artboard.y);
 
-        const auto& artboard = Artboard::get_artboard_size();
-        const auto  width    = static_cast<uint32_t>(artboard.x);
-        const auto  height   = static_cast<uint32_t>(artboard.y);
+    // create image views and msaa image view
+    this->vk_buffers.artboard_create_image(width, height);
+    this->vk_buffers.artboard_create_image_views();
+    this->vk_buffers.artboard_create_msaa();
 
-        // create image views and msaa image view
-        this->vk_buffers.artboard_create_image(width, height);
-        this->vk_buffers.artboard_create_image_views();
-        this->vk_buffers.artboard_create_msaa();
+    // remove old texture
+    ImGui_ImplVulkan_RemoveTexture(ArtboardUtils::artboard_texture);
 
-        // remove old texture
-        ImGui_ImplVulkan_RemoveTexture(ArtboardUtils::artboard_texture);
-
-        // run again after texture removal
-        ArtboardUtils::artboard_texture = ImGui_ImplVulkan_AddTexture(
-            *this->vk_buffers.artboard_sampler, *this->vk_buffers.image_views,
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    }
+    // run again after texture removal
+    ArtboardUtils::artboard_texture = ImGui_ImplVulkan_AddTexture(
+        *this->vk_buffers.artboard_sampler, *this->vk_buffers.image_views,
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 };

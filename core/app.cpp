@@ -2,7 +2,6 @@
 #include "artcode_instance.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
-#include "nav_items.hpp"
 #include "transition_image.hpp"
 #include "vk_types.hpp"
 
@@ -49,12 +48,6 @@ void Application::loop() {
 
         // init canvas vulkan resources once
         if (this->ui_manager.show_main_ui && this->canvas.vulkan_init) {
-            // compile the artcode shader first to generate a .spv file
-            if (ProjectPath::fresh_project) {
-                this->canvas.compile_shader();
-                ProjectPath::fresh_project = false;
-            }
-
             // init pipeline and commands
             this->canvas.set_canvas_pipeline();
             this->canvas.set_canvas_commands();
@@ -62,17 +55,15 @@ void Application::loop() {
             this->canvas.vulkan_init = false;
         }
 
-        // update canvas and texture first
-        if (this->ui_manager.show_main_ui && this->canvas.artboard_commands) {
-            if (ShadersCompiled::compiled) {
-                this->canvas.reload_pipeline();
-                // update artcode buffer
-                this->canvas.update_artcode_buffers();
-                // update texture
-                this->canvas.update_artboard();
+        // compile shaders
+        if (ShadersCompiled::compiled) {
+            this->canvas.reload_pipeline();
+            // update artcode buffer
+            this->canvas.update_artcode_buffers();
+            // update texture
+            this->canvas.update_artboard();
 
-                ShadersCompiled::compiled = false;
-            }
+            ShadersCompiled::compiled = false;
         }
 
         ImGui_ImplVulkan_NewFrame();
