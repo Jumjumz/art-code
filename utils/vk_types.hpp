@@ -21,12 +21,12 @@ struct ArtboardUtils {
 
 // used in canvas renderer and text editor wrapper class
 struct TextEditorUtils {
-    static inline bool file_save = false;
+    static inline bool is_file_save = false;
 };
 
 // used in build panel and canvas renderer class
 struct ShadersCompiled {
-    static inline bool compiled = false;
+    static inline bool is_compiled = false;
 };
 
 struct CanvasControls {

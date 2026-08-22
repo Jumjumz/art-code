@@ -205,7 +205,7 @@ void CanvasRenderer::canvas_events(GLFWwindow* app_window) {
             if (canvas->ctrl_pressed) {
                 if (key == GLFW_KEY_S) {
                     if (action == GLFW_PRESS)
-                        TextEditorUtils::file_save = true;
+                        TextEditorUtils::is_file_save = true;
                 }
             }
         });
@@ -437,16 +437,17 @@ void CanvasRenderer::update_artboard() {
     this->device.waitIdle();
 
     // NOTE:this updates the images from vk buffers to match the artboard dimensions
-    // also updates the texture for canvas to render the artboar
+    // also updates the texture for canvas to render the artboard
     const auto& artboard = Artboard::get_artboard_size();
     const auto  width    = static_cast<uint32_t>(artboard.x);
     const auto  height   = static_cast<uint32_t>(artboard.y);
 
-    // create image views and msaa image view
-    this->vk_buffers.artboard_create_image(width, height);
-    this->vk_buffers.artboard_create_image_views();
-    this->vk_buffers.artboard_create_msaa();
-
+    if (this->vk_buffers.extent.width != width && this->vk_buffers.extent.height != height) {
+        // create image views and msaa image view
+        this->vk_buffers.artboard_create_image(width, height);
+        this->vk_buffers.artboard_create_image_views();
+        this->vk_buffers.artboard_create_msaa();
+    }
     // remove old texture
     ImGui_ImplVulkan_RemoveTexture(ArtboardUtils::artboard_texture);
 

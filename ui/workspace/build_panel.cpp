@@ -158,7 +158,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
             if (exit != 0)
                 break;
 
-            ShadersCompiled::compiled = true;
+            ShadersCompiled::is_compiled = true;
             break;
         };
         }

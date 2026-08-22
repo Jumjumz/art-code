@@ -151,7 +151,7 @@ void TextEditorWrapper::read_code() {
 
 void TextEditorWrapper::save_written_code() {
     // update the file
-    if (TextEditorUtils::file_save) {
+    if (TextEditorUtils::is_file_save) {
         std::ofstream write(this->selected_file);
 
         if (write.is_open()) {
@@ -165,6 +165,6 @@ void TextEditorWrapper::save_written_code() {
         }
 
         // rest state of file save
-        TextEditorUtils::file_save = false;
+        TextEditorUtils::is_file_save = false;
     }
 };

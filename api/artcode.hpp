@@ -133,8 +133,6 @@ namespace Art {
       public:
         Quad();
 
-        ~Quad();
-
         float l, w;
 
       private:
@@ -145,8 +143,6 @@ namespace Art {
     class Circle : public detail::IPen {
       public:
         Circle();
-
-        ~Circle();
 
         float radius;
 
@@ -161,8 +157,6 @@ namespace Art {
       public:
         Triangle();
 
-        ~Triangle();
-
         float base, height;
 
         TriangleTypes type;
@@ -175,8 +169,6 @@ namespace Art {
     class Pen : public detail::IPen {
       public:
         Pen();
-
-        ~Pen();
 
         VectorT<PenHandles> positions;
 

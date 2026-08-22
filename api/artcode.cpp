@@ -1,27 +1,33 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
+#include <cassert>
 #include <cmath>
 #include <glm/common.hpp>
 
-struct ShapeRegistry {
+struct InstanceRegistry {
     static void register_shape(detail::IPen* shape) {
-        if (instances.size() == 0)
-            instances.reserve(20);
+        if (array_size > 500) {
+            assert("Max instances of shape registered exceeded");
+            return;
+        }
 
-        instances.push_back(shape);
+        instances[array_size] = shape;
+        array_size++;
     }
 
-    static VectorT<detail::IPen*> get_instances() { return instances; }
+    static size_t get_size() { return array_size; }
 
-    static void delete_registry(detail::IPen* shape) {
-        instances.erase(std::remove(instances.begin(), instances.end(), shape),
-                        instances.end());
+    static detail::IPen* get_instance(size_t size) { return instances[size]; }
+
+    static void reset_registry() {
+        array_size = 0;
+        std::fill(instances.begin(), instances.end(), nullptr);
     }
 
   private:
-    // TODO:find a way where instances throws a compiler error if num of instance exceeds
-    // 500 to avoid error in shared memory
-    static inline VectorT<detail::IPen*> instances;
+    // init elements to nullptr
+    static inline ArrayT<detail::IPen*, 500> instances  = {};
+    static inline size_t                     array_size = 0;
 };
 
 Vec4 convert_color(const string& color, float opacity) {
@@ -114,10 +120,8 @@ using DrawPen      = Art::Pen;
 DrawQuad::Quad()
     : l(100),
       w(100) {
-    ShapeRegistry::register_shape(this);
+    InstanceRegistry::register_shape(this);
 };
-
-DrawQuad::~Quad() { ShapeRegistry::delete_registry(this); };
 
 ArrayVec2 DrawQuad::generate_vertices() const {
     //  quad coordinates and size
@@ -142,10 +146,8 @@ ArrayU32 DrawQuad::generate_indices() const {
 // Circle
 DrawCircle::Circle()
     : radius(100.0f) {
-    ShapeRegistry::register_shape(this);
+    InstanceRegistry::register_shape(this);
 };
-
-DrawCircle::~Circle() { ShapeRegistry::delete_registry(this); };
 
 size_t DrawCircle::get_num_vert() const {
     // get the number of vertices by calculating th
@@ -200,10 +202,8 @@ DrawTriangle::Triangle()
     : base(100.0f),
       height(100.0f),
       type(TriangleTypes::Equilateral) {
-    ShapeRegistry::register_shape(this);
+    InstanceRegistry::register_shape(this);
 };
-
-DrawTriangle::~Triangle() { ShapeRegistry::delete_registry(this); };
 
 ArrayVec2 DrawTriangle::generate_vertices() const {
     ArrayVec2 vertex = {};
@@ -238,10 +238,8 @@ ArrayU32 DrawTriangle::generate_indices() const {
 
 DrawPen::Pen()
     : positions({}) {
-    ShapeRegistry::register_shape(this);
+    InstanceRegistry::register_shape(this);
 };
-
-DrawPen::~Pen() { ShapeRegistry::delete_registry(this); };
 
 ArrayVec2 DrawPen::generate_vertices() const {
     ArrayVec2 vertex = {};
@@ -288,8 +286,10 @@ void Art::Draw() {
     // load shared memory
     Shared::Memory::load_shared_memory();
     {
-        const auto& instances = ShapeRegistry::get_instances();
-        for (const auto& inst : instances) {
+        const auto& arr_size = InstanceRegistry::get_size();
+        for (size_t i = 0; i < arr_size; i++) {
+            const auto& inst = InstanceRegistry::get_instance(i);
+
             PushConstants constants;
             constants.color  = convert_color(inst->color, inst->opacity);
             constants.center = inst->get_center();
@@ -311,5 +311,8 @@ void Art::Draw() {
             Shared::Memory::register_instance(
                 inst->generate_vertices(), inst->generate_indices(), constants, skew_data);
         }
+
+        // reset all registered instances
+        InstanceRegistry::reset_registry();
     }
 };

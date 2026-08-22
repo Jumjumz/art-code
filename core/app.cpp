@@ -56,14 +56,14 @@ void Application::loop() {
         }
 
         // compile shaders
-        if (ShadersCompiled::compiled) {
+        if (ShadersCompiled::is_compiled) {
             this->canvas.reload_pipeline();
             // update artcode buffer
             this->canvas.update_artcode_buffers();
             // update texture
             this->canvas.update_artboard();
 
-            ShadersCompiled::compiled = false;
+            ShadersCompiled::is_compiled = false;
         }
 
         ImGui_ImplVulkan_NewFrame();
