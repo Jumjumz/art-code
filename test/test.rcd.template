@@ -6,10 +6,6 @@
     },
     "includes": [],
     "project_path": "/absolute/path/to/project",
-    "shaders": [
-        "shaders/artcode.vert",
-        "shaders/artcode.frag"
-    ],
     "solution_file": ""project-name".rcd",
     "sources": [
         "main.cpp",

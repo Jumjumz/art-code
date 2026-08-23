@@ -17,7 +17,7 @@ struct InstanceRegistry {
 
     static size_t get_size() { return array_size; }
 
-    static detail::IPen* get_instance(size_t size) { return instances[size]; }
+    static detail::IPen* get_instance(size_t index) { return instances[index]; }
 
     static void reset_registry() {
         array_size = 0;
@@ -25,7 +25,7 @@ struct InstanceRegistry {
     }
 
   private:
-    // init elements to nullptr
+    // init elements to nullptr, max num of instance only allowed
     static inline ArrayT<detail::IPen*, 500> instances  = {};
     static inline size_t                     array_size = 0;
 };
@@ -90,13 +90,13 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
             shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
 };
 
-ArrayVec2 bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_vec) {
-    constexpr size_t SEG = 8;
+ArrayT<Vec2, 9> bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_vec) {
+    constexpr size_t        LERP_SIZE = 9;
+    ArrayT<Vec2, LERP_SIZE> lerp      = {};
 
-    ArrayVec2 lerp = {};
     // generate lerp along bezier curve
-    for (size_t i = 0; i <= SEG; i++) {
-        float t   = i / (float)SEG;
+    for (size_t i = 0; i < LERP_SIZE; i++) {
+        float t   = i / static_cast<float>(LERP_SIZE - 1);
         float t2  = squared(t);
         float mt  = 1.0f - t;
         float mt2 = squared(mt);
@@ -106,11 +106,12 @@ ArrayVec2 bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_ve
             Vec2{(mt2 * st_vec.x) + (2 * mt * t * handle.x) + (t2 * en_vec.x),
                  (mt2 * st_vec.y) + (2 * mt * t * handle.y) + (t2 * en_vec.y)};
 
-        lerp.push_back(pt);
+        lerp[i] = pt;
     }
     return lerp;
 };
 
+// API implementations
 using DrawQuad     = Art::Quad;
 using DrawCircle   = Art::Circle;
 using DrawTriangle = Art::Triangle;
