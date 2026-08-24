@@ -90,6 +90,7 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
             shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
 };
 
+// NOTE:bezier curve will be in frag shader
 ArrayT<Vec2, 9> bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_vec) {
     constexpr size_t        LERP_SIZE = 9;
     ArrayT<Vec2, LERP_SIZE> lerp      = {};
@@ -102,9 +103,8 @@ ArrayT<Vec2, 9> bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2&
         float mt2 = squared(mt);
 
         // quardratic bezier formula
-        const auto& pt =
-            Vec2{(mt2 * st_vec.x) + (2 * mt * t * handle.x) + (t2 * en_vec.x),
-                 (mt2 * st_vec.y) + (2 * mt * t * handle.y) + (t2 * en_vec.y)};
+        const auto pt = Vec2{(mt2 * st_vec.x) + (2 * mt * t * handle.x) + (t2 * en_vec.x),
+                             (mt2 * st_vec.y) + (2 * mt * t * handle.y) + (t2 * en_vec.y)};
 
         lerp[i] = pt;
     }
@@ -177,7 +177,7 @@ ArrayVec2 DrawCircle::generate_vertices() const {
 ArrayU32 DrawCircle::generate_indices() const {
     ArrayU32 indices = {};
 
-    const auto& num_seg = get_num_vert();
+    const auto num_seg = get_num_vert();
     if (this->fill) {
         // triangles
         for (size_t i = 0; i < num_seg; i++) {
@@ -244,17 +244,22 @@ DrawPen::Pen()
 
 ArrayVec2 DrawPen::generate_vertices() const {
     ArrayVec2 vertex = {};
+    vertex.reserve(this->positions.size());
+
     for (size_t i = 0; i < this->positions.size(); i++) {
         const auto& pos = this->positions[i];
         if (pos.handles.handle) {
-            const auto& pos2 = this->positions[i + 1];
+            /*const auto& pos2 = this->positions[i + 1];
             const auto& bezier =
                 bezier_curve(pos.handles.handlePosition, pos.position, pos2.position);
 
             // flatten the bezier array
             for (const auto& bez : bezier) {
                 vertex.push_back(bez);
-            }
+            }*/
+            // NOTE:pass the p0 and handle, p2 will always be the next vertex
+            vertex.push_back(pos.position);
+            vertex.push_back(pos.handles.handlePosition);
         } else {
             vertex.push_back(pos.position);
         }

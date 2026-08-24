@@ -6,6 +6,7 @@ layout(location = 0) out vec4 frag_color;
 
 void main() {
   vec3 color = constant.color.rgb;
+  // convert color to linear space using gamma correction 2.2
   color = pow(color, vec3(2.2));
 
   frag_color = vec4(color, constant.color.a);

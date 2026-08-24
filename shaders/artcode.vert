@@ -45,9 +45,9 @@ vec2 skew(vec2 pos) {
     if (idx == 5) { def_c2 += vec2(offset.x, 0.0); def_c3 += vec2(offset.x, 0.0);}
     if (idx == 6) def_c3 += offset;
     if (idx == 7) { def_c3 += vec2(0.0, offset.y); def_c0 += vec2(0.0, offset.y);}
-}
+  }
+  vec2 uv = calc_uv(pos, c0, c1, c2, c3);
 
-vec2 uv = calc_uv(pos, c0, c1, c2, c3);
   return bilinear(uv, def_c0, def_c1, def_c2, def_c3);
 }
 
@@ -56,11 +56,11 @@ vec2 rotate(vec2 pos) {
   float radian = constant.rotate * (PI / 180.0f);
   float s = sin(radian);
   float c = cos(radian);
-  
+
   vec2 center = constant.center;
   center.y = ubo.reso.y - center.y;
   pos -= center;
-  
+
   vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
 
   return rotated + center;
