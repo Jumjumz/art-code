@@ -110,7 +110,7 @@ void CanvasRenderer::update_artcode_buffers() {
     for (size_t i = 0; i < inst_size; i++) {
         const auto& instance = Shared::Memory::get_instance(i);
 
-        std::vector<Vec2> vertex(instance.vertex.element.begin(),
+        std::vector<Vec4> vertex(instance.vertex.element.begin(),
                                  instance.vertex.element.begin() + instance.vertex.size);
         std::vector<u32>  indices(instance.index.element.begin(),
                                   instance.index.element.begin() + instance.index.size);

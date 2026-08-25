@@ -21,7 +21,7 @@ class ArtcodeBuffer {
     std::vector<vk::raii::Buffer>       ssbo_buffers;
     std::vector<vk::raii::DeviceMemory> ssbo_memories;
 
-    std::vector<std::vector<glm::vec2>> inst_vertex;
+    std::vector<std::vector<glm::vec4>> inst_vertex;
     std::vector<std::vector<uint32_t>>  inst_index;
 
     std::vector<SkewData> skew_data;

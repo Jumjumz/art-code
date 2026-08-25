@@ -5,7 +5,8 @@ layout(push_constant) uniform PushConstants {vec4 color;vec2 center;float stroke
 struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} ssbo;
-layout(location = 0) in vec2 in_pos;
+layout(location = 0) in vec4 in_pos;
+layout(location = 0) out vec2 uv;
 
 vec2 calc_uv(vec2 pt, vec2 c0, vec2 c1, vec2 c2, vec2 c3) {
   vec2 min_bound = min(min(c0, c1), min(c2, c3));
@@ -67,7 +68,7 @@ vec2 rotate(vec2 pos) {
 }
 
 void main() {
-  vec2 art_pos = in_pos;
+  vec2 art_pos = in_pos.xy;
   art_pos.y = ubo.reso.y - art_pos.y;
   if (constant.skew == 1) {
     art_pos = skew(art_pos);
@@ -75,6 +76,9 @@ void main() {
   if (constant.rotate != 0) {
     art_pos = rotate(art_pos);
   }
+
+  // pass in_pos.wz to frag shader
+  uv = in_pos.wz;
 
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(art_pos, 0.0f, 1.0f);
 }

@@ -47,7 +47,7 @@ Vec4 convert_color(const string& color, float opacity) {
 };
 
 // find length and width of any shapes (forms a quad)
-Vec2 skew_mesh_size(const ArrayVec2& vertices, const Vec2& center) {
+Vec2 skew_mesh_size(const ArrayVec4& vertices, const Vec2& center) {
     Vec2 len_width = Vec2{0.0f, 0.0f}, v_x = Vec2{0.0f, 0.0f}, v_y = Vec2{0.0f, 0.0f};
 
     for (const auto& vertex : vertices) {
@@ -90,9 +90,8 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
             shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
 };
 
-// NOTE:bezier curve will be in frag shader
-ArrayT<Vec2, 9> bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_vec) {
-    constexpr size_t        LERP_SIZE = 9;
+ArrayT<Vec2, 36> bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_vec) {
+    constexpr size_t        LERP_SIZE = 36;
     ArrayT<Vec2, LERP_SIZE> lerp      = {};
 
     // generate lerp along bezier curve
@@ -124,13 +123,16 @@ DrawQuad::Quad()
     InstanceRegistry::register_shape(this);
 };
 
-ArrayVec2 DrawQuad::generate_vertices() const {
+// NOTE:all generate vertices function for shapes except Pen has 10.0f for w and z
+// properties this to isolate real usage of w and z in Pen tool
+// will update in the future
+ArrayVec4 DrawQuad::generate_vertices() const {
     //  quad coordinates and size
-    return ArrayVec2{
-        this->position,
-        this->position + Vec2{this->w, 0.0f},
-        this->position + Vec2{this->w, this->l},
-        this->position + Vec2{0.0f, this->l},
+    return ArrayVec4{
+        Vec4{this->position, Vec2{10.0f, 10.0f}},
+        Vec4{this->position + Vec2{this->w, 0.0f}, Vec2{10.0f, 10.0f}},
+        Vec4{this->position + Vec2{this->w, this->l}, Vec2{10.0f, 10.0f}},
+        Vec4{this->position + Vec2{0.0f, this->l}, Vec2{10.0f, 10.0f}},
     };
 };
 
@@ -159,17 +161,17 @@ size_t DrawCircle::get_num_vert() const {
     return static_cast<size_t>(num_v);
 };
 
-ArrayVec2 DrawCircle::generate_vertices() const {
-    ArrayVec2 vertex;
+ArrayVec4 DrawCircle::generate_vertices() const {
+    ArrayVec4 vertex;
     // center of the circle
-    vertex.push_back(this->position);
+    vertex.push_back({this->position, Vec2{10.0f, 10.0f}});
 
     const auto& num_seg = get_num_vert();
     for (size_t i = 0; i < num_seg; i++) {
         float angle = i * 2.0f * M_PI / num_seg;
 
-        vertex.push_back(Vec2{this->position.x + cos(angle) * this->radius,
-                              this->position.y + sin(angle) * this->radius});
+        vertex.push_back(Vec4{this->position.x + cos(angle) * this->radius,
+                              this->position.y + sin(angle) * this->radius, 10.0f, 10.0f});
     }
     return vertex;
 };
@@ -206,22 +208,24 @@ DrawTriangle::Triangle()
     InstanceRegistry::register_shape(this);
 };
 
-ArrayVec2 DrawTriangle::generate_vertices() const {
-    ArrayVec2 vertex = {};
+ArrayVec4 DrawTriangle::generate_vertices() const {
+    ArrayVec4 vertex = {};
 
     switch (this->type) {
     case TriangleTypes::Equilateral: {
         float size = this->base * glm::sqrt(3) / 2;
         for (int i = 0; i < 3; i++) {
             float angle = i * 2.0f * M_PI / 3.0f - M_PI / 2.0f;
-            vertex.push_back(Vec2{this->position.x + cos(angle) * size,
-                                  this->position.y + sin(angle) * size});
+            vertex.push_back(Vec4{this->position.x + cos(angle) * size,
+                                  this->position.y + sin(angle) * size, 0.0f, 0.0f});
         }
         break;
     }
     case TriangleTypes::Right: {
-        vertex = ArrayVec2{this->position, this->position + Vec2{this->base, 0.0f},
-                           this->position - Vec2{0.0f, this->height}};
+        vertex =
+            ArrayVec4{Vec4{this->position, Vec2{10.0f, 10.0f}},
+                      Vec4{this->position + Vec2{this->base, 0.0f}, Vec2{10.0f, 10.0f}},
+                      Vec4{this->position - Vec2{0.0f, this->height}, Vec2{10.0f, 10.0f}}};
         break;
     }
     }
@@ -242,26 +246,30 @@ DrawPen::Pen()
     InstanceRegistry::register_shape(this);
 };
 
-ArrayVec2 DrawPen::generate_vertices() const {
-    ArrayVec2 vertex = {};
+// NOTE: currently the only place where w and z is important and is being used in the shader
+ArrayVec4 DrawPen::generate_vertices() const {
+    ArrayVec4 vertex = {};
     vertex.reserve(this->positions.size());
 
     for (size_t i = 0; i < this->positions.size(); i++) {
-        const auto& pos = this->positions[i];
-        if (pos.handles.handle) {
-            /*const auto& pos2 = this->positions[i + 1];
-            const auto& bezier =
-                bezier_curve(pos.handles.handlePosition, pos.position, pos2.position);
+        const auto& pos0 = this->positions[i];
+        if (pos0.handles.handle) {
+            const auto& pos1 = pos0.handles;
+            const auto& pos2 = this->positions[i + 1];
+            if (!this->fill) {
+                const auto& bezier =
+                    bezier_curve(pos1.handlePosition, pos0.position, pos2.position);
 
-            // flatten the bezier array
-            for (const auto& bez : bezier) {
-                vertex.push_back(bez);
-            }*/
-            // NOTE:pass the p0 and handle, p2 will always be the next vertex
-            vertex.push_back(pos.position);
-            vertex.push_back(pos.handles.handlePosition);
+                // flatten the bezier array
+                for (const auto& bez : bezier) {
+                    vertex.push_back(Vec4{bez, Vec2{10.0f, 10.0f}});
+                }
+            } else {
+                vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
+                vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
+            }
         } else {
-            vertex.push_back(pos.position);
+            vertex.push_back(Vec4{pos0.position, Vec2{1.0f, 1.0f}});
         }
     }
     return vertex;

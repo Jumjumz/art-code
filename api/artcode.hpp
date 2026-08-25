@@ -112,7 +112,7 @@ namespace detail {
         ArrayT<SkewPos, 8> skewPos;
 
         // must implement
-        virtual ArrayVec2 generate_vertices() const = 0;
+        virtual ArrayVec4 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;
 
         // centroid vertices
@@ -121,7 +121,7 @@ namespace detail {
 
             const auto& verts = this->generate_vertices();
             for (const auto& v : verts) {
-                center += v;
+                center += Vec2{v.x, v.y};
             }
             return center /= static_cast<float>(verts.size());
         };
@@ -136,7 +136,7 @@ namespace Art {
         float l, w;
 
       private:
-        ArrayVec2 generate_vertices() const override;
+        ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
     };
 
@@ -147,7 +147,7 @@ namespace Art {
         float radius;
 
       private:
-        ArrayVec2 generate_vertices() const override;
+        ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
         // num of triangles to make a circle, also defines the smoothness
         size_t get_num_vert() const;
@@ -162,7 +162,7 @@ namespace Art {
         TriangleTypes type;
 
       private:
-        ArrayVec2 generate_vertices() const override;
+        ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
     };
 
@@ -173,7 +173,7 @@ namespace Art {
         VectorT<PenHandles> positions;
 
       private:
-        ArrayVec2 generate_vertices() const override;
+        ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
     };
 

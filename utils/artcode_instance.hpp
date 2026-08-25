@@ -13,7 +13,7 @@
 // to avoid confusion and for the sake of consistency, only this header file uses the
 // artcode typedef and nothing else
 struct Vertex {
-    Vec2 pos;
+    Vec4 pos;
 
     static vk::VertexInputBindingDescription get_binding_description() {
         return {0, sizeof(Vertex), vk::VertexInputRate::eVertex};
@@ -21,7 +21,7 @@ struct Vertex {
 
     static ArrayT<vk::VertexInputAttributeDescription, 1> get_attribute_description() {
         return {
-            vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32Sfloat,
+            vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32B32A32Sfloat,
                                                 offsetof(Vertex, pos)},
         };
     };
@@ -29,7 +29,7 @@ struct Vertex {
 
 struct Vert {
     size_t            size;
-    ArrayT<Vec2, 999> element;
+    ArrayT<Vec4, 999> element;
 };
 
 struct Indx {
@@ -98,7 +98,7 @@ namespace Shared {
             shm_unlink("/artcode_instances");
         }
 
-        static void register_instance(const ArrayVec2& vertex, const ArrayU32& index,
+        static void register_instance(const ArrayVec4& vertex, const ArrayU32& index,
                                       const PushConstants& push_constants,
                                       const SkewData&      skew_data) {
             if (region->size > 500 || !region)
