@@ -30,6 +30,16 @@ struct InstanceRegistry {
     static inline size_t                     array_size = 0;
 };
 
+// NOTE:this is for test only, update this!
+struct Bezier {
+  public:
+    static inline Vec2 p0 = {};
+    static inline Vec2 p1 = {};
+    static inline Vec2 p2 = {};
+
+  private:
+};
+
 Vec4 convert_color(const string& color, float opacity) {
     string hex   = color[0] == '#' ? color.substr(1) : color;
     u32    value = std::stoul(hex, nullptr, 16);
@@ -257,13 +267,18 @@ ArrayVec4 DrawPen::generate_vertices() const {
             const auto& pos1 = pos0.handles;
             const auto& pos2 = this->positions[i + 1];
             if (!this->fill) {
-                const auto& bezier =
+                /*const auto& bezier =
                     bezier_curve(pos1.handlePosition, pos0.position, pos2.position);
 
                 // flatten the bezier array
                 for (const auto& bez : bezier) {
                     vertex.push_back(Vec4{bez, Vec2{10.0f, 10.0f}});
-                }
+                }*/
+                vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
+                vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
+                Bezier::p0 = pos0.position;
+                Bezier::p1 = pos1.handlePosition;
+                Bezier::p2 = pos2.position;
             } else {
                 vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
                 vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
@@ -311,6 +326,9 @@ void Art::Draw() {
             constants.rotate = inst->rotate;
             constants.fill   = static_cast<int>(inst->fill);
             constants.skew   = static_cast<int>(inst->skew);
+            constants.p0     = Bezier::p0;
+            constants.p1     = Bezier::p1;
+            constants.p2     = Bezier::p2;
 
             // TODO:skew should also work for pen, curently skew mesh is using member
             // "position" and not "positions" which pen uses

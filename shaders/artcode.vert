@@ -1,12 +1,13 @@
 #version 450
 
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;float ppi;} ubo;
-layout(push_constant) uniform PushConstants {vec4 color;vec2 center;float stroke;float rotate;int fill;int skew;} constant;
+layout(push_constant) uniform PushConstants {vec4 color;vec2 center;vec2 p0;vec2 p1;vec2 p2;float stroke;float rotate;int fill;int skew;} constant;
 struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} ssbo;
 layout(location = 0) in vec4 in_pos;
 layout(location = 0) out vec2 uv;
+layout(location = 1) out vec2 pos;
 
 vec2 calc_uv(vec2 pt, vec2 c0, vec2 c1, vec2 c2, vec2 c3) {
   vec2 min_bound = min(min(c0, c1), min(c2, c3));
@@ -79,6 +80,8 @@ void main() {
 
   // pass in_pos.wz to frag shader
   uv = in_pos.wz;
+  // pass the current vertex
+  pos = art_pos;
 
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(art_pos, 0.0f, 1.0f);
 }

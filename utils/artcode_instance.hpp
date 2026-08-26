@@ -45,6 +45,9 @@ struct SkewData {
 struct PushConstants {
     Vec4  color;
     Vec2  center;
+    Vec2  p0;
+    Vec2  p1;
+    Vec2  p2;
     float stroke;
     float rotate;
     int   fill;
