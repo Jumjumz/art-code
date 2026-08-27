@@ -350,6 +350,7 @@ void CanvasRenderer::record_artboard_command(const uint32_t current_frame) {
     cmd.end();
 };
 
+// NOTE:need to update the pipeline and rendering
 void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
     auto& cmd = this->artcode_commands->artcode_command_buffers[current_frame];
     // render

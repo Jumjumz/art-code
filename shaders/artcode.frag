@@ -6,8 +6,8 @@ layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) in vec2 pos;
 
-// From Inigo Quilez
-float bezier_sdf(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
+// From Inigo Quilez (curve line sdf)
+float sd_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
   vec2 a = p1 - p0;
   vec2 b = p0 - 2.0 * p1 + p2;
   vec2 c = a * 2.0;
@@ -20,7 +20,7 @@ float bezier_sdf(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
 
   float res = 0.0;
   float p = ky - kx * kx;
-  float q = kx * (2.0 * kx * kx - 3.0 *ky) + kz;
+  float q = kx * (2.0 * kx * kx - 3.0 * ky) + kz;
   float p3 = p * p * p;
   float q2 = q * q;
   float h = q2 + 4.0 * p3;
@@ -31,6 +31,7 @@ float bezier_sdf(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
     vec2 uv2 = sign(x) * pow(abs(x), vec2(1.0 / 3.0));
     float t = clamp(uv2.x + uv2.y - kx, 0.0, 1.0);
     vec2 q2 = d + (c + b * t) * t;
+
     res = dot(q2, q2);
   } else {
     float z = sqrt(-p);
@@ -42,6 +43,7 @@ float bezier_sdf(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
     float dx = dot(qx, qx);
     vec2 qy = d + (c + b * t2.y) * t2.y;
     float dy = dot(qy, qy);
+
     res = (dx < dy) ? dx : dy;
   }
 
@@ -62,18 +64,18 @@ void main() {
       float f = uv.x * uv.x - uv.y;
       float fw = fwidth(f);
 
-      alpha = constant.color.a - smoothstep(-fw, fw, f);
+      alpha -= smoothstep(-fw, fw, f);
     } else {
-      //doesnt work for line topology, might need to use triangles
+      //NOTE:doesnt work!
       vec2 p0 = constant.p0;
       vec2 p1 = constant.p1;
       vec2 p2 = constant.p2;
 
-      float dist = bezier_sdf(pos, p0, p1, p2);
+      float dist = sd_bezier(pos, p0, p1, p2);
       float stroke = constant.stroke;
       float fw = fwidth(dist);
 
-      alpha = constant.color.a - smoothstep(stroke - fw, stroke + fw, dist);
+      alpha -= smoothstep(stroke - fw, stroke + fw, dist);
     }
   }
 

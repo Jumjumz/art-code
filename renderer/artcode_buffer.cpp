@@ -14,6 +14,7 @@ ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice&             phys_de
       artboard_image(artboard_image),
       descriptor_sets(descriptor_sets) {};
 
+// NOTE:might need to remove vertex buffer and index buffers
 void ArtcodeBuffer::create_vertex_buffer() {
     for (size_t i = 0; i < this->inst_vertex.size(); i++) {
         const auto vertex = this->inst_vertex[i];
