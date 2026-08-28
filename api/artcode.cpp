@@ -120,6 +120,7 @@ ArrayT<Vec2, 36> bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2
     return lerp;
 };
 
+// NOTE:removed line list config
 // API implementations
 using DrawQuad     = Art::Quad;
 using DrawCircle   = Art::Circle;
@@ -146,15 +147,7 @@ ArrayVec4 DrawQuad::generate_vertices() const {
     };
 };
 
-ArrayU32 DrawQuad::generate_indices() const {
-    if (this->fill) {
-        // triangles
-        return ArrayU32{0, 1, 3, 1, 2, 3};
-    } else {
-        // lines
-        return ArrayU32{0, 1, 1, 2, 2, 3, 3, 0};
-    }
-};
+ArrayU32 DrawQuad::generate_indices() const { return ArrayU32{0, 1, 3, 1, 2, 3}; };
 
 // Circle
 DrawCircle::Circle()
@@ -190,20 +183,12 @@ ArrayU32 DrawCircle::generate_indices() const {
     ArrayU32 indices = {};
 
     const auto num_seg = get_num_vert();
-    if (this->fill) {
-        // triangles
-        for (size_t i = 0; i < num_seg; i++) {
-            indices.push_back(0);
-            indices.push_back(i + 1);
-            indices.push_back((i + 1) % num_seg + 1);
-        }
-    } else {
-        // lines
-        for (size_t i = 0; i < num_seg; i++) {
-            indices.push_back(i + 1);
-            indices.push_back((i + 1) % num_seg + 1);
-        }
+    for (size_t i = 0; i < num_seg; i++) {
+        indices.push_back(0);
+        indices.push_back(i + 1);
+        indices.push_back((i + 1) % num_seg + 1);
     }
+
     return indices;
 };
 
@@ -242,14 +227,7 @@ ArrayVec4 DrawTriangle::generate_vertices() const {
     return vertex;
 };
 
-ArrayU32 DrawTriangle::generate_indices() const {
-    if (this->fill) {
-        return ArrayU32{0, 1, 2};
-    } else {
-        // line list
-        return ArrayU32{0, 1, 1, 2, 2, 0};
-    }
-};
+ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
 
 DrawPen::Pen()
     : positions({}) {
@@ -266,23 +244,13 @@ ArrayVec4 DrawPen::generate_vertices() const {
         if (pos0.handles.handle) {
             const auto& pos1 = pos0.handles;
             const auto& pos2 = this->positions[i + 1];
-            if (!this->fill) {
-                /*const auto& bezier =
-                    bezier_curve(pos1.handlePosition, pos0.position, pos2.position);
 
-                // flatten the bezier array
-                for (const auto& bez : bezier) {
-                    vertex.push_back(Vec4{bez, Vec2{10.0f, 10.0f}});
-                }*/
-                vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
-                vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
-                Bezier::p0 = pos0.position;
-                Bezier::p1 = pos1.handlePosition;
-                Bezier::p2 = pos2.position;
-            } else {
-                vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
-                vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
-            }
+            Bezier::p0 = pos0.position;
+            Bezier::p1 = pos1.handlePosition;
+            Bezier::p2 = pos2.position;
+
+            vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
+            vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
         } else {
             vertex.push_back(Vec4{pos0.position, Vec2{1.0f, 1.0f}});
         }
@@ -291,20 +259,13 @@ ArrayVec4 DrawPen::generate_vertices() const {
 };
 
 ArrayU32 DrawPen::generate_indices() const {
-    ArrayU32   indices  = {};
-    const auto pos_size = generate_vertices().size();
+    ArrayU32 indices = {};
 
-    if (this->fill) {
-        for (size_t i = 0; i < pos_size - 1; i++) {
-            indices.push_back(0);
-            indices.push_back(i);
-            indices.push_back(i + 1);
-        }
-    } else {
-        for (size_t i = 0; i < pos_size - 1; i++) {
-            indices.push_back(i);
-            indices.push_back(i + 1);
-        }
+    const auto pos_size = generate_vertices().size();
+    for (size_t i = 0; i < pos_size - 1; i++) {
+        indices.push_back(0);
+        indices.push_back(i);
+        indices.push_back(i + 1);
     }
 
     return indices;

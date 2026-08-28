@@ -74,22 +74,12 @@ void ArtcodeGraphics::create_shaders() {
     this->shader_stages = {vert_shader_stage_info, frag_shader_stage_info};
 };
 
-void ArtcodeGraphics::create_pipeline(Topology topology) {
+void ArtcodeGraphics::create_pipeline() {
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
-    switch (topology) {
-    case Topology::TriangleList: {
-        assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
-        break;
-    }
-    case Topology::LineList: {
-        assembly_info.topology = vk::PrimitiveTopology::eLineList;
-        break;
-    }
-    }
+    assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
 
-    std::vector<vk::DynamicState> dynamic_states = {vk::DynamicState::eViewport,
-                                                    vk::DynamicState::eScissor,
-                                                    vk::DynamicState::eLineWidth};
+    std::array<vk::DynamicState, 2> dynamic_states = {vk::DynamicState::eViewport,
+                                                      vk::DynamicState::eScissor};
 
     vk::PipelineDynamicStateCreateInfo dynamic_state_info{};
     dynamic_state_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
@@ -182,17 +172,7 @@ void ArtcodeGraphics::create_pipeline(Topology topology) {
     pipeline_info.basePipelineHandle  = nullptr;
     pipeline_info.basePipelineIndex   = -1;
 
-    // create pipeline depending on the topology
-    switch (topology) {
-    case Topology::TriangleList: {
-        this->pipeline_trianglelist =
-            vk::raii::Pipeline{this->device, nullptr, pipeline_info, nullptr};
-        break;
-    }
-    case Topology::LineList: {
-        this->pipeline_linelist =
-            vk::raii::Pipeline{this->device, nullptr, pipeline_info, nullptr};
-        break;
-    }
-    }
+    // create pipeline
+    this->pipeline_trianglelist =
+        vk::raii::Pipeline{this->device, nullptr, pipeline_info, nullptr};
 };

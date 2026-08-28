@@ -66,7 +66,7 @@ void main() {
 
       alpha -= smoothstep(-fw, fw, f);
     } else {
-      //NOTE:doesnt work!
+      //NOTE:this now works as it only does triangle list topology
       vec2 p0 = constant.p0;
       vec2 p1 = constant.p1;
       vec2 p2 = constant.p2;

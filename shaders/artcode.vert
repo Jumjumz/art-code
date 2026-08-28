@@ -9,6 +9,9 @@ layout(location = 0) in vec4 in_pos;
 layout(location = 0) out vec2 uv;
 layout(location = 1) out vec2 pos;
 
+//TODO:remove and transfer these functions to frag shader,
+// SDF will be the main core of rendering shapes from now on, that also means
+// skew and rotate will be in frag shader
 vec2 calc_uv(vec2 pt, vec2 c0, vec2 c1, vec2 c2, vec2 c3) {
   vec2 min_bound = min(min(c0, c1), min(c2, c3));
   vec2 max_bound = max(max(c0, c1), max(c2, c3));

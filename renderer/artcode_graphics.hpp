@@ -3,21 +3,18 @@
 #include <glm/glm.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
-enum class Topology { TriangleList, LineList };
-
 class ArtcodeGraphics {
   public:
     ArtcodeGraphics(const vk::raii::Device& device, vk::Format& image_format);
 
     vk::raii::DescriptorSetLayout artcode_set_layout    = nullptr;
     vk::raii::Pipeline            pipeline_trianglelist = nullptr;
-    vk::raii::Pipeline            pipeline_linelist     = nullptr;
     vk::raii::PipelineLayout      layout                = nullptr;
 
     std::vector<vk::PipelineShaderStageCreateInfo> shader_stages;
 
     void create_shaders();
-    void create_pipeline(Topology topology);
+    void create_pipeline();
 
   private:
     const vk::raii::Device& device;

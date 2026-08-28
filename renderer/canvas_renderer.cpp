@@ -54,38 +54,15 @@ void CanvasRenderer::set_canvas_commands() {
 };
 
 void CanvasRenderer::reload_pipeline() {
-    // reset graphics_pipeline
     this->device.waitIdle();
 
-    bool need_trilist = false, need_linelist = false;
-
-    const auto inst_size = Shared::Memory::get_intance_size();
-    // recreate graphics_pipeline
-    for (size_t i = 0; i < inst_size; i++) {
-        const auto& cons = Shared::Memory::get_constants(i);
-        if (!cons.fill) {
-            need_linelist = true;
-        } else {
-            need_trilist = true;
-        }
-
-        // early exit if both true
-        if (need_trilist && need_linelist)
-            break;
-    }
-
-    // create shaders
+    // recompile shaders
     this->artcode_pipeline->shader_stages.clear();
     this->artcode_pipeline->create_shaders();
-    if (need_linelist) {
-        this->artcode_pipeline->pipeline_linelist.clear();
-        this->artcode_pipeline->create_pipeline(Topology::LineList);
-    }
 
-    if (need_trilist) {
-        this->artcode_pipeline->pipeline_trianglelist.clear();
-        this->artcode_pipeline->create_pipeline(Topology::TriangleList);
-    }
+    // reload pipeline
+    this->artcode_pipeline->pipeline_trianglelist.clear();
+    this->artcode_pipeline->create_pipeline();
 };
 
 void CanvasRenderer::update_artcode_buffers() {
@@ -297,28 +274,28 @@ void CanvasRenderer::record_artboard_command(const uint32_t current_frame) {
                             vk::ImageAspectFlagBits::eColor);
 
     // prepare to render canvas
-    vk::RenderingAttachmentInfo canvas_attachement_info{};
-    canvas_attachement_info.imageView   = this->vk_buffers.msaa_image_view;
-    canvas_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-    canvas_attachement_info.loadOp      = vk::AttachmentLoadOp::eClear;
-    canvas_attachement_info.storeOp     = vk::AttachmentStoreOp::eDontCare;
-    canvas_attachement_info.clearValue  = this->clear_color;
+    vk::RenderingAttachmentInfo artboard_attachment_info{};
+    artboard_attachment_info.imageView   = this->vk_buffers.msaa_image_view;
+    artboard_attachment_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+    artboard_attachment_info.loadOp      = vk::AttachmentLoadOp::eClear;
+    artboard_attachment_info.storeOp     = vk::AttachmentStoreOp::eDontCare;
+    artboard_attachment_info.clearValue  = this->clear_color;
 
     // resolve
-    canvas_attachement_info.resolveMode        = vk::ResolveModeFlagBits::eAverage;
-    canvas_attachement_info.resolveImageView   = this->vk_buffers.image_views;
-    canvas_attachement_info.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+    artboard_attachment_info.resolveMode      = vk::ResolveModeFlagBits::eAverage;
+    artboard_attachment_info.resolveImageView = this->vk_buffers.image_views;
+    artboard_attachment_info.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
 
-    vk::RenderingInfo canvas_rendering_info{};
-    canvas_rendering_info.renderArea.offset = this->offset;
-    canvas_rendering_info.renderArea.extent =
+    vk::RenderingInfo artboard_rendering_info{};
+    artboard_rendering_info.renderArea.offset = this->offset;
+    artboard_rendering_info.renderArea.extent =
         vk::Extent2D{this->vk_buffers.extent.width, this->vk_buffers.extent.height};
-    canvas_rendering_info.layerCount           = 1;
-    canvas_rendering_info.colorAttachmentCount = 1;
-    canvas_rendering_info.pColorAttachments    = &canvas_attachement_info;
+    artboard_rendering_info.layerCount           = 1;
+    artboard_rendering_info.colorAttachmentCount = 1;
+    artboard_rendering_info.pColorAttachments    = &artboard_attachment_info;
 
     // render canvas
-    cmd.beginRendering(canvas_rendering_info);
+    cmd.beginRendering(artboard_rendering_info);
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, this->graphics_pipeline->pipeline);
 
@@ -377,7 +354,6 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
     artcode_rendering_info.colorAttachmentCount = 1;
     artcode_rendering_info.pColorAttachments    = &artcode_attachement_info;
 
-    const auto& inst_index = this->artcode_buffer->inst_index;
     // render canvas
     cmd.beginRendering(artcode_rendering_info);
 
@@ -390,19 +366,14 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
+    const auto& inst_index = this->artcode_buffer->inst_index;
     // draw in reverse order for shape instances
-    // this makes the first shape instance declared always be the front shape in artboard
+    // this makes the first declared shape always be the front shape in artboard
     for (size_t i = inst_index.size(); i > 0; i--) {
         const auto idx = i - 1;
 
-        const auto& cons = this->push_constants[idx];
-        if (cons.fill) {
-            cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
-                             this->artcode_pipeline->pipeline_trianglelist);
-        } else {
-            cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
-                             this->artcode_pipeline->pipeline_linelist);
-        }
+        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                         this->artcode_pipeline->pipeline_trianglelist);
 
         cmd.bindDescriptorSets(
             vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->layout, 0,
@@ -411,9 +382,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
         cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
                                          vk::ShaderStageFlagBits::eVertex |
                                              vk::ShaderStageFlagBits::eFragment,
-                                         0, cons);
-
-        cmd.setLineWidth(cons.stroke);
+                                         0, this->push_constants[idx]);
 
         cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[idx], {0});
 
