@@ -140,7 +140,9 @@ void ArtcodeGraphics::create_pipeline() {
     rendering_info.colorAttachmentCount    = 1;
     rendering_info.pColorAttachmentFormats = &this->image_format;
 
-    // push constants
+    // TODO:instead of passing the entire push constants to both vert and frag stages,
+    //  use push constant stages to only use what each stages needs
+    //  push constants
     vk::PushConstantRange constant_range{};
     constant_range.stageFlags =
         vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;

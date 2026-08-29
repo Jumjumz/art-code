@@ -40,6 +40,8 @@ struct Bezier {
   private:
 };
 
+enum class ShapeType { Quad, Circle, Triangle, Pen };
+
 Vec4 convert_color(const string& color, float opacity) {
     string hex   = color[0] == '#' ? color.substr(1) : color;
     u32    value = std::stoul(hex, nullptr, 16);
@@ -120,7 +122,8 @@ ArrayT<Vec2, 36> bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2
     return lerp;
 };
 
-// NOTE:removed line list config
+// TODO:remove vertices and indices functions
+// frow now one shapes are only generated in sdf
 // API implementations
 using DrawQuad     = Art::Quad;
 using DrawCircle   = Art::Circle;
@@ -148,6 +151,8 @@ ArrayVec4 DrawQuad::generate_vertices() const {
 };
 
 ArrayU32 DrawQuad::generate_indices() const { return ArrayU32{0, 1, 3, 1, 2, 3}; };
+
+int DrawQuad::shape_type() const { return static_cast<int>(ShapeType::Quad); };
 
 // Circle
 DrawCircle::Circle()
@@ -192,6 +197,8 @@ ArrayU32 DrawCircle::generate_indices() const {
     return indices;
 };
 
+int DrawCircle::shape_type() const { return static_cast<int>(ShapeType::Circle); };
+
 // TODO:have a way where compiler identifies the type first, then from there triangle
 // can only provide if user has access to base and height or only base if type is
 // equilateral
@@ -228,6 +235,8 @@ ArrayVec4 DrawTriangle::generate_vertices() const {
 };
 
 ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
+
+int DrawTriangle::shape_type() const { return static_cast<int>(ShapeType::Triangle); };
 
 DrawPen::Pen()
     : positions({}) {
@@ -271,6 +280,8 @@ ArrayU32 DrawPen::generate_indices() const {
     return indices;
 };
 
+int DrawPen::shape_type() const { return static_cast<int>(ShapeType::Pen); };
+
 // draw every shape instance registered
 void Art::Draw() {
     // load shared memory
@@ -281,15 +292,16 @@ void Art::Draw() {
             const auto& inst = InstanceRegistry::get_instance(i);
 
             PushConstants constants;
-            constants.color  = convert_color(inst->color, inst->opacity);
-            constants.center = inst->get_center();
-            constants.stroke = inst->stroke;
-            constants.rotate = inst->rotate;
-            constants.fill   = static_cast<int>(inst->fill);
-            constants.skew   = static_cast<int>(inst->skew);
-            constants.p0     = Bezier::p0;
-            constants.p1     = Bezier::p1;
-            constants.p2     = Bezier::p2;
+            constants.color      = convert_color(inst->color, inst->opacity);
+            constants.center     = inst->get_center();
+            constants.stroke     = inst->stroke;
+            constants.rotate     = inst->rotate;
+            constants.fill       = static_cast<int>(inst->fill);
+            constants.skew       = static_cast<int>(inst->skew);
+            constants.p0         = Bezier::p0;
+            constants.p1         = Bezier::p1;
+            constants.p2         = Bezier::p2;
+            constants.shape_type = inst->shape_type();
 
             // TODO:skew should also work for pen, curently skew mesh is using member
             // "position" and not "positions" which pen uses

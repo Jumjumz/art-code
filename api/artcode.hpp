@@ -84,6 +84,7 @@ struct PenHandles {
 template <typename T, size_t size> using ArrayT = std::array<T, size>;
 template <typename T> using VectorT             = std::vector<T>;
 
+// TODO:remove vertices and indices generation funcions
 namespace detail {
     class IPen {
       public:
@@ -102,18 +103,22 @@ namespace detail {
         // TODO:make skewPos a function.. or change the way skew pos syntax wise
         // uses camel case for users, snake case for api implementation
         // TODO: replace position with PenHeandles struct, as in the future a warp feature will be added
-        Vec2               position;
-        Color              color;
-        float              stroke;
-        float              rotate;
-        float              opacity;
-        bool               fill;
-        bool               skew;
+        Vec2  position;
+        Color color;
+        float stroke;
+        float rotate;
+        float opacity;
+        bool  fill;
+        bool  skew;
+        // TODO:this is atrocius to write in user land, make this a struct that is
+        // comprehendable to write and read
         ArrayT<SkewPos, 8> skewPos;
 
         // must implement
         virtual ArrayVec4 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;
+        // NOTE:new functions for sdf to work
+        virtual int shape_type() const = 0;
 
         // centroid vertices
         Vec2 get_center() const {
@@ -138,6 +143,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
+        int       shape_type() const override;
     };
 
     class Circle : public detail::IPen {
@@ -149,6 +155,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
+        int       shape_type() const override;
         // num of triangles to make a circle, also defines the smoothness
         size_t get_num_vert() const;
     };
@@ -164,6 +171,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
+        int       shape_type() const override;
     };
 
     class Pen : public detail::IPen {
@@ -175,6 +183,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
+        int       shape_type() const override;
     };
 
     void Draw();

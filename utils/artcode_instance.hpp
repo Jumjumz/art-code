@@ -53,6 +53,7 @@ struct PushConstants {
     float rotate;
     int   fill;
     int   skew;
+    int   shape_type;
 };
 
 namespace Shared {
