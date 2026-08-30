@@ -1,18 +1,17 @@
 #version 450
 
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;float ppi;} ubo;
-layout(push_constant) uniform PushConstants {vec4 color;vec2 center;vec2 p0;vec2 p1;vec2 p2;float stroke;float rotate;int fill;int skew;} constant;
 struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} ssbo;
-layout(location = 0) in vec4 in_pos;
-layout(location = 0) out vec2 uv;
-layout(location = 1) out vec2 pos;
+// layout(location = 0) in vec2 in_pos;
+// layout(location = 0) out vec2 uv;
+layout(location = 1) out vec2 vert_pos;
 
 //TODO:remove and transfer these functions to frag shader,
 // SDF will be the main core of rendering shapes from now on, that also means
 // skew and rotate will be in frag shader
-vec2 calc_uv(vec2 pt, vec2 c0, vec2 c1, vec2 c2, vec2 c3) {
+/*vec2 calc_uv(vec2 pt, vec2 c0, vec2 c1, vec2 c2, vec2 c3) {
   vec2 min_bound = min(min(c0, c1), min(c2, c3));
   vec2 max_bound = max(max(c0, c1), max(c2, c3));
   vec2 size = max_bound - min_bound;
@@ -69,22 +68,31 @@ vec2 rotate(vec2 pos) {
   vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
 
   return rotated + center;
-}
+}*/
 
 void main() {
-  vec2 art_pos = in_pos.xy;
-  art_pos.y = ubo.reso.y - art_pos.y;
-  if (constant.skew == 1) {
+  // vec2 art_pos = in_pos.xy;
+  // art_pos.y = ubo.reso.y - art_pos.y;
+ /* if (constant.skew == 1) {
     art_pos = skew(art_pos);
   }
   if (constant.rotate != 0) {
     art_pos = rotate(art_pos);
-  }
+  }*/
 
   // pass in_pos.wz to frag shader
-  uv = in_pos.wz;
+  // uv = in_pos.wz;
   // pass the current vertex
-  pos = art_pos;
+  const vec2 positions[4] = vec2[](
+    vec2( 0.0f, 0.0f),
+    vec2( ubo.reso.x, 0.0f),
+    vec2( 0.0f, ubo.reso.y),
+    vec2( ubo.reso.x, ubo.reso.y)
+  );
+
+  vec2 art_pos = positions[gl_VertexIndex];
+
+  vert_pos = art_pos;
 
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(art_pos, 0.0f, 1.0f);
 }

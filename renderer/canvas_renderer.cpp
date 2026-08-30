@@ -70,12 +70,12 @@ void CanvasRenderer::update_artcode_buffers() {
     this->device.waitIdle();
 
     // clear the arrays for multiple buffers
-    this->artcode_buffer->inst_vertex.clear();
+    /*this->artcode_buffer->inst_vertex.clear();
     this->artcode_buffer->vertex_buffers.clear();
     this->artcode_buffer->vertex_memories.clear();
     this->artcode_buffer->inst_index.clear();
     this->artcode_buffer->index_buffers.clear();
-    this->artcode_buffer->index_memories.clear();
+    this->artcode_buffer->index_memories.clear();*/
     this->artcode_buffer->ssbo_buffers.clear();
     this->artcode_buffer->ssbo_memories.clear();
     this->artcode_buffer->skew_data.clear();
@@ -83,17 +83,21 @@ void CanvasRenderer::update_artcode_buffers() {
     this->push_constants.clear();
 
     // set the buffers resources from shared memory
-    const auto inst_size = Shared::Memory::get_intance_size();
-    for (size_t i = 0; i < inst_size; i++) {
+    {
+        const auto inst_size = Shared::Memory::get_intance_size();
+        this->inst_size      = inst_size;
+    }
+
+    for (size_t i = 0; i < this->inst_size; i++) {
         const auto& instance = Shared::Memory::get_instance(i);
 
-        std::vector<Vec4> vertex(instance.vertex.element.begin(),
+        /*std::vector<Vec4> vertex(instance.vertex.element.begin(),
                                  instance.vertex.element.begin() + instance.vertex.size);
         std::vector<u32>  indices(instance.index.element.begin(),
                                   instance.index.element.begin() + instance.index.size);
 
         this->artcode_buffer->inst_vertex.push_back(vertex);
-        this->artcode_buffer->inst_index.push_back(indices);
+        this->artcode_buffer->inst_index.push_back(indices);*/
         this->artcode_buffer->skew_data.push_back(instance.skew_data);
 
         this->push_constants.push_back(instance.constants);
@@ -103,8 +107,8 @@ void CanvasRenderer::update_artcode_buffers() {
     Shared::Memory::reset_instance();
 
     // create buffers for each instance or shape
-    this->artcode_buffer->create_vertex_buffer();
-    this->artcode_buffer->create_index_buffer();
+    /*this->artcode_buffer->create_vertex_buffer();
+    this->artcode_buffer->create_index_buffer();*/
     this->artcode_buffer->create_ssbo_buffer();
 };
 
@@ -366,10 +370,12 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
-    const auto& inst_index = this->artcode_buffer->inst_index;
-    // draw in reverse order for shape instances
-    // this makes the first declared shape always be the front shape in artboard
-    for (size_t i = inst_index.size(); i > 0; i--) {
+    // const auto& inst_index = this->artcode_buffer->inst_index;
+
+    // FIXME:doesnt render anything! might be in shader or in here is the issue
+    //  draw in reverse order for shape instances
+    //  this makes the first declared shape always be the front shape in artboard
+    for (size_t i = this->inst_size; i > 0; i--) {
         const auto idx = i - 1;
 
         cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
@@ -380,16 +386,10 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
             *this->artcode_commands->artcode_descriptor_sets[idx], nullptr);
 
         cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
-                                         vk::ShaderStageFlagBits::eVertex |
-                                             vk::ShaderStageFlagBits::eFragment,
-                                         0, this->push_constants[idx]);
+                                         vk::ShaderStageFlagBits::eFragment, 0,
+                                         this->push_constants[idx]);
 
-        cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[idx], {0});
-
-        cmd.bindIndexBuffer(*this->artcode_buffer->index_buffers[idx], 0,
-                            vk::IndexType::eUint32);
-
-        cmd.drawIndexed(inst_index[idx].size(), 1, 0, 0, 0);
+        cmd.draw(4, 1, 0, 0);
     }
 
     cmd.endRendering();

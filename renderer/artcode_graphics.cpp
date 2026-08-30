@@ -90,11 +90,12 @@ void ArtcodeGraphics::create_pipeline() {
     const auto& attribute_desc = Vertex::get_attribute_description();
 
     vk::PipelineVertexInputStateCreateInfo vertex_info{};
-    vertex_info.vertexBindingDescriptionCount = 1;
-    vertex_info.vertexAttributeDescriptionCount =
+    vertex_info.vertexBindingDescriptionCount   = 0;
+    vertex_info.vertexAttributeDescriptionCount = 0;
+    /*vertex_info.vertexAttributeDescriptionCount =
         static_cast<uint32_t>(attribute_desc.size());
     vertex_info.pVertexBindingDescriptions   = &binding_desc;
-    vertex_info.pVertexAttributeDescriptions = attribute_desc.data();
+    vertex_info.pVertexAttributeDescriptions = attribute_desc.data();*/
 
     vk::PipelineViewportStateCreateInfo viewport_state_info{};
     viewport_state_info.pViewports    = nullptr; // use dynamic viewport state
@@ -140,14 +141,12 @@ void ArtcodeGraphics::create_pipeline() {
     rendering_info.colorAttachmentCount    = 1;
     rendering_info.pColorAttachmentFormats = &this->image_format;
 
-    // TODO:instead of passing the entire push constants to both vert and frag stages,
     //  use push constant stages to only use what each stages needs
     //  push constants
     vk::PushConstantRange constant_range{};
-    constant_range.stageFlags =
-        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
-    constant_range.offset = 0;
-    constant_range.size   = sizeof(PushConstants);
+    constant_range.stageFlags = vk::ShaderStageFlagBits::eFragment;
+    constant_range.offset     = 0;
+    constant_range.size       = sizeof(PushConstants);
 
     vk::PipelineLayoutCreateInfo layout_info{};
     layout_info.setLayoutCount         = 1;

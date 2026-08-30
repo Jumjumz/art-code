@@ -118,7 +118,8 @@ namespace detail {
         virtual ArrayVec4 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;
         // NOTE:new functions for sdf to work
-        virtual int shape_type() const = 0;
+        virtual Vec2 shape_data() const = 0;
+        virtual int  shape_type() const = 0;
 
         // centroid vertices
         Vec2 get_center() const {
@@ -143,6 +144,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
+        Vec2      shape_data() const override;
         int       shape_type() const override;
     };
 
@@ -155,6 +157,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
+        Vec2      shape_data() const override;
         int       shape_type() const override;
         // num of triangles to make a circle, also defines the smoothness
         size_t get_num_vert() const;
@@ -171,6 +174,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
+        Vec2      shape_data() const override;
         int       shape_type() const override;
     };
 
@@ -183,6 +187,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
+        Vec2      shape_data() const override;
         int       shape_type() const override;
     };
 

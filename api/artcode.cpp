@@ -152,6 +152,8 @@ ArrayVec4 DrawQuad::generate_vertices() const {
 
 ArrayU32 DrawQuad::generate_indices() const { return ArrayU32{0, 1, 3, 1, 2, 3}; };
 
+Vec2 DrawQuad::shape_data() const { return Vec2{this->w, this->l}; };
+
 int DrawQuad::shape_type() const { return static_cast<int>(ShapeType::Quad); };
 
 // Circle
@@ -197,6 +199,8 @@ ArrayU32 DrawCircle::generate_indices() const {
     return indices;
 };
 
+Vec2 DrawCircle::shape_data() const { return Vec2{this->radius, this->radius}; };
+
 int DrawCircle::shape_type() const { return static_cast<int>(ShapeType::Circle); };
 
 // TODO:have a way where compiler identifies the type first, then from there triangle
@@ -235,6 +239,8 @@ ArrayVec4 DrawTriangle::generate_vertices() const {
 };
 
 ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
+
+Vec2 DrawTriangle::shape_data() const { return Vec2{this->base, this->height}; };
 
 int DrawTriangle::shape_type() const { return static_cast<int>(ShapeType::Triangle); };
 
@@ -280,6 +286,9 @@ ArrayU32 DrawPen::generate_indices() const {
     return indices;
 };
 
+// NOTE:this is wrong, filler data for now
+Vec2 DrawPen::shape_data() const { return this->position; };
+
 int DrawPen::shape_type() const { return static_cast<int>(ShapeType::Pen); };
 
 // draw every shape instance registered
@@ -287,20 +296,19 @@ void Art::Draw() {
     // load shared memory
     Shared::Memory::load_shared_memory();
     {
-        const auto& arr_size = InstanceRegistry::get_size();
-        for (size_t i = 0; i < arr_size; i++) {
+        const auto& reg_size = InstanceRegistry::get_size();
+        for (size_t i = 0; i < reg_size; i++) {
             const auto& inst = InstanceRegistry::get_instance(i);
 
             PushConstants constants;
             constants.color      = convert_color(inst->color, inst->opacity);
+            constants.pos        = inst->position;
+            constants.shape_data = inst->shape_data();
             constants.center     = inst->get_center();
             constants.stroke     = inst->stroke;
             constants.rotate     = inst->rotate;
             constants.fill       = static_cast<int>(inst->fill);
             constants.skew       = static_cast<int>(inst->skew);
-            constants.p0         = Bezier::p0;
-            constants.p1         = Bezier::p1;
-            constants.p2         = Bezier::p2;
             constants.shape_type = inst->shape_type();
 
             // TODO:skew should also work for pen, curently skew mesh is using member
@@ -313,8 +321,9 @@ void Art::Draw() {
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = inst->skewPos;
             //  register resources per instance
-            Shared::Memory::register_instance(
-                inst->generate_vertices(), inst->generate_indices(), constants, skew_data);
+            /*Shared::Memory::register_instance(
+                inst->generate_vertices(), inst->generate_indices(), constants, skew_data);*/
+            Shared::Memory::register_constants(constants, skew_data);
         }
 
         // reset all registered instances

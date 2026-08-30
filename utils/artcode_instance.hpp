@@ -13,7 +13,7 @@
 // to avoid confusion and for the sake of consistency, only this header file uses the
 // artcode typedef and nothing else
 struct Vertex {
-    Vec4 pos;
+    Vec2 pos;
 
     static vk::VertexInputBindingDescription get_binding_description() {
         return {0, sizeof(Vertex), vk::VertexInputRate::eVertex};
@@ -21,7 +21,7 @@ struct Vertex {
 
     static ArrayT<vk::VertexInputAttributeDescription, 1> get_attribute_description() {
         return {
-            vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32B32A32Sfloat,
+            vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32Sfloat,
                                                 offsetof(Vertex, pos)},
         };
     };
@@ -44,11 +44,14 @@ struct SkewData {
 
 // TODO:shape data will be pass in push constants, except for shapes or intances that needed vertices and indices
 struct PushConstants {
-    Vec4  color;
-    Vec2  center;
-    Vec2  p0;
-    Vec2  p1;
-    Vec2  p2;
+    Vec4 color;
+    Vec2 pos;
+    Vec2 shape_data;
+    Vec2 center;
+    // TODO:find a way to have a better implementation for pen tool
+    /*Vec2  p0;
+    Vec2c2  p1;
+    Vec2  p2;*/
     float stroke;
     float rotate;
     int   fill;
@@ -119,6 +122,22 @@ namespace Shared {
                 inst.index.element[inst.index.size++] = idx;
             }
             inst.constants = push_constants;
+            inst.skew_data = skew_data;
+            region->size++;
+        }
+
+        // TODO:complete this, for now get the constants first, missing skew data
+        static void register_constants(const PushConstants& push_const,
+                                       const SkewData&      skew_data) {
+            if (!region || region->size > 500) {
+                assert(
+                    "Max instances reached! or something wrong with instance creation!");
+                return;
+            }
+
+            auto& inst = region->instance[region->size];
+
+            inst.constants = push_const;
             inst.skew_data = skew_data;
             region->size++;
         }
