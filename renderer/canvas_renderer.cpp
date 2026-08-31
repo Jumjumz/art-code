@@ -61,7 +61,7 @@ void CanvasRenderer::reload_pipeline() {
     this->artcode_pipeline->create_shaders();
 
     // reload pipeline
-    this->artcode_pipeline->pipeline_trianglelist.clear();
+    this->artcode_pipeline->pipeline_triangle.clear();
     this->artcode_pipeline->create_pipeline();
 };
 
@@ -102,7 +102,6 @@ void CanvasRenderer::update_artcode_buffers() {
 
         this->push_constants.push_back(instance.constants);
     }
-
     // reset all instances
     Shared::Memory::reset_instance();
 
@@ -112,10 +111,10 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->create_ssbo_buffer();
 };
 
-// this is used only for checking if both buffer exist to push the artcode command buffers in render loop
+// NOTE: this is used only for checking if buffer data exist to
+// push the artcode command buffers in render loop
 bool CanvasRenderer::buffer_exist() const {
-    if (!this->artcode_buffer->vertex_buffers.empty() &&
-        !this->artcode_buffer->index_buffers.empty())
+    if (!this->artcode_buffer->skew_data.empty())
         return true;
 
     return false;
@@ -372,14 +371,13 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
 
     // const auto& inst_index = this->artcode_buffer->inst_index;
 
-    // FIXME:doesnt render anything! might be in shader or in here is the issue
     //  draw in reverse order for shape instances
     //  this makes the first declared shape always be the front shape in artboard
     for (size_t i = this->inst_size; i > 0; i--) {
         const auto idx = i - 1;
 
         cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
-                         this->artcode_pipeline->pipeline_trianglelist);
+                         this->artcode_pipeline->pipeline_triangle);
 
         cmd.bindDescriptorSets(
             vk::PipelineBindPoint::eGraphics, this->artcode_pipeline->layout, 0,
@@ -389,7 +387,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
                                          vk::ShaderStageFlagBits::eFragment, 0,
                                          this->push_constants[idx]);
 
-        cmd.draw(4, 1, 0, 0);
+        cmd.draw(6, 1, 0, 0);
     }
 
     cmd.endRendering();

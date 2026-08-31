@@ -46,8 +46,8 @@ struct SkewData {
 struct PushConstants {
     Vec4 color;
     Vec2 pos;
-    Vec2 shape_data;
     Vec2 center;
+    Vec2 shape_data;
     // TODO:find a way to have a better implementation for pen tool
     /*Vec2  p0;
     Vec2c2  p1;

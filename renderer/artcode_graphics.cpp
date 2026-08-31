@@ -86,8 +86,8 @@ void ArtcodeGraphics::create_pipeline() {
     dynamic_state_info.pDynamicStates    = dynamic_states.data();
 
     // vert and index bindings
-    const auto& binding_desc   = Vertex::get_binding_description();
-    const auto& attribute_desc = Vertex::get_attribute_description();
+    /*const auto& binding_desc   = Vertex::get_binding_description();
+    const auto& attribute_desc = Vertex::get_attribute_description();*/
 
     vk::PipelineVertexInputStateCreateInfo vertex_info{};
     vertex_info.vertexBindingDescriptionCount   = 0;
@@ -174,6 +174,6 @@ void ArtcodeGraphics::create_pipeline() {
     pipeline_info.basePipelineIndex   = -1;
 
     // create pipeline
-    this->pipeline_trianglelist =
+    this->pipeline_triangle =
         vk::raii::Pipeline{this->device, nullptr, pipeline_info, nullptr};
 };

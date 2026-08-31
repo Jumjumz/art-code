@@ -62,7 +62,8 @@ float sd_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
 
 // shapes
 float sd_quad(vec2 p, vec2 b) {
-  vec2 d = abs(p) - b;
+  vec2 n_b = b * 0.5;
+  vec2 d = abs(p) - n_b;
 
   return length(max(d, 0.0f)) + min(max(d.x, d.y), 0.0f);
 }
@@ -80,6 +81,8 @@ void main() {
   int shape = constant.shape_type;
   vec2 shape_data = constant.shape_data;
   vec2 pos = constant.pos;
+  pos.y = ubo.reso.y - pos.y;
+
   vec2 p = vert_pos - pos;
   float d = 1.0f;
 
@@ -107,16 +110,19 @@ void main() {
   }*/
 
   // renders correct shape
-  if (shape == 0) {
-    d = sd_quad(p, shape_data);
-  } else if (shape == 1) {
-    d = sd_circle(p, shape_data.x);
+  if (constant.fill == 1) {
+    if (shape == 0) {
+      d = sd_quad(p, shape_data);
+    } else if (shape == 1) {
+      d = sd_circle(p, shape_data.x);
+    }
   }
 
+  // discard outside
   if (d > 0.0f) discard;
  
   // only renders the curve inside the triangle
-  if(alpha < 0.001f) discard;
+  // if(alpha < 0.001f) discard;
 
   frag_color = vec4(color, alpha);
 }

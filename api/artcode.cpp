@@ -300,11 +300,12 @@ void Art::Draw() {
         for (size_t i = 0; i < reg_size; i++) {
             const auto& inst = InstanceRegistry::get_instance(i);
 
+            // TODO: add bounding box, like a mesh that renders the shape on that box
             PushConstants constants;
             constants.color      = convert_color(inst->color, inst->opacity);
             constants.pos        = inst->position;
-            constants.shape_data = inst->shape_data();
             constants.center     = inst->get_center();
+            constants.shape_data = inst->shape_data();
             constants.stroke     = inst->stroke;
             constants.rotate     = inst->rotate;
             constants.fill       = static_cast<int>(inst->fill);

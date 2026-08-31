@@ -7,9 +7,9 @@ class ArtcodeGraphics {
   public:
     ArtcodeGraphics(const vk::raii::Device& device, vk::Format& image_format);
 
-    vk::raii::DescriptorSetLayout artcode_set_layout    = nullptr;
-    vk::raii::Pipeline            pipeline_trianglelist = nullptr;
-    vk::raii::PipelineLayout      layout                = nullptr;
+    vk::raii::DescriptorSetLayout artcode_set_layout = nullptr;
+    vk::raii::Pipeline            pipeline_triangle  = nullptr;
+    vk::raii::PipelineLayout      layout             = nullptr;
 
     std::vector<vk::PipelineShaderStageCreateInfo> shader_stages;
 

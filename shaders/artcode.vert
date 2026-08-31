@@ -82,17 +82,15 @@ void main() {
 
   // pass in_pos.wz to frag shader
   // uv = in_pos.wz;
-  // pass the current vertex
-  const vec2 positions[4] = vec2[](
-    vec2( 0.0f, 0.0f),
-    vec2( ubo.reso.x, 0.0f),
-    vec2( 0.0f, ubo.reso.y),
-    vec2( ubo.reso.x, ubo.reso.y)
+  //NOTE:implement bounding box
+  const vec2 positions[6] = vec2[](
+    vec2( 0.0f, 0.0f), vec2( ubo.reso.x, 0.0f), vec2( 0.0f, ubo.reso.y),
+    vec2( ubo.reso.x, 0.0f), vec2( 0.0f, ubo.reso.y), vec2( ubo.reso.x, ubo.reso.y)
   );
 
   vec2 art_pos = positions[gl_VertexIndex];
 
   vert_pos = art_pos;
 
-  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(art_pos, 0.0f, 1.0f);
+  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);
 }
