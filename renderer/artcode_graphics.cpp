@@ -1,6 +1,5 @@
 #include "artcode_graphics.hpp"
 #include "artcode_instance.hpp"
-#include <array>
 #include <fstream>
 
 ArtcodeGraphics::ArtcodeGraphics(const vk::raii::Device& device, vk::Format& image_format)
@@ -144,9 +143,10 @@ void ArtcodeGraphics::create_pipeline() {
     //  use push constant stages to only use what each stages needs
     //  push constants
     vk::PushConstantRange constant_range{};
-    constant_range.stageFlags = vk::ShaderStageFlagBits::eFragment;
-    constant_range.offset     = 0;
-    constant_range.size       = sizeof(PushConstants);
+    constant_range.stageFlags =
+        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+    constant_range.offset = 0;
+    constant_range.size   = sizeof(PushConstants);
 
     vk::PipelineLayoutCreateInfo layout_info{};
     layout_info.setLayoutCount         = 1;

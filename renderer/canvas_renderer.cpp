@@ -384,8 +384,9 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
             *this->artcode_commands->artcode_descriptor_sets[idx], nullptr);
 
         cmd.pushConstants<PushConstants>(*this->artcode_pipeline->layout,
-                                         vk::ShaderStageFlagBits::eFragment, 0,
-                                         this->push_constants[idx]);
+                                         vk::ShaderStageFlagBits::eVertex |
+                                             vk::ShaderStageFlagBits::eFragment,
+                                         0, this->push_constants[idx]);
 
         cmd.draw(6, 1, 0, 0);
     }

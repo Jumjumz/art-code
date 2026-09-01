@@ -14,7 +14,7 @@ layout(push_constant) uniform PushConstants {
 } constant;
 // layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 frag_color;
-layout(location = 1) in vec2 vert_pos;
+layout(location = 0) in vec2 vert_pos;
 
 // From Inigo Quilez (curve line sdf)
 float sd_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
@@ -80,10 +80,10 @@ void main() {
 
   int shape = constant.shape_type;
   vec2 shape_data = constant.shape_data;
-  vec2 pos = constant.pos;
+  vec2 pos = vert_pos;
   pos.y = ubo.reso.y - pos.y;
 
-  vec2 p = vert_pos - pos;
+  vec2 p = pos;
   float d = 1.0f;
 
   float alpha = constant.color.a;
