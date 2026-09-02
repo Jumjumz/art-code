@@ -176,7 +176,7 @@ ArrayVec4 DrawCircle::generate_vertices() const {
     // center of the circle
     vertex.push_back({this->position, Vec2{10.0f, 10.0f}});
 
-    const auto& num_seg = get_num_vert();
+    const size_t num_seg = 8;
     for (size_t i = 0; i < num_seg; i++) {
         float angle = i * 2.0f * M_PI / num_seg;
 
@@ -306,6 +306,8 @@ void Art::Draw() {
             constants.pos        = inst->position;
             constants.center     = inst->get_center();
             constants.shape_data = inst->shape_data();
+            constants.mesh_size =
+                skew_mesh_size(inst->generate_vertices(), inst->get_center());
             constants.stroke     = inst->stroke;
             constants.rotate     = inst->rotate;
             constants.fill       = static_cast<int>(inst->fill);

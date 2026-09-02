@@ -6,6 +6,7 @@ layout(push_constant) uniform PushConstants {
   vec2 pos;
   vec2 center;
   vec2 shape_data;
+  vec2 mesh_size;
   float stroke;
   float rotate;
   int fill;
@@ -15,8 +16,6 @@ layout(push_constant) uniform PushConstants {
 struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} ssbo;
-// layout(location = 0) in vec2 in_pos;
-// layout(location = 0) out vec2 uv;
 layout(location = 0) out vec2 vert_pos;
 
 //TODO:remove and transfer these functions to frag shader,
@@ -94,17 +93,27 @@ void main() {
   // pass in_pos.wz to frag shader
   // uv = in_pos.wz;
 
-  const vec2 positions[6] = vec2[](
+  /*const vec2 positions[6] = vec2[](
     vec2( 0.0f, 0.0f ), vec2( ubo.reso.x, 0.0f ), vec2( 0.0f, ubo.reso.y ),
     vec2( ubo.reso.x, 0.0f ), vec2( 0.0f, ubo.reso.y ), vec2( ubo.reso.x, ubo.reso.y )
+  );*/
+  vec2 position = constant.pos;
+  // set position to ubo coord
+  position.y = ubo.reso.y + position.y;
+  vec2 mesh_size = constant.mesh_size;
+
+  // sets the quad to position and mesh size
+  const vec2 positions[6] = vec2[](
+    position,
+    vec2( position.x + mesh_size.x, position.y ),
+    vec2( position.x,  position.y + mesh_size.y ),
+    vec2( position.x + mesh_size.x, position.y ),
+    vec2( position.x,  position.y + mesh_size.y ),
+    position + mesh_size
   );
 
-  vec2 pos = positions[gl_VertexIndex];
-  //FIXME:doesnt work as intended
-  vec2 uv = pos / ubo.reso;
+  //TODO:create a mesh with the position to render
+  vert_pos = positions[gl_VertexIndex];
 
-  vec2 art_pos = constant.pos + uv;
-  vert_pos = art_pos;
-
-  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(pos, 0.0f, 1.0f);
+  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);
 }

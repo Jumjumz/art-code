@@ -48,6 +48,7 @@ struct PushConstants {
     Vec2 pos;
     Vec2 center;
     Vec2 shape_data;
+    Vec2 mesh_size;
     // TODO:find a way to have a better implementation for pen tool
     /*Vec2  p0;
     Vec2c2  p1;

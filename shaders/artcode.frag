@@ -6,15 +6,15 @@ layout(push_constant) uniform PushConstants {
   vec2 pos;
   vec2 center;
   vec2 shape_data;
+  vec2 mesh_size;
   float stroke;
   float rotate;
   int fill;
   int skew;
   int shape_type;
 } constant;
-// layout(location = 0) in vec2 uv;
-layout(location = 0) out vec4 frag_color;
 layout(location = 0) in vec2 vert_pos;
+layout(location = 0) out vec4 frag_color;
 
 // From Inigo Quilez (curve line sdf)
 float sd_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
@@ -80,10 +80,10 @@ void main() {
 
   int shape = constant.shape_type;
   vec2 shape_data = constant.shape_data;
-  vec2 pos = vert_pos;
-  pos.y = ubo.reso.y - pos.y;
+  vec2 pos = constant.pos;
+  // set pos to ubo coord
+  pos.y = ubo.reso.y + pos.y;
 
-  vec2 p = pos;
   float d = 1.0f;
 
   float alpha = constant.color.a;
@@ -109,11 +109,23 @@ void main() {
     }
   }*/
 
-  // renders correct shape
+  // renders correct shape per draw call
   if (constant.fill == 1) {
     if (shape == 0) {
+      vec2 center = vec2(
+        pos.x + shape_data.x * 0.5f,
+        pos.y + shape_data.y * 0.5f
+      );
+      vec2 p = vert_pos - center;
+
       d = sd_quad(p, shape_data);
     } else if (shape == 1) {
+      vec2 center = vec2(
+        pos.x + shape_data.x,
+        pos.y + shape_data.y
+      );
+      vec2 p = vert_pos - center;
+
       d = sd_circle(p, shape_data.x);
     }
   }

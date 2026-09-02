@@ -230,9 +230,12 @@ void CanvasRenderer::artboard_setup(const glm::vec3& artboard_size, bool show_ma
         .proj  = glm::ortho(0.0f, artboard_size.x, artboard_size.y, 0.0f, -1.0f, 1.0f),
         .view  = glm::mat4(1.0f),
         .model = glm::mat4(1.0f),
-        .reso  = artboard_size,
+        .reso  = glm::vec2{artboard_size.x, -artboard_size.y},
         // third value in artboard is ppi
         .ppi = artboard_size.z};
+
+    // y-flip
+    ab_ubo.proj[1][1] *= -1;
 
     memcpy(this->vk_buffers.artboard_uniform_buffer_mapped, &ab_ubo, sizeof(ab_ubo));
 };
