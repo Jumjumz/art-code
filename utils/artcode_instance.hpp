@@ -44,15 +44,14 @@ struct SkewData {
 
 // TODO:shape data will be pass in push constants, except for shapes or intances that needed vertices and indices
 struct PushConstants {
-    Vec4 color;
-    Vec2 pos;
-    Vec2 center;
-    Vec2 shape_data;
-    Vec2 mesh_size;
-    // TODO:find a way to have a better implementation for pen tool
-    /*Vec2  p0;
-    Vec2c2  p1;
-    Vec2  p2;*/
+    Vec4  color;
+    Vec2  pos;
+    Vec2  center;
+    Vec2  shape_data;
+    Vec2  mesh_size;
+    Vec2  p0;
+    Vec2  p1;
+    Vec2  p2;
     float stroke;
     float rotate;
     int   fill;

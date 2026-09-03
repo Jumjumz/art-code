@@ -210,6 +210,9 @@ int DrawCircle::shape_type() const { return static_cast<int>(ShapeType::Circle);
 DrawTriangle::Triangle()
     : base(100.0f),
       height(100.0f),
+      p0(100.0f, 200.0f),
+      p1(200.0f, 100.0f),
+      p2(300.0f, 200.0f),
       type(TriangleTypes::Equilateral) {
     InstanceRegistry::register_shape(this);
 };
@@ -234,13 +237,54 @@ ArrayVec4 DrawTriangle::generate_vertices() const {
                       Vec4{this->position - Vec2{0.0f, this->height}, Vec2{10.0f, 10.0f}}};
         break;
     }
+    case TriangleTypes::FreeForm: {
+        vertex = ArrayVec4{Vec4{this->position + this->p0, Vec2{10.0f, 10.0f}},
+                           Vec4{this->position + this->p1, Vec2{10.0f, 10.0f}},
+                           Vec4{this->position + this->p2, Vec2{10.0f, 10.0f}}};
+        break;
+    }
     }
     return vertex;
 };
 
 ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
 
-Vec2 DrawTriangle::shape_data() const { return Vec2{this->base, this->height}; };
+Vec2 DrawTriangle::shape_data() const {
+    Vec2 shape_data = {0.0f, 0.0f};
+
+    switch (this->type) {
+    case TriangleTypes::Equilateral: {
+        shape_data = {this->base, this->height};
+        break;
+    }
+    case TriangleTypes::Right: {
+        shape_data = {this->base, this->height};
+        break;
+    }
+    // TODO:this is wrong, for free form there should be a calculation
+    //  to get the base and height by calculating the p0, p1 and p2
+    case TriangleTypes::FreeForm: {
+        // NOTE:this is wrong and for testing purpose only
+        // should have a better implementation
+        Bezier::p0 = this->p0;
+        Bezier::p1 = this->p1;
+        Bezier::p2 = this->p2;
+        // calculate base and height using p0, p1, p2
+        float ab_x = this->p2.x - this->p0.x;
+        float ab_y = this->p2.y - this->p0.y;
+        float ac_x = this->p1.x - this->p0.x;
+        float ac_y = this->p1.y - this->p0.y;
+        // get base and height
+        float base   = std::sqrt(squared(ab_x) + squared(ab_y));
+        float height = std::abs((ab_x * ac_y) - (ab_y * ac_x)) / base;
+
+        shape_data = {base, height};
+        break;
+    }
+    }
+
+    return shape_data;
+};
 
 int DrawTriangle::shape_type() const { return static_cast<int>(ShapeType::Triangle); };
 
@@ -308,6 +352,9 @@ void Art::Draw() {
             constants.shape_data = inst->shape_data();
             constants.mesh_size =
                 skew_mesh_size(inst->generate_vertices(), inst->get_center());
+            constants.p0         = Bezier::p0;
+            constants.p1         = Bezier::p1;
+            constants.p2         = Bezier::p2;
             constants.stroke     = inst->stroke;
             constants.rotate     = inst->rotate;
             constants.fill       = static_cast<int>(inst->fill);

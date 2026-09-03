@@ -7,6 +7,9 @@ layout(push_constant) uniform PushConstants {
   vec2 center;
   vec2 shape_data;
   vec2 mesh_size;
+  vec2 p0;
+  vec2 p1;
+  vec2 p2;
   float stroke;
   float rotate;
   int fill;
@@ -93,10 +96,6 @@ void main() {
   // pass in_pos.wz to frag shader
   // uv = in_pos.wz;
 
-  /*const vec2 positions[6] = vec2[](
-    vec2( 0.0f, 0.0f ), vec2( ubo.reso.x, 0.0f ), vec2( 0.0f, ubo.reso.y ),
-    vec2( ubo.reso.x, 0.0f ), vec2( 0.0f, ubo.reso.y ), vec2( ubo.reso.x, ubo.reso.y )
-  );*/
   vec2 position = constant.pos;
   // set position to ubo coord
   position.y = ubo.reso.y + position.y;
@@ -112,7 +111,6 @@ void main() {
     position + mesh_size
   );
 
-  //TODO:create a mesh with the position to render
   vert_pos = positions[gl_VertexIndex];
 
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);

@@ -43,7 +43,7 @@ template <typename T> T cubic(T cb) { return cb * cb * cb; };
 
 // TODO:add predefined positions such as center, corner etc.
 
-enum class TriangleTypes { Equilateral, Right };
+enum class TriangleTypes { Equilateral, Right, FreeForm };
 
 // hides padding as this is for alingment in the gpu
 struct SkewPos {
@@ -168,6 +168,8 @@ namespace Art {
         Triangle();
 
         float base, height;
+        // for free form
+        Vec2 p0, p1, p2;
 
         TriangleTypes type;
 
