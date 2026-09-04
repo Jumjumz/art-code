@@ -15,6 +15,7 @@ layout(push_constant) uniform PushConstants {
   int fill;
   int skew;
   int shape_type;
+  int tri_type;
 } constant;
 layout(location = 0) in vec2 vert_pos;
 layout(location = 0) out vec4 frag_color;
@@ -95,6 +96,16 @@ float sd_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   return -sqrt(d.x) * sign(d.y);
 }
 
+float sd_equilateral_triangle(vec2 p, float r) {
+  const float k = sqrt(3.0f);
+  p.x = abs(p.x) - r;
+  p.y = p.y + r / k;
+  if ( p.x + k * p.y > 0.0f ) p = vec2( p.x - k * p.y, -k * p.x - p.y ) / 2.0f;
+  p.x -= clamp( p.x, -2.0f * r, 0.0f );
+
+  return -length(p) * sign(p.y);
+}
+
 //TODO:apply bezier sdf for line topology
 void main() {
   vec3 color = constant.color.rgb;
@@ -150,17 +161,31 @@ void main() {
       vec2 p = vert_pos - center;
 
       d = sd_circle(p, shape_data.x);
-    } else if (shape == 2) {
-      vec2 p0 = constant.p0;
-      vec2 p1 = constant.p1;
-      vec2 p2 = constant.p2;
+    }
+    // NOTE:should have all types of triangle types 
+    else if (shape == 2) {
+      //NOTE:this is done on purpose, for testing other triangle types
+      if (constant.tri_type == 0) {
+        //FIXME:doesnt form a triangle, only almost.. xD
+        vec2 center = vec2(
+          pos.x + shape_data.x,
+          pos.y + shape_data.x
+        );
+        vec2 p = vert_pos - center;
 
-      vec2 center = (p0 + p1 + p2) / 3.0f;
-      vec2 p = vert_pos - center;
+        d = sd_equilateral_triangle(p, shape_data.x);
+      } else if (constant.tri_type == 1) {
+        //TODO:add implementation for right triangle
+      } else if (constant.tri_type == 2) {
+        vec2 p0 = constant.p0;
+        vec2 p1 = constant.p1;
+        vec2 p2 = constant.p2;
 
-      // NOTE:should have all types of triangle types
-      // free form triangle
-      d = sd_any_triangle( p, p0, p1, p2 );
+        vec2 center = (p0 + p1 + p2) / 3.0f;
+        vec2 p = vert_pos - center;
+        // free form triangle
+        d = sd_any_triangle( p, p0, p1, p2 );
+      }
     }
   }
 

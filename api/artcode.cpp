@@ -36,8 +36,11 @@ struct Bezier {
     static inline Vec2 p0 = {};
     static inline Vec2 p1 = {};
     static inline Vec2 p2 = {};
+};
 
-  private:
+struct TriangleType {
+  public:
+    static inline int type = 0;
 };
 
 enum class ShapeType { Quad, Circle, Triangle, Pen };
@@ -251,19 +254,26 @@ ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
 
 Vec2 DrawTriangle::shape_data() const {
     Vec2 shape_data = {0.0f, 0.0f};
+    // triangle sdf uses circumradius
+    float base = this->base / std::sqrt(3);
 
     switch (this->type) {
     case TriangleTypes::Equilateral: {
-        shape_data = {this->base, this->height};
+        TriangleType::type = static_cast<int>(TriangleTypes::Equilateral);
+
+        shape_data = {base, this->height};
         break;
     }
     case TriangleTypes::Right: {
-        shape_data = {this->base, this->height};
+        TriangleType::type = static_cast<int>(TriangleTypes::Right);
+
+        shape_data = {base, this->height};
         break;
     }
     // TODO:this is wrong, for free form there should be a calculation
     //  to get the base and height by calculating the p0, p1 and p2
     case TriangleTypes::FreeForm: {
+        TriangleType::type = static_cast<int>(TriangleTypes::FreeForm);
         // NOTE:this is wrong and for testing purpose only
         // should have a better implementation
         Bezier::p0 = this->p0;
@@ -275,7 +285,7 @@ Vec2 DrawTriangle::shape_data() const {
         float ac_x = this->p1.x - this->p0.x;
         float ac_y = this->p1.y - this->p0.y;
         // get base and height
-        float base   = std::sqrt(squared(ab_x) + squared(ab_y));
+        base         = std::sqrt(squared(ab_x) + squared(ab_y));
         float height = std::abs((ab_x * ac_y) - (ab_y * ac_x)) / base;
 
         shape_data = {base, height};
@@ -360,6 +370,7 @@ void Art::Draw() {
             constants.fill       = static_cast<int>(inst->fill);
             constants.skew       = static_cast<int>(inst->skew);
             constants.shape_type = inst->shape_type();
+            constants.tri_type   = TriangleType::type;
 
             // TODO:skew should also work for pen, curently skew mesh is using member
             // "position" and not "positions" which pen uses

@@ -15,6 +15,7 @@ layout(push_constant) uniform PushConstants {
   int fill;
   int skew;
   int shape_type;
+  int tri_type;
 } constant;
 struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
@@ -104,9 +105,9 @@ void main() {
   // sets the quad to position and mesh size
   const vec2 positions[6] = vec2[](
     position,
-    vec2( position.x + mesh_size.x, position.y ),
+    vec2( position.x + mesh_size.x, position.y  ),
     vec2( position.x,  position.y + mesh_size.y ),
-    vec2( position.x + mesh_size.x, position.y ),
+    vec2( position.x + mesh_size.x, position.y  ),
     vec2( position.x,  position.y + mesh_size.y ),
     position + mesh_size
   );
