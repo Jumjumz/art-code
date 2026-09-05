@@ -94,7 +94,7 @@ namespace detail {
             : position(200, 200),
               color("#000000"),
               stroke(1.0f),
-              rotate(1.0f),
+              rotate(0.0f),
               opacity(1.0f),
               fill(true),
               skew(false),
@@ -167,6 +167,8 @@ namespace Art {
       public:
         Triangle();
 
+        // TODO:equilateral only needs base, find a way for the compiler to provide a
+        // warning if hegiht is being used by the user
         float base, height;
         // for free form
         Vec2 p0, p1, p2;

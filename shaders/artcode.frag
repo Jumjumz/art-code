@@ -76,6 +76,16 @@ float sd_circle(vec2 p, float r) {
   return length(p) - r;
 }
 
+float sd_equilateral_triangle(vec2 p, float r) {
+  const float k = sqrt(3.0f);
+  p.x = abs(p.x) - r;
+  p.y = p.y + r / k;
+  if ( p.x + k * p.y > 0.0f ) p = vec2( p.x - k * p.y, -k * p.x - p.y ) / 2.0f;
+  p.x -= clamp( p.x, -2.0f * r, 0.0f );
+
+  return -length(p) * sign(p.y);
+}
+
 // any form of triangle granted 3 vertices are provided
 float sd_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   vec2 e0 = p1 - p0;
@@ -94,16 +104,6 @@ float sd_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
                      vec2( dot( pq2, pq2 ), s * ( v2.x * e2.y - v2.y * e2.x ) ) );
 
   return -sqrt(d.x) * sign(d.y);
-}
-
-float sd_equilateral_triangle(vec2 p, float r) {
-  const float k = sqrt(3.0f);
-  p.x = abs(p.x) - r;
-  p.y = p.y + r / k;
-  if ( p.x + k * p.y > 0.0f ) p = vec2( p.x - k * p.y, -k * p.x - p.y ) / 2.0f;
-  p.x -= clamp( p.x, -2.0f * r, 0.0f );
-
-  return -length(p) * sign(p.y);
 }
 
 //TODO:apply bezier sdf for line topology
@@ -161,12 +161,9 @@ void main() {
       vec2 p = vert_pos - center;
 
       d = sd_circle(p, shape_data.x);
-    }
-    // NOTE:should have all types of triangle types 
-    else if (shape == 2) {
-      //NOTE:this is done on purpose, for testing other triangle types
+    } else if (shape == 2) {
       if (constant.tri_type == 0) {
-        //FIXME:doesnt form a triangle, only almost.. xD
+        // FIXME:trangle is inverted
         vec2 center = vec2(
           pos.x + shape_data.x,
           pos.y + shape_data.x
@@ -177,6 +174,7 @@ void main() {
       } else if (constant.tri_type == 1) {
         //TODO:add implementation for right triangle
       } else if (constant.tri_type == 2) {
+        // FIXME:this doesnt work!
         vec2 p0 = constant.p0;
         vec2 p1 = constant.p1;
         vec2 p2 = constant.p2;
@@ -187,6 +185,8 @@ void main() {
         d = sd_any_triangle( p, p0, p1, p2 );
       }
     }
+  } else {
+    //TODO:implement the line based shapes
   }
 
   // discard outside

@@ -63,34 +63,18 @@ Vec4 convert_color(const string& color, float opacity) {
 
 // find length and width of any shapes (forms a quad)
 Vec2 skew_mesh_size(const ArrayVec4& vertices, const Vec2& center) {
-    Vec2 len_width = Vec2{0.0f, 0.0f}, v_x = Vec2{0.0f, 0.0f}, v_y = Vec2{0.0f, 0.0f};
+    float max_x = -FLT_MAX, min_x = FLT_MAX;
+    float max_y = -FLT_MAX, min_y = FLT_MAX;
 
     for (const auto& vertex : vertices) {
-        // get min and max
-        float max_x = glm::max(vertex.x - center.x, vertex.x);
-        float min_x = glm::min(vertex.x - center.x, vertex.x);
-        float max_y = glm::max(vertex.y - center.y, vertex.y);
-        float min_y = glm::min(vertex.y - center.y, vertex.y);
-        // reduction operation
-        if (v_x.x > max_x) {
-            v_x.x = max_x;
-        }
-        if (v_x.y < min_x) {
-            v_x.y = min_x;
-        }
-        if (v_y.x > max_y) {
-            v_y.x = max_y;
-        }
-        if (v_y.y < min_y) {
-            v_y.y = min_y;
-        }
+        max_x = glm::max(max_x, vertex.x);
+        min_x = glm::min(min_x, vertex.x);
+        max_y = glm::max(max_y, vertex.y);
+        min_y = glm::min(min_y, vertex.y);
     }
-    // calculate the max minus min
-    len_width.x = v_x.x - (v_x.y * -1) * 2;
-    len_width.y = v_y.x - (v_y.y * -1) * 2;
 
-    return len_width;
-};
+    return Vec2{max_x - min_x, max_y - min_y};
+}
 
 // TODO:might need to reduce this to size 4 as 0-4 indices are only needed.. though this is still in consideration
 ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {

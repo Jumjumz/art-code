@@ -67,31 +67,29 @@ vec2 skew(vec2 pos) {
   vec2 uv = calc_uv(pos, c0, c1, c2, c3);
 
   return bilinear(uv, def_c0, def_c1, def_c2, def_c3);
-}
+}*/
 
+//FIXME:this doesnt work! might need to be in frag shader
 vec2 rotate(vec2 pos) {
   const float PI = 3.14159265359;
-  float radian = v_const.rotate * (PI / 180.0f);
+  float radian = constant.rotate * (PI / 180.0f);
   float s = sin(radian);
   float c = cos(radian);
 
-  vec2 center = v_const.center;
+  vec2 center = constant.center;
   center.y = ubo.reso.y - center.y;
   pos -= center;
 
   vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
 
   return rotated + center;
-}*/
+}
 
 void main() {
   // vec2 art_pos = in_pos.xy;
   // art_pos.y = ubo.reso.y - art_pos.y;
  /* if (v_const.skew == 1) {
     art_pos = skew(art_pos);
-  }
-  if (v_const.rotate != 0) {
-    art_pos = rotate(art_pos);
   }*/
 
   // pass in_pos.wz to frag shader
@@ -112,7 +110,13 @@ void main() {
     position + mesh_size
   );
 
-  vert_pos = positions[gl_VertexIndex];
+  vec2 art_pos = positions[gl_VertexIndex];
+
+  if (constant.rotate != 0.0) {
+    art_pos = rotate(art_pos);
+  }
+
+  vert_pos = art_pos;
 
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);
 }
