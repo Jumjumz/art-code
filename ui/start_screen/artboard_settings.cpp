@@ -68,7 +68,9 @@ void ArtboardSettings::render() {
     ImGui::End();
     ImGui::PopStyleVar();
 
-    // display file modal browser
+    // TODO:when displaying the dialog, have a way where only the solution extension is displayed
+    //  this avoids users to click random or incorrect files
+    //  display file modal browser
     this->file_dialog.Display();
 
     if (!this->open_selected) {

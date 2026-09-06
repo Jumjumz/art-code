@@ -209,8 +209,8 @@ ArrayVec4 DrawTriangle::generate_vertices() const {
 
     switch (this->type) {
     case TriangleTypes::Equilateral: {
-        float size = this->base * glm::sqrt(3) / 2;
-        for (int i = 0; i < 3; i++) {
+        float size = this->base / glm::sqrt(3);
+        for (size_t i = 0; i < 3; i++) {
             float angle = i * 2.0f * M_PI / 3.0f - M_PI / 2.0f;
             vertex.push_back(Vec4{this->position.x + cos(angle) * size,
                                   this->position.y + sin(angle) * size, 0.0f, 0.0f});

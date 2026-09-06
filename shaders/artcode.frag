@@ -66,8 +66,8 @@ float sd_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
 
 // shapes
 float sd_quad(vec2 p, vec2 b) {
-  vec2 n_b = b * 0.5;
-  vec2 d = abs(p) - n_b;
+  const vec2 n_b = b * 0.5;
+  const vec2 d = abs(p) - n_b;
 
   return length(max(d, 0.0f)) + min(max(d.x, d.y), 0.0f);
 }
@@ -79,8 +79,9 @@ float sd_circle(vec2 p, float r) {
 float sd_equilateral_triangle(vec2 p, float r) {
   const float k = sqrt(3.0f);
   p.x = abs(p.x) - r;
-  p.y = p.y + r / k;
+  p.y = -p.y + r / k; // uses negative y to flip the triangle upwards
   if ( p.x + k * p.y > 0.0f ) p = vec2( p.x - k * p.y, -k * p.x - p.y ) / 2.0f;
+ 
   p.x -= clamp( p.x, -2.0f * r, 0.0f );
 
   return -length(p) * sign(p.y);
@@ -106,7 +107,7 @@ float sd_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   return -sqrt(d.x) * sign(d.y);
 }
 
-//TODO:apply bezier sdf for line topology
+// TODO:apply bezier sdf for line topology
 void main() {
   vec3 color = constant.color.rgb;
   // convert color to linear space using gamma correction 2.2
@@ -163,7 +164,7 @@ void main() {
       d = sd_circle(p, shape_data.x);
     } else if (shape == 2) {
       if (constant.tri_type == 0) {
-        // FIXME:trangle is inverted
+        // FIXME:renders a clipped triangle
         vec2 center = vec2(
           pos.x + shape_data.x,
           pos.y + shape_data.x
@@ -186,7 +187,7 @@ void main() {
       }
     }
   } else {
-    //TODO:implement the line based shapes
+    // TODO:implement the line based shapes
   }
 
   // discard outside

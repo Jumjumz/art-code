@@ -98,7 +98,7 @@ void main() {
   vec2 position = constant.pos;
   // set position to ubo coord
   position.y = ubo.reso.y + position.y;
-  vec2 mesh_size = constant.mesh_size;
+  const vec2 mesh_size = constant.mesh_size;
 
   // sets the quad to position and mesh size
   const vec2 positions[6] = vec2[](
