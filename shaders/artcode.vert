@@ -21,6 +21,7 @@ struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} ssbo;
 layout(location = 0) out vec2 vert_pos;
+layout(location = 1) out vec2 mesh_center;
 
 //TODO:remove and transfer these functions to frag shader,
 // SDF be the main core of rendering shapes from now on, that also means
@@ -68,6 +69,16 @@ vec2 skew(vec2 pos) {
 
   return bilinear(uv, def_c0, def_c1, def_c2, def_c3);
 }*/
+
+// NOTE:this is a test, might need to delete later
+vec2 get_mesh_center(vec2 positions[6]) {
+  vec2 center = vec2(0.0f, 0.0f);
+  int pos_size = positions.length();
+  for (int i = 0; i < pos_size; i++) {
+    center += positions[i];
+  }
+  return center /= pos_size;
+}
 
 //FIXME:this doesnt work! might need to be in frag shader
 vec2 rotate(vec2 pos) {
@@ -117,6 +128,8 @@ void main() {
   }
 
   vert_pos = art_pos;
+
+  mesh_center = get_mesh_center(positions);
 
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);
 }

@@ -50,6 +50,7 @@ Vec4 convert_color(const string& color, float opacity) {
     u32    value = std::stoul(hex, nullptr, 16);
 
     // 0xFF (255) is a bit mask
+    // string size of 8 means alpha value is provided
     if (hex.size() == 8) {
         // this means hex is already provided an alpha value which makes the hex size 8 i.e #443199FF
         return Vec4{((value >> 24) & 0xFF) / 255.0f, ((value >> 16) & 0xFF) / 255.0f,
@@ -209,7 +210,7 @@ ArrayVec4 DrawTriangle::generate_vertices() const {
 
     switch (this->type) {
     case TriangleTypes::Equilateral: {
-        float size = this->base / glm::sqrt(3);
+        float size = this->base / glm::sqrt(3.0f);
         for (size_t i = 0; i < 3; i++) {
             float angle = i * 2.0f * M_PI / 3.0f - M_PI / 2.0f;
             vertex.push_back(Vec4{this->position.x + cos(angle) * size,
@@ -239,13 +240,13 @@ ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
 Vec2 DrawTriangle::shape_data() const {
     Vec2 shape_data = {0.0f, 0.0f};
     // triangle sdf uses circumradius
-    float base = this->base / std::sqrt(3);
+    float base = this->base / std::sqrt(3.0f);
 
     switch (this->type) {
     case TriangleTypes::Equilateral: {
         TriangleType::type = static_cast<int>(TriangleTypes::Equilateral);
 
-        shape_data = {base, this->height};
+        shape_data = {base, base};
         break;
     }
     case TriangleTypes::Right: {

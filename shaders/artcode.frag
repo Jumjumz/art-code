@@ -19,6 +19,7 @@ layout(push_constant) uniform PushConstants {
 } constant;
 layout(location = 0) in vec2 vert_pos;
 layout(location = 0) out vec4 frag_color;
+layout(location = 1) in vec2 mesh_center;
 
 // From Inigo Quilez (curve line sdf)
 float sd_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
