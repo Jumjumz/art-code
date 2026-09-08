@@ -170,7 +170,8 @@ namespace Art {
         // TODO:equilateral only needs base, find a way for the compiler to provide a
         // warning if hegiht is being used by the user
         float base, height;
-        // for free form
+        // TODO: should be v0, v1, v2;
+        //  for free form
         Vec2 p0, p1, p2;
 
         TriangleTypes type;

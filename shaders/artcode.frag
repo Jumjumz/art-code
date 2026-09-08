@@ -19,7 +19,6 @@ layout(push_constant) uniform PushConstants {
 } constant;
 layout(location = 0) in vec2 vert_pos;
 layout(location = 0) out vec4 frag_color;
-layout(location = 1) in vec2 mesh_center;
 
 // From Inigo Quilez (curve line sdf)
 float sd_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
@@ -80,7 +79,8 @@ float sd_circle(vec2 p, float r) {
 float sd_equilateral_triangle(vec2 p, float r) {
   const float k = sqrt(3.0f);
   p.x = abs(p.x) - r;
-  p.y = -p.y + r / k; // uses negative y to flip the triangle upwards
+  p.y = -p.y; // uses negative y to flip the triangle upwards
+  p.y = p.y + r / k;
   if ( p.x + k * p.y > 0.0f ) p = vec2( p.x - k * p.y, -k * p.x - p.y ) / 2.0f;
  
   p.x -= clamp( p.x, -2.0f * r, 0.0f );
@@ -100,6 +100,7 @@ float sd_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   vec2 pq0 = v0 - e0 * clamp( dot(v0, e0) / dot(e0, e0), 0.0f, 1.0f );
   vec2 pq1 = v1 - e1 * clamp( dot(v1, e1) / dot(e1, e1), 0.0f, 1.0f );
   vec2 pq2 = v2 - e2 * clamp( dot(v2, e2) / dot(e2, e2), 0.0f, 1.0f );
+
   float s = sign( e0.x * e2.y - e0.y * e2.x );
   vec2 d = min( min( vec2( dot( pq0, pq0 ), s * ( v0.x * e0.y - v0.y * e0.x ) ),
                      vec2( dot( pq1, pq1 ), s * ( v1.x * e1.y - v1.y * e1.x ) ) ),
@@ -148,18 +149,12 @@ void main() {
   // renders correct shape per draw call
   if (constant.fill == 1) {
     if (shape == 0) {
-      vec2 center = vec2(
-        pos.x + shape_data.x * 0.5f,
-        pos.y + shape_data.y * 0.5f
-      );
+      const vec2 center = pos + (shape_data * 0.5f); 
       vec2 p = vert_pos - center;
 
       d = sd_quad(p, shape_data);
     } else if (shape == 1) {
-      vec2 center = vec2(
-        pos.x + shape_data.x,
-        pos.y + shape_data.y
-      );
+      const vec2 center = pos + shape_data;
       vec2 p = vert_pos - center;
 
       d = sd_circle(p, shape_data.x);
@@ -168,7 +163,7 @@ void main() {
         // FIXME:renders a clipped triangle
         vec2 center = vec2(
           pos.x + shape_data.x,
-          pos.y + shape_data.x
+          pos.y + shape_data.y
         );
         vec2 p = vert_pos - center;
 
