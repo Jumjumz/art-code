@@ -72,12 +72,12 @@ vec2 skew(vec2 pos) {
 //FIXME:this doesnt work! might need to be in frag shader
 vec2 rotate(vec2 pos) {
   const float PI = 3.14159265359;
-  float radian = constant.rotate * (PI / 180.0f);
-  float s = sin(radian);
-  float c = cos(radian);
+  float radian   = constant.rotate * (PI / 180.0f);
+  float s        = sin(radian);
+  float c        = cos(radian);
 
   vec2 center = constant.center;
-  center.y = ubo.reso.y - center.y;
+  center.y    = ubo.reso.y - center.y;
   pos -= center;
 
   vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
@@ -95,10 +95,10 @@ void main() {
   // pass in_pos.wz to frag shader
   // uv = in_pos.wz;
 
-  vec2 position = constant.pos;
+  vec2 position        = constant.pos;
+  const vec2 mesh_size = constant.mesh_size;
   // set position to ubo coord
   position.y = ubo.reso.y + position.y;
-  const vec2 mesh_size = constant.mesh_size;
 
   // sets the quad to position and mesh size
   const vec2 positions[6] = vec2[](

@@ -27,35 +27,34 @@ float sd_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
   vec2 c = a * 2.0f;
   vec2 d = p0 - pos;
 
-  float kk = 1.0f / dot(b, b);
-  float kx = kk * dot(a, b);
-  float ky = kk * (2.0f * dot(a, a) + dot(d, b)) / 3.0f;
-  float kz = kk * dot(d, a);
-
+  float kk  = 1.0f / dot(b, b);
+  float kx  = kk * dot(a, b);
+  float ky  = kk * (2.0f * dot(a, a) + dot(d, b)) / 3.0f;
+  float kz  = kk * dot(d, a);
   float res = 0.0f;
-  float p = ky - kx * kx;
-  float q = kx * (2.0f * kx * kx - 3.0f * ky) + kz;
-  float p3 = p * p * p;
-  float q2 = q * q;
-  float h = q2 + 4.0f * p3;
+  float p   = ky - kx * kx;
+  float q   = kx * (2.0f * kx * kx - 3.0f * ky) + kz;
+  float p3  = p * p * p;
+  float q2  = q * q;
+  float h   = q2 + 4.0f * p3;
 
   if (h >= 0.0f) {
-    h = sqrt(h);
-    vec2 x = (vec2(h, -h) - q) / 2.0f;
+    h        = sqrt(h);
+    vec2 x   = (vec2(h, -h) - q) / 2.0f;
     vec2 uv2 = sign(x) * pow(abs(x), vec2(1.0f / 3.0f));
-    float t = clamp(uv2.x + uv2.y - kx, 0.0f, 1.0f);
-    vec2 q2 = d + (c + b * t) * t;
+    float t  = clamp(uv2.x + uv2.y - kx, 0.0f, 1.0f);
+    vec2 q2  = d + (c + b * t) * t;
 
     res = dot(q2, q2);
   } else {
-    float z = sqrt(-p);
-    float v = acos(q / (p * z * 2.0f)) / 3.0f;
-    float m = cos(v);
-    float n = sin(v) * 1.732050808f;
-    vec3 t2 = clamp(vec3(m + m, -n - m, n - m) * z - kx, 0.0f, 1.0f);
-    vec2 qx = d + (c + b * t2.x) * t2.x;
+    float z  = sqrt(-p);
+    float v  = acos(q / (p * z * 2.0f)) / 3.0f;
+    float m  = cos(v);
+    float n  = sin(v) * 1.732050808f;
+    vec3 t2  = clamp(vec3(m + m, -n - m, n - m) * z - kx, 0.0f, 1.0f);
+    vec2 qx  = d + (c + b * t2.x) * t2.x;
     float dx = dot(qx, qx);
-    vec2 qy = d + (c + b * t2.y) * t2.y;
+    vec2 qy  = d + (c + b * t2.y) * t2.y;
     float dy = dot(qy, qy);
 
     res = (dx < dy) ? dx : dy;
@@ -65,22 +64,23 @@ float sd_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
 }
 
 // shapes
-float sd_quad(vec2 p, vec2 b) {
+float sdf_quad(vec2 p, vec2 b) {
   const vec2 n_b = b * 0.5;
-  const vec2 d = abs(p) - n_b;
+  const vec2 d   = abs(p) - n_b;
 
   return length(max(d, 0.0f)) + min(max(d.x, d.y), 0.0f);
 }
 
-float sd_circle(vec2 p, float r) {
+float sdf_circle(vec2 p, float r) {
   return length(p) - r;
 }
 
-float sd_equilateral_triangle(vec2 p, float r) {
+float sdf_equilateral_triangle(vec2 p, float r) {
   const float k = sqrt(3.0f);
+
   p.x = abs(p.x) - r;
   p.y = -p.y; // uses negative y to flip the triangle upwards
-  p.y = p.y + r / k;
+  p.y =  p.y + r / k;
   if ( p.x + k * p.y > 0.0f ) p = vec2( p.x - k * p.y, -k * p.x - p.y ) / 2.0f;
  
   p.x -= clamp( p.x, -2.0f * r, 0.0f );
@@ -89,7 +89,7 @@ float sd_equilateral_triangle(vec2 p, float r) {
 }
 
 // any form of triangle granted 3 vertices are provided
-float sd_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
+float sdf_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   vec2 e0 = p1 - p0;
   vec2 e1 = p2 - p1;
   vec2 e2 = p0 - p2;
@@ -102,7 +102,7 @@ float sd_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   vec2 pq2 = v2 - e2 * clamp( dot(v2, e2) / dot(e2, e2), 0.0f, 1.0f );
 
   float s = sign( e0.x * e2.y - e0.y * e2.x );
-  vec2 d = min( min( vec2( dot( pq0, pq0 ), s * ( v0.x * e0.y - v0.y * e0.x ) ),
+  vec2 d  = min( min( vec2( dot( pq0, pq0 ), s * ( v0.x * e0.y - v0.y * e0.x ) ),
                      vec2( dot( pq1, pq1 ), s * ( v1.x * e1.y - v1.y * e1.x ) ) ),
                      vec2( dot( pq2, pq2 ), s * ( v2.x * e2.y - v2.y * e2.x ) ) );
 
@@ -116,13 +116,16 @@ void main() {
   color = pow(color, vec3(2.2f));
 
   int shape = constant.shape_type;
+
+  // init variables
   vec2 shape_data = constant.shape_data;
-  vec2 pos = constant.pos;
+  vec2 pos        = constant.pos;
+  vec2 center     = vec2(0.0f, 0.0f);
+  vec2 p          = vec2(0.0f, 0.0f);
   // set pos to ubo coord
   pos.y = ubo.reso.y + pos.y;
 
-  float d = 1.0f;
-
+  float d     = 1.0f;
   float alpha = constant.color.a;
   // uses loop-blinn for quadratic curves
   /*if (uv.x != 10.0f || uv.y != 10.0f) {
@@ -133,7 +136,7 @@ void main() {
 
       alpha -= smoothstep(-fw, fw, f);
     } else {
-      //NOTE:this now works as it only does triangle list topology
+      // NOTE:this now works as it only does triangle list topology
       vec2 p0 = constant.p0;
       vec2 p1 = constant.p1;
       vec2 p2 = constant.p2;
@@ -145,41 +148,48 @@ void main() {
       alpha -= smoothstep(stroke - fw, stroke + fw, dist);
     }
   }*/
-
   // renders correct shape per draw call
   if (constant.fill == 1) {
     if (shape == 0) {
-      const vec2 center = pos + (shape_data * 0.5f); 
-      vec2 p = vert_pos - center;
+      center = pos + (shape_data * 0.5f); 
+      p      = vert_pos - center;
 
-      d = sd_quad(p, shape_data);
+      d = sdf_quad(p, shape_data);
     } else if (shape == 1) {
-      const vec2 center = pos + shape_data;
-      vec2 p = vert_pos - center;
+      center = pos + shape_data;
+      p      = vert_pos - center;
 
-      d = sd_circle(p, shape_data.x);
+      d = sdf_circle(p, shape_data.x);
     } else if (shape == 2) {
+      // NOTE:for triangles, might remove types and just render v0, v1 and v2
       if (constant.tri_type == 0) {
-        // FIXME:renders a clipped triangle
-        vec2 center = vec2(
-          pos.x + shape_data.x,
-          pos.y + shape_data.y
-        );
-        vec2 p = vert_pos - center;
+        // NOTE:sqrt(1.359f) compensates for coorindate space offset
+        // fixed clipping issue BUT!
+        // this is a bizzare solution! especially the calculations for shape_data.x
+        // sqrt(1.359f) is a magic number, doing these prevents
+        // the equilateral triangle to be clipped
+        // shape_data value update is done by color debugging
+        // DONT KNOW WHY IT WORKS!
+        // FIXME:udpate this! should be mathematically
+        // correct solution and not some random bull--!
+        shape_data.x /= sqrt(1.359f); // <- magic number!
+        center = pos + shape_data;
+        p      = vert_pos - center;
 
-        d = sd_equilateral_triangle(p, shape_data.x);
+        d = sdf_equilateral_triangle(p, shape_data.x);
       } else if (constant.tri_type == 1) {
-        //TODO:add implementation for right triangle
+        // TODO:add implementation for right triangle
       } else if (constant.tri_type == 2) {
         // FIXME:this doesnt work!
+        // triangle not rendered at all!
         vec2 p0 = constant.p0;
         vec2 p1 = constant.p1;
         vec2 p2 = constant.p2;
 
-        vec2 center = (p0 + p1 + p2) / 3.0f;
-        vec2 p = vert_pos - center;
+        center = (p0 + p1 + p2) / sqrt(3.0f);
+        p      = vert_pos - center;
         // free form triangle
-        d = sd_any_triangle( p, p0, p1, p2 );
+        d = sdf_any_triangle( p, p0, p1, p2 );
       }
     }
   } else {
@@ -188,7 +198,10 @@ void main() {
 
   // discard outside
   if (d > 0.0f) discard;
- 
+
+  // NOTE:debugging purpose
+  // (p.y > 0.0f) color = vec3(p.x);
+
   // only renders the curve inside the triangle
   // if(alpha < 0.001f) discard;
 

@@ -163,6 +163,7 @@ namespace Art {
         size_t get_num_vert() const;
     };
 
+    // TODO:this triangle should be a free form triangle, base and height is not needed
     class Triangle : public detail::IPen {
       public:
         Triangle();
@@ -172,7 +173,7 @@ namespace Art {
         float base, height;
         // TODO: should be v0, v1, v2;
         //  for free form
-        Vec2 p0, p1, p2;
+        Vec2 v0, v1, v2;
 
         TriangleTypes type;
 
