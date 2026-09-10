@@ -70,7 +70,7 @@ vec2 skew(vec2 pos) {
 }*/
 
 //FIXME:this doesnt work! might need to be in frag shader
-vec2 rotate(vec2 pos) {
+/*vec2 rotate(vec2 pos) {
   const float PI = 3.14159265359;
   float radian   = constant.rotate * (PI / 180.0f);
   float s        = sin(radian);
@@ -83,7 +83,7 @@ vec2 rotate(vec2 pos) {
   vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
 
   return rotated + center;
-}
+}*/
 
 void main() {
   // vec2 art_pos = in_pos.xy;
@@ -112,9 +112,9 @@ void main() {
 
   vec2 art_pos = positions[gl_VertexIndex];
 
-  if (constant.rotate != 0.0) {
+  /*if (constant.rotate != 0.0) {
     art_pos = rotate(art_pos);
-  }
+  }*/
 
   vert_pos = art_pos;
 

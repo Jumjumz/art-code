@@ -63,7 +63,7 @@ Vec4 convert_color(const string& color, float opacity) {
 };
 
 // find length and width of any shapes (forms a quad)
-Vec2 skew_mesh_size(const ArrayVec4& vertices, const Vec2& center) {
+Vec2 skew_mesh_size(const ArrayVec4& vertices) {
     float max_x = -FLT_MAX, min_x = FLT_MAX;
     float max_y = -FLT_MAX, min_y = FLT_MAX;
 
@@ -340,13 +340,12 @@ void Art::Draw() {
             const auto& inst = InstanceRegistry::get_instance(i);
 
             // TODO: add bounding box, like a mesh that renders the shape on that box
-            PushConstants constants;
+            PushConstants constants{};
             constants.color      = convert_color(inst->color, inst->opacity);
             constants.pos        = inst->position;
             constants.center     = inst->get_center();
             constants.shape_data = inst->shape_data();
-            constants.mesh_size =
-                skew_mesh_size(inst->generate_vertices(), inst->get_center());
+            constants.mesh_size  = skew_mesh_size(inst->generate_vertices());
             constants.p0         = Bezier::p0;
             constants.p1         = Bezier::p1;
             constants.p2         = Bezier::p2;
@@ -359,9 +358,7 @@ void Art::Draw() {
 
             // TODO:skew should also work for pen, curently skew mesh is using member
             // "position" and not "positions" which pen uses
-            const auto& skew_mesh =
-                get_skew_mesh(skew_mesh_size(inst->generate_vertices(), inst->get_center()),
-                              inst->position);
+            const auto& skew_mesh = get_skew_mesh(constants.mesh_size, inst->position);
 
             SkewData skew_data;
             skew_data.skew_mesh = skew_mesh;

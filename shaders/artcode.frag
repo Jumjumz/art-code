@@ -103,8 +103,8 @@ float sdf_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
 
   float s = sign( e0.x * e2.y - e0.y * e2.x );
   vec2 d  = min( min( vec2( dot( pq0, pq0 ), s * ( v0.x * e0.y - v0.y * e0.x ) ),
-                     vec2( dot( pq1, pq1 ), s * ( v1.x * e1.y - v1.y * e1.x ) ) ),
-                     vec2( dot( pq2, pq2 ), s * ( v2.x * e2.y - v2.y * e2.x ) ) );
+                      vec2( dot( pq1, pq1 ), s * ( v1.x * e1.y - v1.y * e1.x ) ) ),
+                      vec2( dot( pq2, pq2 ), s * ( v2.x * e2.y - v2.y * e2.x ) ) );
 
   return -sqrt(d.x) * sign(d.y);
 }
@@ -163,16 +163,16 @@ void main() {
     } else if (shape == 2) {
       // NOTE:for triangles, might remove types and just render v0, v1 and v2
       if (constant.tri_type == 0) {
-        // NOTE:sqrt(1.359f) compensates for coorindate space offset
+        // NOTE:sqrt(1.320f) compensates for coorindate space offset
         // fixed clipping issue BUT!
         // this is a bizzare solution! especially the calculations for shape_data.x
-        // sqrt(1.359f) is a magic number, doing these prevents
+        // sqrt(1.320f) is a magic number, doing these prevents
         // the equilateral triangle to be clipped
         // shape_data value update is done by color debugging
         // DONT KNOW WHY IT WORKS!
-        // FIXME:udpate this! should be mathematically
+        // FIXME:update this! should be mathematically
         // correct solution and not some random bull--!
-        shape_data.x /= sqrt(1.359f); // <- magic number!
+        shape_data.x /= sqrt(1.320f); // <- magic number!
         center = pos + shape_data;
         p      = vert_pos - center;
 
@@ -180,13 +180,12 @@ void main() {
       } else if (constant.tri_type == 1) {
         // TODO:add implementation for right triangle
       } else if (constant.tri_type == 2) {
-        // FIXME:this doesnt work!
-        // triangle not rendered at all!
-        vec2 p0 = constant.p0;
-        vec2 p1 = constant.p1;
-        vec2 p2 = constant.p2;
+        // FIXME:triangle not rendered at all!
+        vec2 p0 = pos + constant.p0;
+        vec2 p1 = pos + constant.p1;
+        vec2 p2 = pos + constant.p2;
 
-        center = (p0 + p1 + p2) / sqrt(3.0f);
+        center = (p0 + p1 + p2) / 3.0f;
         p      = vert_pos - center;
         // free form triangle
         d = sdf_any_triangle( p, p0, p1, p2 );
@@ -200,10 +199,10 @@ void main() {
   if (d > 0.0f) discard;
 
   // NOTE:debugging purpose
-  // (p.y > 0.0f) color = vec3(p.x);
+  // if (p.y > 0.0f) color = vec3(p.x);
 
   // only renders the curve inside the triangle
-  // if(alpha < 0.001f) discard;
+  // if (alpha < 0.001f) discard;
 
   frag_color = vec4(color, alpha);
 }
