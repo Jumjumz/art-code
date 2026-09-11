@@ -181,14 +181,19 @@ void main() {
         // TODO:add implementation for right triangle
       } else if (constant.tri_type == 2) {
         // FIXME:triangle not rendered at all!
-        vec2 p0 = pos + constant.p0;
-        vec2 p1 = pos + constant.p1;
-        vec2 p2 = pos + constant.p2;
+        vec2 p0 = constant.p0;
+        vec2 p1 = constant.p1;
+        vec2 p2 = constant.p2;
 
-        center = (p0 + p1 + p2) / 3.0f;
+        p0.y = ubo.reso.y + p0.y;
+        p1.y = ubo.reso.y + p1.y;
+        p2.y = ubo.reso.y + p2.y;
+
+        center = constant.center;
+        center.y = ubo.reso.y + center.y;
         p      = vert_pos - center;
         // free form triangle
-        d = sdf_any_triangle( p, p0, p1, p2 );
+        d = sdf_any_triangle( vert_pos, p0, p1, p2 );
       }
     }
   } else {

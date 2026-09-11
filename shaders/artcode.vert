@@ -86,9 +86,7 @@ vec2 skew(vec2 pos) {
 }*/
 
 void main() {
-  // vec2 art_pos = in_pos.xy;
-  // art_pos.y = ubo.reso.y - art_pos.y;
- /* if (v_const.skew == 1) {
+  /*if (v_const.skew == 1) {
     art_pos = skew(art_pos);
   }*/
 
@@ -111,10 +109,6 @@ void main() {
   );
 
   vec2 art_pos = positions[gl_VertexIndex];
-
-  /*if (constant.rotate != 0.0) {
-    art_pos = rotate(art_pos);
-  }*/
 
   vert_pos = art_pos;
 
