@@ -190,7 +190,6 @@ void main() {
         p2.y = ubo.reso.y + p2.y;
 
         center = constant.center;
-        center.y = ubo.reso.y + center.y;
         p      = vert_pos - center;
         // free form triangle
         d = sdf_any_triangle( vert_pos, p0, p1, p2 );

@@ -261,9 +261,9 @@ Vec2 DrawTriangle::shape_data() const {
         TriangleType::type = static_cast<int>(TriangleTypes::FreeForm);
         // NOTE:this is wrong and for testing purpose only
         // should have a better implementation
-        Bezier::p0 = this->v0;
-        Bezier::p1 = this->v1;
-        Bezier::p2 = this->v2;
+        Bezier::p0 = this->position + this->v0;
+        Bezier::p1 = this->position + this->v1;
+        Bezier::p2 = this->position + this->v2;
         // calculate base and height using v0, v1, v2
         float ab_x = this->v2.x - this->v0.x;
         float ab_y = this->v2.y - this->v0.y;
