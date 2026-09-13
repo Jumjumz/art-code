@@ -226,9 +226,9 @@ ArrayVec4 DrawTriangle::generate_vertices() const {
         break;
     }
     case TriangleTypes::FreeForm: {
-        vertex = ArrayVec4{Vec4{this->position + this->v0, Vec2{10.0f, 10.0f}},
-                           Vec4{this->position + this->v1, Vec2{10.0f, 10.0f}},
-                           Vec4{this->position + this->v2, Vec2{10.0f, 10.0f}}};
+        vertex = ArrayVec4{Vec4{this->v0, Vec2{10.0f, 10.0f}},
+                           Vec4{this->v1, Vec2{10.0f, 10.0f}},
+                           Vec4{this->v2, Vec2{10.0f, 10.0f}}};
         break;
     }
     }

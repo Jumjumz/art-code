@@ -111,7 +111,8 @@ float sdf_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
 
 // TODO:apply bezier sdf for line topology
 void main() {
-  vec3 color = constant.color.rgb;
+  vec3 color  = constant.color.rgb;
+  float alpha = constant.color.a;
   // convert color to linear space using gamma correction 2.2
   color = pow(color, vec3(2.2f));
 
@@ -126,7 +127,6 @@ void main() {
   pos.y = ubo.reso.y + pos.y;
 
   float d     = 1.0f;
-  float alpha = constant.color.a;
   // uses loop-blinn for quadratic curves
   /*if (uv.x != 10.0f || uv.y != 10.0f) {
     if (constant.fill == 1) {
@@ -180,7 +180,6 @@ void main() {
       } else if (constant.tri_type == 1) {
         // TODO:add implementation for right triangle
       } else if (constant.tri_type == 2) {
-        // FIXME:triangle not rendered at all!
         vec2 p0 = constant.p0;
         vec2 p1 = constant.p1;
         vec2 p2 = constant.p2;
@@ -189,8 +188,6 @@ void main() {
         p1.y = ubo.reso.y + p1.y;
         p2.y = ubo.reso.y + p2.y;
 
-        center = constant.center;
-        p      = vert_pos - center;
         // free form triangle
         d = sdf_any_triangle( vert_pos, p0, p1, p2 );
       }
