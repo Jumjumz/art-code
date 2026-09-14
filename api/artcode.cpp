@@ -30,17 +30,12 @@ struct InstanceRegistry {
     static inline size_t                     array_size = 0;
 };
 
-// NOTE:this is for test only, update this!
-struct Bezier {
+// NOTE:only for triangle, Pen needs a different struct
+struct Vertices {
   public:
     static inline Vec2 p0 = {};
     static inline Vec2 p1 = {};
     static inline Vec2 p2 = {};
-};
-
-struct TriangleType {
-  public:
-    static inline int type = 0;
 };
 
 enum class ShapeType { Quad, Circle, Triangle, Pen };
@@ -191,94 +186,31 @@ Vec2 DrawCircle::shape_data() const { return Vec2{this->radius, this->radius}; }
 
 int DrawCircle::shape_type() const { return static_cast<int>(ShapeType::Circle); };
 
-// TODO:have a way where compiler identifies the type first, then from there triangle
-// can only provide if user has access to base and height or only base if type is
-// equilateral
 // Triangle
 DrawTriangle::Triangle()
-    : base(100.0f),
-      height(100.0f),
-      v0(100.0f, 200.0f),
-      v1(200.0f, 100.0f),
-      v2(300.0f, 200.0f),
-      type(TriangleTypes::Equilateral) {
+    : v0(150, 0),
+      v1(0, 300),
+      v2(300, 300) {
     InstanceRegistry::register_shape(this);
 };
 
 ArrayVec4 DrawTriangle::generate_vertices() const {
-    ArrayVec4 vertex = {};
-
-    switch (this->type) {
-    case TriangleTypes::Equilateral: {
-        float size = this->base / glm::sqrt(3.0f);
-        for (size_t i = 0; i < 3; i++) {
-            float angle = i * 2.0f * M_PI / 3.0f - M_PI / 2.0f;
-            vertex.push_back(Vec4{this->position.x + cos(angle) * size,
-                                  this->position.y + sin(angle) * size, 0.0f, 0.0f});
-        }
-        break;
-    }
-    case TriangleTypes::Right: {
-        vertex =
-            ArrayVec4{Vec4{this->position, Vec2{10.0f, 10.0f}},
-                      Vec4{this->position + Vec2{this->base, 0.0f}, Vec2{10.0f, 10.0f}},
-                      Vec4{this->position - Vec2{0.0f, this->height}, Vec2{10.0f, 10.0f}}};
-        break;
-    }
-    case TriangleTypes::FreeForm: {
-        vertex = ArrayVec4{Vec4{this->v0, Vec2{10.0f, 10.0f}},
-                           Vec4{this->v1, Vec2{10.0f, 10.0f}},
-                           Vec4{this->v2, Vec2{10.0f, 10.0f}}};
-        break;
-    }
-    }
-    return vertex;
+    return ArrayVec4{Vec4{this->v0, Vec2{10.0f, 10.0f}}, Vec4{this->v1, Vec2{10.0f, 10.0f}},
+                     Vec4{this->v2, Vec2{10.0f, 10.0f}}};
 };
 
 ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
 
+// NOTE:triangle doesnt need to return shape data
+// just needs to assign p0, p1 and p2
 Vec2 DrawTriangle::shape_data() const {
-    Vec2 shape_data = {0.0f, 0.0f};
-    // triangle sdf uses circumradius
-    float base = this->base / std::sqrt(3.0f);
+    // FIXME:dont use static variables
+    // this doesnt work for multiple instances of triangle
+    Vertices::p0 = this->v0 + this->position;
+    Vertices::p1 = this->v1 + this->position;
+    Vertices::p2 = this->v2 + this->position;
 
-    switch (this->type) {
-    case TriangleTypes::Equilateral: {
-        TriangleType::type = static_cast<int>(TriangleTypes::Equilateral);
-
-        shape_data = {base, base};
-        break;
-    }
-    case TriangleTypes::Right: {
-        TriangleType::type = static_cast<int>(TriangleTypes::Right);
-
-        shape_data = {base, this->height};
-        break;
-    }
-    // TODO:this is wrong, for free form there should be a calculation
-    //  to get the base and height by calculating the p0, p1 and p2
-    case TriangleTypes::FreeForm: {
-        TriangleType::type = static_cast<int>(TriangleTypes::FreeForm);
-        // NOTE:this is wrong and for testing purpose only
-        // should have a better implementation
-        Bezier::p0 = this->position + this->v0;
-        Bezier::p1 = this->position + this->v1;
-        Bezier::p2 = this->position + this->v2;
-        // calculate base and height using v0, v1, v2
-        float ab_x = this->v2.x - this->v0.x;
-        float ab_y = this->v2.y - this->v0.y;
-        float ac_x = this->v1.x - this->v0.x;
-        float ac_y = this->v1.y - this->v0.y;
-        // get base and height
-        base         = std::sqrt(squared(ab_x) + squared(ab_y));
-        float height = std::abs((ab_x * ac_y) - (ab_y * ac_x)) / base;
-
-        shape_data = {base, height};
-        break;
-    }
-    }
-
-    return shape_data;
+    return this->v0;
 };
 
 int DrawTriangle::shape_type() const { return static_cast<int>(ShapeType::Triangle); };
@@ -299,9 +231,9 @@ ArrayVec4 DrawPen::generate_vertices() const {
             const auto& pos1 = pos0.handles;
             const auto& pos2 = this->positions[i + 1];
 
-            Bezier::p0 = pos0.position;
-            Bezier::p1 = pos1.handlePosition;
-            Bezier::p2 = pos2.position;
+            Vertices::p0 = pos0.position;
+            Vertices::p1 = pos1.handlePosition;
+            Vertices::p2 = pos2.position;
 
             vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
             vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
@@ -339,22 +271,20 @@ void Art::Draw() {
         for (size_t i = 0; i < reg_size; i++) {
             const auto& inst = InstanceRegistry::get_instance(i);
 
-            // TODO: add bounding box, like a mesh that renders the shape on that box
             PushConstants constants{};
             constants.color      = convert_color(inst->color, inst->opacity);
             constants.pos        = inst->position;
             constants.center     = inst->get_center();
             constants.shape_data = inst->shape_data();
             constants.mesh_size  = skew_mesh_size(inst->generate_vertices());
-            constants.p0         = Bezier::p0;
-            constants.p1         = Bezier::p1;
-            constants.p2         = Bezier::p2;
+            constants.p0         = Vertices::p0;
+            constants.p1         = Vertices::p1;
+            constants.p2         = Vertices::p2;
             constants.stroke     = inst->stroke;
             constants.rotate     = inst->rotate;
             constants.fill       = static_cast<int>(inst->fill);
             constants.skew       = static_cast<int>(inst->skew);
             constants.shape_type = inst->shape_type();
-            constants.tri_type   = TriangleType::type;
 
             // TODO:skew should also work for pen, curently skew mesh is using member
             // "position" and not "positions" which pen uses

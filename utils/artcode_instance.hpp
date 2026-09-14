@@ -57,7 +57,6 @@ struct PushConstants {
     int   fill;
     int   skew;
     int   shape_type;
-    int   tri_type;
 };
 
 namespace Shared {

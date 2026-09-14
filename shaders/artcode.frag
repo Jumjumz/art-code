@@ -15,7 +15,6 @@ layout(push_constant) uniform PushConstants {
   int fill;
   int skew;
   int shape_type;
-  int tri_type;
 } constant;
 layout(location = 0) in vec2 vert_pos;
 layout(location = 0) out vec4 frag_color;
@@ -65,8 +64,7 @@ float sd_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
 
 // shapes
 float sdf_quad(vec2 p, vec2 b) {
-  const vec2 n_b = b * 0.5;
-  const vec2 d   = abs(p) - n_b;
+  const vec2 d = abs(p) - b;
 
   return length(max(d, 0.0f)) + min(max(d.x, d.y), 0.0f);
 }
@@ -75,20 +73,7 @@ float sdf_circle(vec2 p, float r) {
   return length(p) - r;
 }
 
-float sdf_equilateral_triangle(vec2 p, float r) {
-  const float k = sqrt(3.0f);
-
-  p.x = abs(p.x) - r;
-  p.y = -p.y; // uses negative y to flip the triangle upwards
-  p.y =  p.y + r / k;
-  if ( p.x + k * p.y > 0.0f ) p = vec2( p.x - k * p.y, -k * p.x - p.y ) / 2.0f;
- 
-  p.x -= clamp( p.x, -2.0f * r, 0.0f );
-
-  return -length(p) * sign(p.y);
-}
-
-// any form of triangle granted 3 vertices are provided
+// free form triangle
 float sdf_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   vec2 e0 = p1 - p0;
   vec2 e1 = p2 - p1;
@@ -102,7 +87,7 @@ float sdf_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   vec2 pq2 = v2 - e2 * clamp( dot(v2, e2) / dot(e2, e2), 0.0f, 1.0f );
 
   float s = sign( e0.x * e2.y - e0.y * e2.x );
-  vec2 d  = min( min( vec2( dot( pq0, pq0 ), s * ( v0.x * e0.y - v0.y * e0.x ) ),
+  vec2  d = min( min( vec2( dot( pq0, pq0 ), s * ( v0.x * e0.y - v0.y * e0.x ) ),
                       vec2( dot( pq1, pq1 ), s * ( v1.x * e1.y - v1.y * e1.x ) ) ),
                       vec2( dot( pq2, pq2 ), s * ( v2.x * e2.y - v2.y * e2.x ) ) );
 
@@ -148,49 +133,32 @@ void main() {
       alpha -= smoothstep(stroke - fw, stroke + fw, dist);
     }
   }*/
+  // TODO:apply FXAA
   // renders correct shape per draw call
   if (constant.fill == 1) {
     if (shape == 0) {
-      center = pos + (shape_data * 0.5f); 
+      const vec2 b = shape_data * 0.5f;
+
+      center = pos + b; 
       p      = vert_pos - center;
 
-      d = sdf_quad(p, shape_data);
+      d = sdf_quad(p, b);
     } else if (shape == 1) {
       center = pos + shape_data;
       p      = vert_pos - center;
 
       d = sdf_circle(p, shape_data.x);
     } else if (shape == 2) {
-      // NOTE:for triangles, might remove types and just render v0, v1 and v2
-      if (constant.tri_type == 0) {
-        // NOTE:sqrt(1.320f) compensates for coorindate space offset
-        // fixed clipping issue BUT!
-        // this is a bizzare solution! especially the calculations for shape_data.x
-        // sqrt(1.320f) is a magic number, doing these prevents
-        // the equilateral triangle to be clipped
-        // shape_data value update is done by color debugging
-        // DONT KNOW WHY IT WORKS!
-        // FIXME:update this! should be mathematically
-        // correct solution and not some random bull--!
-        shape_data.x /= sqrt(1.320f); // <- magic number!
-        center = pos + shape_data;
-        p      = vert_pos - center;
+      vec2 p0 = constant.p0;
+      vec2 p1 = constant.p1;
+      vec2 p2 = constant.p2;
 
-        d = sdf_equilateral_triangle(p, shape_data.x);
-      } else if (constant.tri_type == 1) {
-        // TODO:add implementation for right triangle
-      } else if (constant.tri_type == 2) {
-        vec2 p0 = constant.p0;
-        vec2 p1 = constant.p1;
-        vec2 p2 = constant.p2;
+      p0.y += ubo.reso.y;
+      p1.y += ubo.reso.y;
+      p2.y += ubo.reso.y;
 
-        p0.y = ubo.reso.y + p0.y;
-        p1.y = ubo.reso.y + p1.y;
-        p2.y = ubo.reso.y + p2.y;
-
-        // free form triangle
-        d = sdf_any_triangle( vert_pos, p0, p1, p2 );
-      }
+      // free form triangle
+      d = sdf_any_triangle( vert_pos, p0, p1, p2 );
     }
   } else {
     // TODO:implement the line based shapes

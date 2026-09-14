@@ -15,7 +15,6 @@ layout(push_constant) uniform PushConstants {
   int fill;
   int skew;
   int shape_type;
-  int tri_type;
 } constant;
 struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};

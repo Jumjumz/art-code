@@ -43,8 +43,6 @@ template <typename T> T cubic(T cb) { return cb * cb * cb; };
 
 // TODO:add predefined positions such as center, corner etc.
 
-enum class TriangleTypes { Equilateral, Right, FreeForm };
-
 // hides padding as this is for alingment in the gpu
 struct SkewPos {
     Vec2 pos;
@@ -110,7 +108,6 @@ namespace detail {
         float opacity;
         bool  fill;
         bool  skew;
-        // TODO:this is atrocius to write in user land, make this a struct that is
         // comprehendable to write and read
         ArrayT<SkewPos, 8> skewPos;
 
@@ -168,14 +165,7 @@ namespace Art {
       public:
         Triangle();
 
-        // TODO:equilateral only needs base, find a way for the compiler to provide a
-        // warning if hegiht is being used by the user
-        float base, height;
-        // TODO: should be v0, v1, v2;
-        //  for free form
         Vec2 v0, v1, v2;
-
-        TriangleTypes type;
 
       private:
         ArrayVec4 generate_vertices() const override;
