@@ -73,7 +73,7 @@ void ArtcodeGraphics::create_shaders() {
     this->shader_stages = {vert_shader_stage_info, frag_shader_stage_info};
 };
 
-void ArtcodeGraphics::create_pipeline() {
+void ArtcodeGraphics::create_pipeline(bool has_pen_instance) {
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
     assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
 
@@ -84,17 +84,21 @@ void ArtcodeGraphics::create_pipeline() {
     dynamic_state_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
     dynamic_state_info.pDynamicStates    = dynamic_states.data();
 
-    // vert and index bindings
-    /*const auto& binding_desc   = Vertex::get_binding_description();
-    const auto& attribute_desc = Vertex::get_attribute_description();*/
-
     vk::PipelineVertexInputStateCreateInfo vertex_info{};
-    vertex_info.vertexBindingDescriptionCount   = 0;
-    vertex_info.vertexAttributeDescriptionCount = 0;
-    /*vertex_info.vertexAttributeDescriptionCount =
-        static_cast<uint32_t>(attribute_desc.size());
-    vertex_info.pVertexBindingDescriptions   = &binding_desc;
-    vertex_info.pVertexAttributeDescriptions = attribute_desc.data();*/
+    if (has_pen_instance) {
+        // vert and index bindings
+        const auto& binding_desc   = Vertex::get_binding_description();
+        const auto& attribute_desc = Vertex::get_attribute_description();
+
+        vertex_info.vertexBindingDescriptionCount = 1;
+        vertex_info.vertexAttributeDescriptionCount =
+            static_cast<uint32_t>(attribute_desc.size());
+        vertex_info.pVertexBindingDescriptions   = &binding_desc;
+        vertex_info.pVertexAttributeDescriptions = attribute_desc.data();
+    } else {
+        vertex_info.vertexBindingDescriptionCount   = 0;
+        vertex_info.vertexAttributeDescriptionCount = 0;
+    }
 
     vk::PipelineViewportStateCreateInfo viewport_state_info{};
     viewport_state_info.pViewports    = nullptr; // use dynamic viewport state

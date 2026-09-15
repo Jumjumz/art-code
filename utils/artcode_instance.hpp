@@ -106,9 +106,7 @@ namespace Shared {
             shm_unlink("/artcode_instances");
         }
 
-        static void register_instance(const ArrayVec4& vertex, const ArrayU32& index,
-                                      const PushConstants& push_constants,
-                                      const SkewData&      skew_data) {
+        static void register_pen_instance(const ArrayVec4& vertex, const ArrayU32& index) {
             if (region->size > 500 || !region)
                 return;
 
@@ -121,12 +119,8 @@ namespace Shared {
             for (const auto& idx : index) {
                 inst.index.element[inst.index.size++] = idx;
             }
-            inst.constants = push_constants;
-            inst.skew_data = skew_data;
-            region->size++;
         }
 
-        // TODO:complete this, for now get the constants first, missing skew data
         static void register_constants(const PushConstants& push_const,
                                        const SkewData&      skew_data) {
             if (!region || region->size > 500) {
@@ -148,6 +142,20 @@ namespace Shared {
 
         static PushConstants get_constants(size_t idx) {
             return region->instance[idx].constants;
+        }
+
+        static bool has_pen_instance() {
+            bool found = false;
+            // check if pen instance exist, if found exit immidiately
+            for (size_t i = 0; i < region->size; i++) {
+                const auto& constants = region->instance[i].constants;
+                // shape type == pen
+                if (constants.shape_type == 3) {
+                    found = true;
+                    break;
+                }
+            }
+            return found;
         }
 
         static SkewData get_skew_data(size_t idx) {

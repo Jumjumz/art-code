@@ -135,7 +135,7 @@ ArrayVec4 DrawQuad::generate_vertices() const {
 
 ArrayU32 DrawQuad::generate_indices() const { return ArrayU32{0, 1, 3, 1, 2, 3}; };
 
-Vec2 DrawQuad::shape_data() const { return Vec2{this->w, this->l}; };
+Vec2 DrawQuad::shape_data() { return Vec2{this->w, this->l}; };
 
 int DrawQuad::shape_type() const { return static_cast<int>(ShapeType::Quad); };
 
@@ -182,17 +182,12 @@ ArrayU32 DrawCircle::generate_indices() const {
     return indices;
 };
 
-Vec2 DrawCircle::shape_data() const { return Vec2{this->radius, this->radius}; };
+Vec2 DrawCircle::shape_data() { return Vec2{this->radius, this->radius}; };
 
 int DrawCircle::shape_type() const { return static_cast<int>(ShapeType::Circle); };
 
 // Triangle
-DrawTriangle::Triangle()
-    : v0(150, 0),
-      v1(0, 300),
-      v2(300, 300) {
-    InstanceRegistry::register_shape(this);
-};
+DrawTriangle::Triangle() { InstanceRegistry::register_shape(this); };
 
 ArrayVec4 DrawTriangle::generate_vertices() const {
     return ArrayVec4{Vec4{this->v0, Vec2{10.0f, 10.0f}}, Vec4{this->v1, Vec2{10.0f, 10.0f}},
@@ -203,12 +198,10 @@ ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
 
 // NOTE:triangle doesnt need to return shape data
 // just needs to assign p0, p1 and p2
-Vec2 DrawTriangle::shape_data() const {
-    // FIXME:dont use static variables
-    // this doesnt work for multiple instances of triangle
-    Vertices::p0 = this->v0 + this->position;
-    Vertices::p1 = this->v1 + this->position;
-    Vertices::p2 = this->v2 + this->position;
+Vec2 DrawTriangle::shape_data() {
+    this->v0 += this->position;
+    this->v1 += this->position;
+    this->v2 += this->position;
 
     return this->v0;
 };
@@ -231,6 +224,8 @@ ArrayVec4 DrawPen::generate_vertices() const {
             const auto& pos1 = pos0.handles;
             const auto& pos2 = this->positions[i + 1];
 
+            // TODO:remove vertices struct, pen should have different implementation
+            //  compared to other shapes
             Vertices::p0 = pos0.position;
             Vertices::p1 = pos1.handlePosition;
             Vertices::p2 = pos2.position;
@@ -258,7 +253,7 @@ ArrayU32 DrawPen::generate_indices() const {
 };
 
 // NOTE:this is wrong, filler data for now
-Vec2 DrawPen::shape_data() const { return this->position; };
+Vec2 DrawPen::shape_data() { return this->position; };
 
 int DrawPen::shape_type() const { return static_cast<int>(ShapeType::Pen); };
 
@@ -277,9 +272,9 @@ void Art::Draw() {
             constants.center     = inst->get_center();
             constants.shape_data = inst->shape_data();
             constants.mesh_size  = skew_mesh_size(inst->generate_vertices());
-            constants.p0         = Vertices::p0;
-            constants.p1         = Vertices::p1;
-            constants.p2         = Vertices::p2;
+            constants.p0         = inst->v0;
+            constants.p1         = inst->v1;
+            constants.p2         = inst->v2;
             constants.stroke     = inst->stroke;
             constants.rotate     = inst->rotate;
             constants.fill       = static_cast<int>(inst->fill);
@@ -293,9 +288,14 @@ void Art::Draw() {
             SkewData skew_data;
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = inst->skewPos;
-            //  register resources per instance
-            /*Shared::Memory::register_instance(
-                inst->generate_vertices(), inst->generate_indices(), constants, skew_data);*/
+            //  register pen instances
+            if (constants.shape_type == static_cast<int>(ShapeType::Pen)) {
+                // NOTE:pen instance is not responsible for increasing the shared memory size,
+                //  that is register_constants responsibility
+                Shared::Memory::register_pen_instance(inst->generate_vertices(),
+                                                      inst->generate_indices());
+            }
+
             Shared::Memory::register_constants(constants, skew_data);
         }
 

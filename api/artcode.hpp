@@ -96,7 +96,10 @@ namespace detail {
               opacity(1.0f),
               fill(true),
               skew(false),
-              skewPos({}) {}
+              skewPos({}),
+              v0(100, 0),
+              v1(0, 150),
+              v2(200, 150) {}
 
         // TODO:make skewPos a function.. or change the way skew pos syntax wise
         // uses camel case for users, snake case for api implementation
@@ -108,6 +111,10 @@ namespace detail {
         float opacity;
         bool  fill;
         bool  skew;
+        // NOTE:for triangles, mutable
+        // TODO:v0, v1, v2 should not be available for other shapes but for triangles
+        // only, have a way to hide this
+        Vec2 v0, v1, v2;
         // comprehendable to write and read
         ArrayT<SkewPos, 8> skewPos;
 
@@ -115,7 +122,7 @@ namespace detail {
         virtual ArrayVec4 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;
         // NOTE:new functions for sdf to work
-        virtual Vec2 shape_data() const = 0;
+        virtual Vec2 shape_data()       = 0;
         virtual int  shape_type() const = 0;
 
         // centroid vertices
@@ -141,7 +148,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
-        Vec2      shape_data() const override;
+        Vec2      shape_data() override;
         int       shape_type() const override;
     };
 
@@ -154,7 +161,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
-        Vec2      shape_data() const override;
+        Vec2      shape_data() override;
         int       shape_type() const override;
         // num of triangles to make a circle, also defines the smoothness
         size_t get_num_vert() const;
@@ -165,12 +172,10 @@ namespace Art {
       public:
         Triangle();
 
-        Vec2 v0, v1, v2;
-
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
-        Vec2      shape_data() const override;
+        Vec2      shape_data() override;
         int       shape_type() const override;
     };
 
@@ -183,7 +188,7 @@ namespace Art {
       private:
         ArrayVec4 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
-        Vec2      shape_data() const override;
+        Vec2      shape_data() override;
         int       shape_type() const override;
     };
 

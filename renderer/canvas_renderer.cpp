@@ -55,6 +55,7 @@ void CanvasRenderer::set_canvas_commands() {
 
 void CanvasRenderer::reload_pipeline() {
     this->device.waitIdle();
+    this->has_pen_instance = Shared::Memory::has_pen_instance();
 
     // recompile shaders
     this->artcode_pipeline->shader_stages.clear();
@@ -62,20 +63,26 @@ void CanvasRenderer::reload_pipeline() {
 
     // reload pipeline
     this->artcode_pipeline->pipeline_triangle.clear();
-    this->artcode_pipeline->create_pipeline();
+    this->artcode_pipeline->create_pipeline(this->has_pen_instance);
 };
 
 void CanvasRenderer::update_artcode_buffers() {
     // wait gpu to finish using old buffers
     this->device.waitIdle();
 
+    // NOTE:this is for Pen instances, regardless of pen instance being present or not
+    // this still clears the listed artcode buffer vectors
     // clear the arrays for multiple buffers
-    /*this->artcode_buffer->inst_vertex.clear();
-    this->artcode_buffer->vertex_buffers.clear();
-    this->artcode_buffer->vertex_memories.clear();
-    this->artcode_buffer->inst_index.clear();
-    this->artcode_buffer->index_buffers.clear();
-    this->artcode_buffer->index_memories.clear();*/
+    if (this->has_pen_instance) {
+        this->artcode_buffer->inst_vertex.clear();
+        this->artcode_buffer->vertex_buffers.clear();
+        this->artcode_buffer->vertex_memories.clear();
+        this->artcode_buffer->inst_index.clear();
+        this->artcode_buffer->index_buffers.clear();
+        this->artcode_buffer->index_memories.clear();
+    }
+
+    // clear ssbo and skew data
     this->artcode_buffer->ssbo_buffers.clear();
     this->artcode_buffer->ssbo_memories.clear();
     this->artcode_buffer->skew_data.clear();
@@ -91,13 +98,17 @@ void CanvasRenderer::update_artcode_buffers() {
     for (size_t i = 0; i < this->inst_size; i++) {
         const auto& instance = Shared::Memory::get_instance(i);
 
-        /*std::vector<Vec4> vertex(instance.vertex.element.begin(),
-                                 instance.vertex.element.begin() + instance.vertex.size);
-        std::vector<u32>  indices(instance.index.element.begin(),
-                                  instance.index.element.begin() + instance.index.size);
+        // NOTE: shape_type = 3 is Pen
+        // TODO: have a better way to represent shape type in app..
+        if (instance.constants.shape_type == 3) {
+            std::vector<Vec4> vertex(instance.vertex.element.begin(),
+                                     instance.vertex.element.begin() + instance.vertex.size);
+            std::vector<u32>  indices(instance.index.element.begin(),
+                                      instance.index.element.begin() + instance.index.size);
 
-        this->artcode_buffer->inst_vertex.push_back(vertex);
-        this->artcode_buffer->inst_index.push_back(indices);*/
+            this->artcode_buffer->inst_vertex.push_back(vertex);
+            this->artcode_buffer->inst_index.push_back(indices);
+        }
         this->artcode_buffer->skew_data.push_back(instance.skew_data);
 
         this->push_constants.push_back(instance.constants);
@@ -105,9 +116,11 @@ void CanvasRenderer::update_artcode_buffers() {
     // reset all instances
     Shared::Memory::reset_instance();
 
-    // create buffers for each instance or shape
-    /*this->artcode_buffer->create_vertex_buffer();
-    this->artcode_buffer->create_index_buffer();*/
+    if (this->has_pen_instance) {
+        // create buffers for each instance or shape
+        this->artcode_buffer->create_vertex_buffer();
+        this->artcode_buffer->create_index_buffer();
+    }
     this->artcode_buffer->create_ssbo_buffer();
 };
 
@@ -372,8 +385,6 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
-    // const auto& inst_index = this->artcode_buffer->inst_index;
-
     //  draw in reverse order for shape instances
     //  this makes the first declared shape always be the front shape in artboard
     for (size_t i = this->inst_size; i > 0; i--) {
@@ -391,7 +402,21 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
                                              vk::ShaderStageFlagBits::eFragment,
                                          0, this->push_constants[idx]);
 
-        cmd.draw(6, 1, 0, 0);
+        // different draw call for pen tool
+        if (this->has_pen_instance) {
+            const auto& inst_index = this->artcode_buffer->inst_index;
+
+            for (size_t j = 0; j < inst_index.size(); j++) {
+                cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[j], {0});
+
+                cmd.bindIndexBuffer(*this->artcode_buffer->index_buffers[j], 0,
+                                    vk::IndexType::eUint32);
+
+                cmd.drawIndexed(inst_index[j].size(), 1, 0, 0, 0);
+            }
+        } else {
+            cmd.draw(6, 1, 0, 0);
+        }
     }
 
     cmd.endRendering();

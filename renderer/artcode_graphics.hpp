@@ -14,7 +14,7 @@ class ArtcodeGraphics {
     std::vector<vk::PipelineShaderStageCreateInfo> shader_stages;
 
     void create_shaders();
-    void create_pipeline();
+    void create_pipeline(bool has_pen_instance);
 
   private:
     const vk::raii::Device& device;
