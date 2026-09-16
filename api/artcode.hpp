@@ -111,12 +111,11 @@ namespace detail {
         float opacity;
         bool  fill;
         bool  skew;
-        // NOTE:for triangles, mutable
+        // comprehendable to write and read
+        ArrayT<SkewPos, 8> skewPos;
         // TODO:v0, v1, v2 should not be available for other shapes but for triangles
         // only, have a way to hide this
         Vec2 v0, v1, v2;
-        // comprehendable to write and read
-        ArrayT<SkewPos, 8> skewPos;
 
         // must implement
         virtual ArrayVec4 generate_vertices() const = 0;

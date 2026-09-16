@@ -13,7 +13,7 @@
 // to avoid confusion and for the sake of consistency, only this header file uses the
 // artcode typedef and nothing else
 struct Vertex {
-    Vec2 pos;
+    Vec4 pos;
 
     static vk::VertexInputBindingDescription get_binding_description() {
         return {0, sizeof(Vertex), vk::VertexInputRate::eVertex};
@@ -21,7 +21,7 @@ struct Vertex {
 
     static ArrayT<vk::VertexInputAttributeDescription, 1> get_attribute_description() {
         return {
-            vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32Sfloat,
+            vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32B32A32Sfloat,
                                                 offsetof(Vertex, pos)},
         };
     };

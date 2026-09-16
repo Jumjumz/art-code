@@ -84,12 +84,12 @@ void ArtcodeGraphics::create_pipeline(bool has_pen_instance) {
     dynamic_state_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
     dynamic_state_info.pDynamicStates    = dynamic_states.data();
 
+    // vert and index bindings
+    const auto  binding_desc   = Vertex::get_binding_description();
+    const auto& attribute_desc = Vertex::get_attribute_description();
+
     vk::PipelineVertexInputStateCreateInfo vertex_info{};
     if (has_pen_instance) {
-        // vert and index bindings
-        const auto& binding_desc   = Vertex::get_binding_description();
-        const auto& attribute_desc = Vertex::get_attribute_description();
-
         vertex_info.vertexBindingDescriptionCount = 1;
         vertex_info.vertexAttributeDescriptionCount =
             static_cast<uint32_t>(attribute_desc.size());

@@ -69,8 +69,7 @@ class CanvasRenderer {
 
     std::vector<PushConstants> push_constants = {};
 
-    size_t inst_size        = 0;
-    bool   has_pen_instance = false;
+    size_t inst_size = 0;
 
     const vk::ClearColorValue clear_color = {1.0f, 1.0f, 1.0f, 1.0f};
     const vk::Offset2D        offset      = {0, 0};

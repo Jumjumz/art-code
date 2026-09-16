@@ -16,7 +16,7 @@ layout(push_constant) uniform PushConstants {
   int skew;
   int shape_type;
 } constant;
-layout(location = 0) in vec2 vert_pos;
+layout(location = 0) in vec4 vert_pos;
 layout(location = 0) out vec4 frag_color;
 
 // From Inigo Quilez (curve line sdf)
@@ -140,12 +140,12 @@ void main() {
       const vec2 b = shape_data * 0.5f;
 
       center = pos + b; 
-      p      = vert_pos - center;
+      p      = vert_pos.xy - center;
 
       d = sdf_quad(p, b);
     } else if (shape == 1) {
       center = pos + shape_data;
-      p      = vert_pos - center;
+      p      = vert_pos.xy - center;
 
       d = sdf_circle(p, shape_data.x);
     } else if (shape == 2) {
@@ -158,7 +158,13 @@ void main() {
       p2.y += ubo.reso.y;
 
       // free form triangle
-      d = sdf_any_triangle( vert_pos, p0, p1, p2 );
+      d = sdf_any_triangle( vert_pos.xy, p0, p1, p2 );
+    } else if (shape == 3) {
+      // quadratic bezier
+      float f = vert_pos.w * vert_pos.w - vert_pos.z;
+      float fw = fwidth(f);
+
+      alpha -= smoothstep(-fw, fw, f);
     }
   } else {
     // TODO:implement the line based shapes
@@ -171,7 +177,7 @@ void main() {
   // if (p.y > 0.0f) color = vec3(p.x);
 
   // only renders the curve inside the triangle
-  // if (alpha < 0.001f) discard;
+  if (alpha < 0.001f) discard;
 
   frag_color = vec4(color, alpha);
 }

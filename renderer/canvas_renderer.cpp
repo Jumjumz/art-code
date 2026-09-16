@@ -55,7 +55,7 @@ void CanvasRenderer::set_canvas_commands() {
 
 void CanvasRenderer::reload_pipeline() {
     this->device.waitIdle();
-    this->has_pen_instance = Shared::Memory::has_pen_instance();
+    bool has_pen_instance = Shared::Memory::has_pen_instance();
 
     // recompile shaders
     this->artcode_pipeline->shader_stages.clear();
@@ -63,7 +63,7 @@ void CanvasRenderer::reload_pipeline() {
 
     // reload pipeline
     this->artcode_pipeline->pipeline_triangle.clear();
-    this->artcode_pipeline->create_pipeline(this->has_pen_instance);
+    this->artcode_pipeline->create_pipeline(has_pen_instance);
 };
 
 void CanvasRenderer::update_artcode_buffers() {
@@ -73,14 +73,12 @@ void CanvasRenderer::update_artcode_buffers() {
     // NOTE:this is for Pen instances, regardless of pen instance being present or not
     // this still clears the listed artcode buffer vectors
     // clear the arrays for multiple buffers
-    if (this->has_pen_instance) {
-        this->artcode_buffer->inst_vertex.clear();
-        this->artcode_buffer->vertex_buffers.clear();
-        this->artcode_buffer->vertex_memories.clear();
-        this->artcode_buffer->inst_index.clear();
-        this->artcode_buffer->index_buffers.clear();
-        this->artcode_buffer->index_memories.clear();
-    }
+    this->artcode_buffer->inst_vertex.clear();
+    this->artcode_buffer->vertex_buffers.clear();
+    this->artcode_buffer->vertex_memories.clear();
+    this->artcode_buffer->inst_index.clear();
+    this->artcode_buffer->index_buffers.clear();
+    this->artcode_buffer->index_memories.clear();
 
     // clear ssbo and skew data
     this->artcode_buffer->ssbo_buffers.clear();
@@ -95,12 +93,14 @@ void CanvasRenderer::update_artcode_buffers() {
         this->inst_size      = inst_size;
     }
 
+    bool has_pen_instance = false;
     for (size_t i = 0; i < this->inst_size; i++) {
         const auto& instance = Shared::Memory::get_instance(i);
 
         // NOTE: shape_type = 3 is Pen
         // TODO: have a better way to represent shape type in app..
         if (instance.constants.shape_type == 3) {
+            has_pen_instance = true;
             std::vector<Vec4> vertex(instance.vertex.element.begin(),
                                      instance.vertex.element.begin() + instance.vertex.size);
             std::vector<u32>  indices(instance.index.element.begin(),
@@ -116,10 +116,11 @@ void CanvasRenderer::update_artcode_buffers() {
     // reset all instances
     Shared::Memory::reset_instance();
 
-    if (this->has_pen_instance) {
+    if (has_pen_instance) {
         // create buffers for each instance or shape
         this->artcode_buffer->create_vertex_buffer();
         this->artcode_buffer->create_index_buffer();
+        has_pen_instance = false;
     }
     this->artcode_buffer->create_ssbo_buffer();
 };
@@ -385,6 +386,8 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
+    // init pen idx variable
+    size_t pen_idx = 0;
     //  draw in reverse order for shape instances
     //  this makes the first declared shape always be the front shape in artboard
     for (size_t i = this->inst_size; i > 0; i--) {
@@ -402,18 +405,19 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
                                              vk::ShaderStageFlagBits::eFragment,
                                          0, this->push_constants[idx]);
 
-        // different draw call for pen tool
-        if (this->has_pen_instance) {
+        // different draw call for pen instance
+        if (this->push_constants[idx].shape_type == 3) {
+            // NOTE:access the correct pen instance in the inst_index array
             const auto& inst_index = this->artcode_buffer->inst_index;
 
-            for (size_t j = 0; j < inst_index.size(); j++) {
-                cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[j], {0});
+            cmd.bindVertexBuffers(0, *this->artcode_buffer->vertex_buffers[pen_idx], {0});
 
-                cmd.bindIndexBuffer(*this->artcode_buffer->index_buffers[j], 0,
-                                    vk::IndexType::eUint32);
+            cmd.bindIndexBuffer(*this->artcode_buffer->index_buffers[pen_idx], 0,
+                                vk::IndexType::eUint32);
 
-                cmd.drawIndexed(inst_index[j].size(), 1, 0, 0, 0);
-            }
+            cmd.drawIndexed(inst_index[pen_idx].size(), 1, 0, 0, 0);
+            // increment if "if" block is visited
+            pen_idx++;
         } else {
             cmd.draw(6, 1, 0, 0);
         }
