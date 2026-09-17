@@ -20,7 +20,8 @@ struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} ssbo;
 layout(location = 0) in vec4 pen_pos;
-layout(location = 0) out vec4 vert_pos;
+layout(location = 0) out vec2 vert_pos;
+layout(location = 1) out vec2 uv;
 
 //TODO:remove and transfer these functions to frag shader,
 // SDF be the main core of rendering shapes from now on, that also means
@@ -96,7 +97,8 @@ void main() {
   if (constant.shape_type == 3) {
     vec4 new_pos = pen_pos;
     new_pos.y = ubo.reso.y + new_pos.y;
-    vert_pos = new_pos;
+    vert_pos = new_pos.xy;
+    uv = new_pos.wz;
   } else {
     vec2 position        = constant.pos;
     const vec2 mesh_size = constant.mesh_size;
@@ -115,8 +117,8 @@ void main() {
 
     vec2 art_pos = positions[gl_VertexIndex];
 
-    vert_pos = vec4(art_pos, 0.0f, 0.0f);
+    vert_pos = art_pos;
   }
 
-  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos.xy, 0.0f, 1.0f);
+  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);
 }

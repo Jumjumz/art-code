@@ -126,10 +126,10 @@ DrawQuad::Quad()
 ArrayVec4 DrawQuad::generate_vertices() const {
     //  quad coordinates and size
     return ArrayVec4{
-        Vec4{this->position, Vec2{10.0f, 10.0f}},
-        Vec4{this->position + Vec2{this->w, 0.0f}, Vec2{10.0f, 10.0f}},
-        Vec4{this->position + Vec2{this->w, this->l}, Vec2{10.0f, 10.0f}},
-        Vec4{this->position + Vec2{0.0f, this->l}, Vec2{10.0f, 10.0f}},
+        Vec4{this->position, Vec2{2.0f, 2.0f}},
+        Vec4{this->position + Vec2{this->w, 0.0f}, Vec2{2.0f, 2.0f}},
+        Vec4{this->position + Vec2{this->w, this->l}, Vec2{2.0f, 2.0f}},
+        Vec4{this->position + Vec2{0.0f, this->l}, Vec2{2.0f, 2.0f}},
     };
 };
 
@@ -164,7 +164,7 @@ ArrayVec4 DrawCircle::generate_vertices() const {
         float angle = i * 2.0f * M_PI / num_seg;
 
         vertex.push_back(Vec4{this->position.x + cos(angle) * this->radius,
-                              this->position.y + sin(angle) * this->radius, 10.0f, 10.0f});
+                              this->position.y + sin(angle) * this->radius, 2.0f, 2.0f});
     }
     return vertex;
 };
@@ -190,8 +190,8 @@ int DrawCircle::shape_type() const { return static_cast<int>(ShapeType::Circle);
 DrawTriangle::Triangle() { InstanceRegistry::register_shape(this); };
 
 ArrayVec4 DrawTriangle::generate_vertices() const {
-    return ArrayVec4{Vec4{this->v0, Vec2{10.0f, 10.0f}}, Vec4{this->v1, Vec2{10.0f, 10.0f}},
-                     Vec4{this->v2, Vec2{10.0f, 10.0f}}};
+    return ArrayVec4{Vec4{this->v0, Vec2{2.0f, 2.0f}}, Vec4{this->v1, Vec2{2.0f, 2.0f}},
+                     Vec4{this->v2, Vec2{2.0f, 2.0f}}};
 };
 
 ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
@@ -232,8 +232,9 @@ ArrayVec4 DrawPen::generate_vertices() const {
 
             vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
             vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
+            vertex.push_back(Vec4{pos2.position, Vec2{1.0f, 1.0f}});
         } else {
-            vertex.push_back(Vec4{pos0.position, Vec2{1.0f, 1.0f}});
+            vertex.push_back(Vec4{pos0.position, Vec2{2.0f, 2.0f}});
         }
     }
     return vertex;
@@ -298,8 +299,5 @@ void Art::Draw() {
 
             Shared::Memory::register_constants(constants, skew_data);
         }
-
-        // reset all registered instances
-        InstanceRegistry::reset_registry();
     }
 };
