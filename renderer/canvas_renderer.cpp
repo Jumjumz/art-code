@@ -387,9 +387,11 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
                                                        this->vk_buffers.extent.height}});
 
     // init pen idx variable
-    size_t pen_idx = 0;
-    //  draw in reverse order for shape instances
-    //  this makes the first declared shape always be the front shape in artboard
+    size_t pen_idx = this->artcode_buffer->inst_index.empty()
+                         ? 0
+                         : this->artcode_buffer->inst_index.size() - 1;
+    // draw in reverse order for shape instances
+    // this makes the first declared shape always be the front shape in artboard
     for (size_t i = this->inst_size; i > 0; i--) {
         const auto idx = i - 1;
 
@@ -416,8 +418,8 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
                                 vk::IndexType::eUint32);
 
             cmd.drawIndexed(inst_index[pen_idx].size(), 1, 0, 0, 0);
-            // increment if "if" block is visited
-            pen_idx++;
+            // decrement if "if" block is visited
+            pen_idx--;
         } else {
             cmd.draw(6, 1, 0, 0);
         }

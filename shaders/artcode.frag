@@ -112,7 +112,7 @@ void main() {
   // set pos to ubo coord
   pos.y = ubo.reso.y + pos.y;
 
-  float d     = 1.0f;
+  float d = 0.0f;
   // uses loop-blinn for quadratic curves
   /*if (uv.x != 10.0f || uv.y != 10.0f) {
     if (constant.fill == 1) {
@@ -160,14 +160,11 @@ void main() {
       // free form triangle
       d = sdf_any_triangle( vert_pos, p0, p1, p2 );
     } else if (shape == 3) {
-      // FIXME:this doenst render!
       // quadratic bezier
-      if (uv.x != 2.0f || uv.y != 2.0f) {
-        float f  = uv.x * uv.x + uv.y;
-        float fw = fwidth(f);
+      float f  = uv.x * uv.x - uv.y;
+      float fw = fwidth(f);
 
-        alpha -= smoothstep(-fw, fw, f);
-      }
+      alpha -= smoothstep(-fw, fw, f);
     }
   } else {
     // TODO:implement the line based shapes
@@ -180,7 +177,7 @@ void main() {
   // if (p.y > 0.0f) color = vec3(p.x);
 
   // only renders the curve inside the triangle
-  if (alpha < 0.001f) discard;
-
+  if (alpha < 0.001f) color = vec3(1.0f);
+ 
   frag_color = vec4(color, alpha);
 }

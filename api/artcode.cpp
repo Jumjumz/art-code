@@ -232,9 +232,8 @@ ArrayVec4 DrawPen::generate_vertices() const {
 
             vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
             vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
-            vertex.push_back(Vec4{pos2.position, Vec2{1.0f, 1.0f}});
         } else {
-            vertex.push_back(Vec4{pos0.position, Vec2{2.0f, 2.0f}});
+            vertex.push_back(Vec4{pos0.position, Vec2{1.0f, 1.0f}});
         }
     }
     return vertex;
