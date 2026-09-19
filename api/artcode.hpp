@@ -162,8 +162,6 @@ namespace Art {
         ArrayU32  generate_indices() const override;
         Vec2      shape_data() override;
         int       shape_type() const override;
-        // num of triangles to make a circle, also defines the smoothness
-        size_t get_num_vert() const;
     };
 
     // TODO:this triangle should be a free form triangle, base and height is not needed
@@ -190,6 +188,9 @@ namespace Art {
         Vec2      shape_data() override;
         int       shape_type() const override;
     };
+
+    // sets background color of the canvas
+    inline string backgroundColor = "#FFFFFF";
 
     void Draw();
 }; // namespace Art

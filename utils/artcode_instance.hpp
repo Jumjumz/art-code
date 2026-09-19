@@ -45,6 +45,7 @@ struct SkewData {
 // TODO:shape data will be pass in push constants, except for shapes or intances that needed vertices and indices
 struct PushConstants {
     Vec4  color;
+    Vec4  bg_color;
     Vec2  pos;
     Vec2  center;
     Vec2  shape_data;

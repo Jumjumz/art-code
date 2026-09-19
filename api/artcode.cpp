@@ -30,14 +30,6 @@ struct InstanceRegistry {
     static inline size_t                     array_size = 0;
 };
 
-// NOTE:only for triangle, Pen needs a different struct
-struct Vertices {
-  public:
-    static inline Vec2 p0 = {};
-    static inline Vec2 p1 = {};
-    static inline Vec2 p2 = {};
-};
-
 enum class ShapeType { Quad, Circle, Triangle, Pen };
 
 Vec4 convert_color(const string& color, float opacity) {
@@ -106,7 +98,6 @@ ArrayT<Vec2, 36> bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2
 };
 
 // TODO:remove vertices and indices functions
-// frow now one shapes are only generated in sdf
 // API implementations
 using DrawQuad     = Art::Quad;
 using DrawCircle   = Art::Circle;
@@ -145,15 +136,6 @@ DrawCircle::Circle()
     InstanceRegistry::register_shape(this);
 };
 
-size_t DrawCircle::get_num_vert() const {
-    // get the number of vertices by calculating th
-    // this is adaptive tesselatation
-    // the formula is th = arccos(2 * squared(1 - e / r) - 1) where e is tolerance and error acceptable
-    const float th    = std::acos(2 * squared(1 - 0.33 / this->radius) - 1);
-    const auto  num_v = std::ceil(2 * M_PI / th);
-    return static_cast<size_t>(num_v);
-};
-
 ArrayVec4 DrawCircle::generate_vertices() const {
     ArrayVec4 vertex;
     // center of the circle
@@ -172,7 +154,7 @@ ArrayVec4 DrawCircle::generate_vertices() const {
 ArrayU32 DrawCircle::generate_indices() const {
     ArrayU32 indices = {};
 
-    const auto num_seg = get_num_vert();
+    const auto num_seg = 8;
     for (size_t i = 0; i < num_seg; i++) {
         indices.push_back(0);
         indices.push_back(i + 1);
@@ -224,12 +206,6 @@ ArrayVec4 DrawPen::generate_vertices() const {
             const auto& pos1 = pos0.handles;
             const auto& pos2 = this->positions[i + 1];
 
-            // TODO:remove vertices struct, pen should have different implementation
-            //  compared to other shapes
-            Vertices::p0 = pos0.position;
-            Vertices::p1 = pos1.handlePosition;
-            Vertices::p2 = pos2.position;
-
             vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
             vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
         } else {
@@ -252,7 +228,7 @@ ArrayU32 DrawPen::generate_indices() const {
     return indices;
 };
 
-// NOTE:this is wrong, filler data for now
+// NOTE:filler data
 Vec2 DrawPen::shape_data() { return this->position; };
 
 int DrawPen::shape_type() const { return static_cast<int>(ShapeType::Pen); };
@@ -268,6 +244,7 @@ void Art::Draw() {
 
             PushConstants constants{};
             constants.color      = convert_color(inst->color, inst->opacity);
+            constants.bg_color   = convert_color(Art::backgroundColor, 1.0f);
             constants.pos        = inst->position;
             constants.center     = inst->get_center();
             constants.shape_data = inst->shape_data();
