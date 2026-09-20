@@ -28,7 +28,8 @@ float sdf_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2);
 float sdf_bezier(vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
 // TODO:apply bezier sdf for line topology
-// FIXME:constant bg_color doesnt work as intended
+// FIXME:constant bg_color doesnt work..
+// it should not be in here but isntead in canvas itself
 void main() {
   vec3 color  = constant.color.rgb;
   float alpha = constant.color.a;
@@ -79,10 +80,18 @@ void main() {
 
       alpha -= smoothstep(-fw, fw, f);
     }
+
+    // discard outside
+    if (d > 0.0f) discard;
   } else {
+    float stroke = constant.stroke;
     // TODO:implement the line based shapes
     if (shape == 0) {
+      const vec2 b = shape_data * 0.5f;
+      center       = pos + b;
+      p            = vert_pos - center;
 
+      d = sdf_quad(p, b);
     } else if (shape == 3) {
       // NOTE:doesnt work yet, need to comeup with a solution
       // to pass all p0, p1 and p2 at the same time
@@ -91,15 +100,14 @@ void main() {
       vec2 p2 = constant.p2;
 
       float dist = sdf_bezier(pos, p0, p1, p2);
-      float stroke = constant.stroke;
       float fw = fwidth(dist);
 
       alpha -= smoothstep(stroke - fw, stroke + fw, dist);
     }
-  }
 
-  // discard outside
-  if (d > 0.0f) discard;
+    // render the shapes in line line topology
+    if (abs(d) > stroke) discard;
+  }
 
   // NOTE:debugging purpose
   // if (p.y > 0.0f) color = vec3(p.x);
