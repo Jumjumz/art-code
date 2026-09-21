@@ -46,53 +46,44 @@ void main() {
   // set pos to ubo coord
   pos.y = ubo.reso.y + pos.y;
 
-  float d = 0.0f;
+  float stroke = constant.stroke;
+  float d      = 0.0f;
+  if (shape == 0) {
+    const vec2 b = shape_data * 0.5f;
+    center       = pos + b;
+    p            = vert_pos - center;
+
+    d = sdf_quad(p, b);
+  } else if (shape == 1) {
+    center = pos + shape_data;
+    p      = vert_pos - center;
+
+    d = sdf_circle(p, shape_data.x);
+  } else if (shape == 2) {
+    vec2 p0 = constant.p0;
+    vec2 p1 = constant.p1;
+    vec2 p2 = constant.p2;
+
+    p0.y += ubo.reso.y;
+    p1.y += ubo.reso.y;
+    p2.y += ubo.reso.y;
+
+    // free form triangle
+    d = sdf_any_triangle( vert_pos, p0, p1, p2 );
+  } else if (shape == 3) {
+    // quadratic bezier
+    // uses loop-blinn for quadratic curves
+    float f  = uv.x * uv.x - uv.y;
+    float fw = fwidth(f);
+
+    alpha -= smoothstep(-fw, fw, f);
+  }
+ 
   // TODO:apply FXAA
-  // renders correct shape per draw call
-  if (constant.fill == 1) {
-    if (shape == 0) {
-      const vec2 b = shape_data * 0.5f;
-      center       = pos + b;
-      p            = vert_pos - center;
-
-      d = sdf_quad(p, b);
-    } else if (shape == 1) {
-      center = pos + shape_data;
-      p      = vert_pos - center;
-
-      d = sdf_circle(p, shape_data.x);
-    } else if (shape == 2) {
-      vec2 p0 = constant.p0;
-      vec2 p1 = constant.p1;
-      vec2 p2 = constant.p2;
-
-      p0.y += ubo.reso.y;
-      p1.y += ubo.reso.y;
-      p2.y += ubo.reso.y;
-
-      // free form triangle
-      d = sdf_any_triangle( vert_pos, p0, p1, p2 );
-    } else if (shape == 3) {
-      // quadratic bezier
-      // uses loop-blinn for quadratic curves
-      float f  = uv.x * uv.x - uv.y;
-      float fw = fwidth(f);
-
-      alpha -= smoothstep(-fw, fw, f);
-    }
-
-    // discard outside
-    if (d > 0.0f) discard;
-  } else {
-    float stroke = constant.stroke;
-    // TODO:implement the line based shapes
-    if (shape == 0) {
-      const vec2 b = shape_data * 0.5f;
-      center       = pos + b;
-      p            = vert_pos - center;
-
-      d = sdf_quad(p, b);
-    } else if (shape == 3) {
+  // discard outside shape, aka the mesh
+  if (d > 0.0f) discard;
+  if (constant.fill == 0) {
+    if (shape == 3) {
       // NOTE:doesnt work yet, need to comeup with a solution
       // to pass all p0, p1 and p2 at the same time
       vec2 p0 = constant.p0;
@@ -104,7 +95,6 @@ void main() {
 
       alpha -= smoothstep(stroke - fw, stroke + fw, dist);
     }
-
     // render the shapes in line line topology
     if (abs(d) > stroke) discard;
   }

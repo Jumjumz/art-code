@@ -228,7 +228,7 @@ ArrayU32 DrawPen::generate_indices() const {
     return indices;
 };
 
-// NOTE:filler data
+// TODO:add v0, v1 and v2 for line curves
 Vec2 DrawPen::shape_data() { return this->position; };
 
 int DrawPen::shape_type() const { return static_cast<int>(ShapeType::Pen); };
