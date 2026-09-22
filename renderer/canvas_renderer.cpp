@@ -58,10 +58,17 @@ void CanvasRenderer::reload_pipeline() {
     bool has_pen_instance = Shared::Memory::has_pen_instance();
 
     // recompile shaders
+    // artboard
+    this->graphics_pipeline->shader_stages.clear();
+    // artcode
     this->artcode_pipeline->shader_stages.clear();
     this->artcode_pipeline->create_shaders();
 
     // reload pipeline
+    // artboard
+    this->graphics_pipeline->pipeline.clear();
+    this->graphics_pipeline->create_graphics_pipeline();
+    // artcode
     this->artcode_pipeline->pipeline_triangle.clear();
     this->artcode_pipeline->create_pipeline(has_pen_instance);
 };
@@ -323,6 +330,27 @@ void CanvasRenderer::record_artboard_command(const uint32_t current_frame) {
                            this->graphics_pipeline->layout, 0,
                            *this->artboard_commands->artboard_descriptor_set[0], nullptr);
 
+    // add filler data
+    if (this->push_constants.empty()) {
+        PushConstants partial{};
+        this->push_constants.push_back(partial);
+    }
+
+    // updates clear color to bg_color
+    // same color calculation in shader
+    {
+        const auto&     bg_color = this->push_constants[0].bg_color;
+        const glm::vec3 color =
+            glm::pow(glm::vec3{bg_color.r, bg_color.g, bg_color.b}, glm::vec3{2.2f});
+
+        this->clear_color = {color.r, color.g, color.b, bg_color.a};
+    }
+
+    // only needs the first index..
+    cmd.pushConstants<PushConstants>(*this->graphics_pipeline->layout,
+                                     vk::ShaderStageFlagBits::eFragment, 0,
+                                     this->push_constants[0]);
+
     cmd.setViewport(
         0, vk::Viewport{0.0f, 0.0f, static_cast<float>(this->vk_buffers.extent.width),
                         static_cast<float>(this->vk_buffers.extent.height), 0.0f, 1.0f});
@@ -347,7 +375,6 @@ void CanvasRenderer::record_artboard_command(const uint32_t current_frame) {
     cmd.end();
 };
 
-// NOTE:need to update the pipeline and rendering
 void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
     auto& cmd = this->artcode_commands->artcode_command_buffers[current_frame];
     // render

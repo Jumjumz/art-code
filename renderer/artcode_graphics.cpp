@@ -96,8 +96,7 @@ void ArtcodeGraphics::create_pipeline(bool has_pen_instance) {
         vertex_info.pVertexBindingDescriptions   = &binding_desc;
         vertex_info.pVertexAttributeDescriptions = attribute_desc.data();
     } else {
-        vertex_info.vertexBindingDescriptionCount   = 0;
-        vertex_info.vertexAttributeDescriptionCount = 0;
+        vertex_info.vertexBindingDescriptionCount = 0;
     }
 
     vk::PipelineViewportStateCreateInfo viewport_state_info{};
@@ -144,8 +143,7 @@ void ArtcodeGraphics::create_pipeline(bool has_pen_instance) {
     rendering_info.colorAttachmentCount    = 1;
     rendering_info.pColorAttachmentFormats = &this->image_format;
 
-    //  use push constant stages to only use what each stages needs
-    //  push constants
+    // push constants
     vk::PushConstantRange constant_range{};
     constant_range.stageFlags =
         vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;

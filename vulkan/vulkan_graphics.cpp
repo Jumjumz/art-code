@@ -1,4 +1,5 @@
 #include "vulkan_graphics.hpp"
+#include "artcode_instance.hpp"
 #include <fstream>
 
 VulkanGraphics::VulkanGraphics(const vk::raii::Device& device,
@@ -47,7 +48,7 @@ void VulkanGraphics::create_descriptor_set_layout() {
         vk::raii::DescriptorSetLayout{this->device, descriptor_info, nullptr};
 };
 
-void VulkanGraphics::create_graphics_pipeline() {
+void VulkanGraphics::create_shaders() {
     this->vert_shader_module = create_shader_module(read_file("shaders/core.vert.spv"));
     // uses project shader from api user
     this->frag_shader_module = create_shader_module(read_file("shaders/core.frag.spv"));
@@ -62,8 +63,12 @@ void VulkanGraphics::create_graphics_pipeline() {
     frag_shader_stage_info.module = this->frag_shader_module;
     frag_shader_stage_info.pName  = "main";
 
-    vk::PipelineShaderStageCreateInfo shader_stages[] = {vert_shader_stage_info,
-                                                         frag_shader_stage_info};
+    this->shader_stages = {vert_shader_stage_info, frag_shader_stage_info};
+};
+
+void VulkanGraphics::create_graphics_pipeline() {
+    // run all the time.. regardless if has_bg_color is false
+    create_shaders();
 
     vk::PipelineInputAssemblyStateCreateInfo assembly_info{};
     assembly_info.topology = vk::PrimitiveTopology::eTriangleStrip;
@@ -115,10 +120,16 @@ void VulkanGraphics::create_graphics_pipeline() {
     blend_info.attachmentCount = 1;
     blend_info.pAttachments    = &color_attachment;
 
+    vk::PushConstantRange constant_range{};
+    constant_range.stageFlags = vk::ShaderStageFlagBits::eFragment;
+    constant_range.offset     = 0;
+    constant_range.size       = sizeof(PushConstants);
+
     vk::PipelineLayoutCreateInfo layout_info{};
     layout_info.setLayoutCount         = 1;
     layout_info.pSetLayouts            = &*this->descriptor_set_layout;
-    layout_info.pushConstantRangeCount = 0;
+    layout_info.pushConstantRangeCount = 1;
+    layout_info.pPushConstantRanges    = &constant_range;
 
     this->layout = vk::raii::PipelineLayout{this->device, layout_info, nullptr};
 
@@ -128,7 +139,7 @@ void VulkanGraphics::create_graphics_pipeline() {
 
     vk::GraphicsPipelineCreateInfo pipeline_info{};
     pipeline_info.stageCount          = 2;
-    pipeline_info.pStages             = shader_stages;
+    pipeline_info.pStages             = this->shader_stages.data();
     pipeline_info.pNext               = &rendering_info;
     pipeline_info.pVertexInputState   = &vertex_info;
     pipeline_info.pInputAssemblyState = &assembly_info;

@@ -2,8 +2,8 @@
 
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;float ppi;} ubo;
 layout(push_constant) uniform PushConstants {
-  vec4 color;
   vec4 bg_color;
+  vec4 color;
   vec2 pos;
   vec2 center;
   vec2 shape_data;

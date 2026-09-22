@@ -12,6 +12,12 @@ class VulkanGraphics {
 
     vk::raii::DescriptorSetLayout descriptor_set_layout = nullptr;
 
+    std::vector<vk::PipelineShaderStageCreateInfo> shader_stages = {};
+
+    void create_shaders();
+
+    void create_graphics_pipeline();
+
   private:
     const vk::raii::Device& device;
 
@@ -27,6 +33,4 @@ class VulkanGraphics {
     vk::raii::ShaderModule create_shader_module(const std::vector<char>& code) const;
 
     void create_descriptor_set_layout();
-
-    void create_graphics_pipeline();
 };

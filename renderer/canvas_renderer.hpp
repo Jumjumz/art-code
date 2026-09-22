@@ -71,6 +71,6 @@ class CanvasRenderer {
 
     size_t inst_size = 0;
 
-    const vk::ClearColorValue clear_color = {1.0f, 1.0f, 1.0f, 1.0f};
-    const vk::Offset2D        offset      = {0, 0};
+    vk::ClearColorValue clear_color = {1.0f, 1.0f, 1.0f, 1.0f};
+    const vk::Offset2D  offset      = {0, 0};
 };

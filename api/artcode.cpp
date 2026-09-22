@@ -243,8 +243,8 @@ void Art::Draw() {
             const auto& inst = InstanceRegistry::get_instance(i);
 
             PushConstants constants{};
-            constants.color      = convert_color(inst->color, inst->opacity);
             constants.bg_color   = convert_color(Art::backgroundColor, 1.0f);
+            constants.color      = convert_color(inst->color, inst->opacity);
             constants.pos        = inst->position;
             constants.center     = inst->get_center();
             constants.shape_data = inst->shape_data();

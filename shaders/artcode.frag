@@ -2,8 +2,8 @@
 
 layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;float ppi;} ubo;
 layout(push_constant) uniform PushConstants {
-  vec4 color;
   vec4 bg_color;
+  vec4 color;
   vec2 pos;
   vec2 center;
   vec2 shape_data;
@@ -28,8 +28,6 @@ float sdf_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2);
 float sdf_bezier(vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
 // TODO:apply bezier sdf for line topology
-// FIXME:constant bg_color doesnt work..
-// it should not be in here but isntead in canvas itself
 void main() {
   vec3 color  = constant.color.rgb;
   float alpha = constant.color.a;
