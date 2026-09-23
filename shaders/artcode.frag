@@ -69,41 +69,47 @@ void main() {
     // free form triangle
     d = sdf_any_triangle( vert_pos, p0, p1, p2 );
   } else if (shape == 3) {
-    // quadratic bezier
-    // uses loop-blinn for quadratic curves
-    float f  = uv.x * uv.x - uv.y;
-    float fw = fwidth(f);
-
-    alpha -= smoothstep(-fw, fw, f);
-  }
- 
-  // TODO:apply FXAA
-  // discard outside shape, aka the mesh
-  if (d > 0.0f) discard;
-  if (constant.fill == 0) {
-    if (shape == 3) {
-      // NOTE:doesnt work yet, need to comeup with a solution
+    if (constant.fill == 0) {
+      // FIXME:doesnt work yet, need to come up with a solution
       // to pass all p0, p1 and p2 at the same time
       vec2 p0 = constant.p0;
       vec2 p1 = constant.p1;
       vec2 p2 = constant.p2;
 
-      float dist = sdf_bezier(pos, p0, p1, p2);
-      float fw = fwidth(dist);
+      p0.y += ubo.reso.y;
+      p1.y += ubo.reso.y;
+      p2.y += ubo.reso.y;
 
-      alpha -= smoothstep(stroke - fw, stroke + fw, dist);
+      d          = sdf_bezier( vert_pos, p0, p1, p2 );
+      float fw   = fwidth(d);
+
+      alpha -= smoothstep(stroke - fw, stroke + fw, d);
+    } else {
+      // quadratic bezier
+      // uses loop-blinn for quadratic curves
+      float f  = uv.x * uv.x - uv.y;
+      float fw = fwidth(f);
+
+      alpha -= smoothstep(-fw, fw, f);
     }
-    // render the shapes in line line topology
-    if (abs(d) > stroke) discard;
   }
+ 
+  // TODO:apply FXAA
+  // discard outside shape, aka the mesh
+  if (d > 0.0f) discard;
+
+  // render the shapes in line topology
+  if (constant.fill == 0)
+    if (abs(d) > stroke) discard;
+ 
 
   // NOTE:debugging purpose
   // if (p.y > 0.0f) color = vec3(p.x);
 
   // only renders the curve inside the triangle
   if (alpha < 0.00001f) {
-    alpha = constant.bg_color.a;
     color = pow(constant.bg_color.rgb, vec3(2.2f));
+    discard;
   }
  
   frag_color = vec4(color, alpha);

@@ -215,11 +215,12 @@ ArrayVec4 DrawPen::generate_vertices() const {
     return vertex;
 };
 
+// NOTE:this generates duplicate indices for index 0
 ArrayU32 DrawPen::generate_indices() const {
     ArrayU32 indices = {};
 
-    const auto pos_size = generate_vertices().size();
-    for (size_t i = 0; i < pos_size - 1; i++) {
+    const auto pen_size = generate_vertices().size();
+    for (size_t i = 0; i < pen_size - 1; i++) {
         indices.push_back(0);
         indices.push_back(i);
         indices.push_back(i + 1);
@@ -229,7 +230,22 @@ ArrayU32 DrawPen::generate_indices() const {
 };
 
 // TODO:add v0, v1 and v2 for line curves
-Vec2 DrawPen::shape_data() { return this->position; };
+Vec2 DrawPen::shape_data() {
+    // FIXME:this will not work for multiple curves.. should have a different approach
+    // NOTE:mutating v0, v1 and v2 doesnt have to do with shape data,
+    // this is for test purpose
+    for (size_t i = 0; i < this->positions.size(); i++) {
+        const auto& pos = this->positions[i];
+        if (pos.handles.handle) {
+            this->v0 = pos.position;
+            this->v1 = pos.handles.handlePosition;
+            this->v2 = this->positions[i + 1].position;
+            continue;
+        }
+    }
+
+    return this->position;
+};
 
 int DrawPen::shape_type() const { return static_cast<int>(ShapeType::Pen); };
 

@@ -97,9 +97,11 @@ void main() {
 
   if (constant.shape_type == 3) {
     vec4 new_pos = pen_pos;
-    new_pos.y = ubo.reso.y + new_pos.y;
+    new_pos.y += ubo.reso.y;
+
+    // assign
     vert_pos = new_pos.xy;
-    uv = new_pos.wz;
+    uv       = new_pos.wz;
   } else {
     vec2 position        = constant.pos;
     const vec2 mesh_size = constant.mesh_size;
