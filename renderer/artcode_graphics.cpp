@@ -114,7 +114,7 @@ void ArtcodeGraphics::create_pipeline(bool has_pen_instance) {
     vk::PipelineMultisampleStateCreateInfo multismapling_state_info{};
     multismapling_state_info.rasterizationSamples = vk::SampleCountFlagBits::e4;
     multismapling_state_info.sampleShadingEnable  = vk::False;
-    // multismapling_state_info.minSampleShading     = 0.2f;
+    multismapling_state_info.minSampleShading     = 1.0f;
 
     vk::PipelineDepthStencilStateCreateInfo stencil_state_info{};
     stencil_state_info.depthTestEnable       = vk::False;

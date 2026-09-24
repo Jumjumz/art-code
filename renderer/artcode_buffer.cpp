@@ -122,17 +122,19 @@ void ArtcodeBuffer::create_index_buffer() {
     }
 };
 
+// TODO:add ssbo for pen instance
 void ArtcodeBuffer::create_ssbo_buffer() {
     // create buffer per instance
     std::vector<vk::DescriptorBufferInfo> ssbo_infos;
     std::vector<vk::WriteDescriptorSet>   writes;
 
     // reserve size to avoid seg faults
-    ssbo_infos.reserve(this->skew_data.size());
-    writes.reserve(this->skew_data.size());
+    const auto skew_size = this->skew_data.size();
+    ssbo_infos.reserve(skew_size);
+    writes.reserve(skew_size);
 
     // creates ssbo buffer per shape instance, meaning every shape has an attached ssbo buffer
-    for (size_t i = 0; i < this->skew_data.size(); i++) {
+    for (size_t i = 0; i < skew_size; i++) {
         vk::BufferCreateInfo buffer_info{};
         buffer_info.size        = sizeof(this->skew_data[0]);
         buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;

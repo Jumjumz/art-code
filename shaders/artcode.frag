@@ -24,7 +24,7 @@ layout(location = 1) in vec2 uv;
 // forward declarations
 float sdf_quad(vec2 p, vec2 b);
 float sdf_circle(vec2 p, float r);
-float sdf_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2);
+float sdf_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2);
 float sdf_bezier(vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
 // TODO:apply bezier sdf for line topology
@@ -57,6 +57,9 @@ void main() {
     p      = vert_pos - center;
 
     d = sdf_circle(p, shape_data.x);
+
+    float fw = fwidth(d);
+    alpha -= smoothstep(-fw, fw, d);
   } else if (shape == 2) {
     vec2 p0 = constant.p0;
     vec2 p1 = constant.p1;
@@ -67,11 +70,11 @@ void main() {
     p2.y += ubo.reso.y;
 
     // free form triangle
-    d = sdf_any_triangle( vert_pos, p0, p1, p2 );
+    d = sdf_triangle( vert_pos, p0, p1, p2 );
   } else if (shape == 3) {
     if (constant.fill == 0) {
-      // FIXME:doesnt work yet, need to come up with a solution
-      // to pass all p0, p1 and p2 at the same time
+      // FIXME:works for a single curve, dont work if a curve and a line is created
+      // doesnt work with multiple curves, not consistent in line shape
       vec2 p0 = constant.p0;
       vec2 p1 = constant.p1;
       vec2 p2 = constant.p2;
@@ -87,30 +90,27 @@ void main() {
     } else {
       // quadratic bezier
       // uses loop-blinn for quadratic curves
-      float f  = uv.x * uv.x - uv.y;
-      float fw = fwidth(f);
+      d        = uv.x * uv.x - uv.y;
+      float fw = fwidth(d);
 
-      alpha -= smoothstep(-fw, fw, f);
+      alpha -= smoothstep(-fw, fw, d);
     }
   }
  
-  // TODO:apply FXAA
+  // TODO:make anti-aliasing for all shape smoother
   // discard outside shape, aka the mesh
   if (d > 0.0f) discard;
 
   // render the shapes in line topology
   if (constant.fill == 0)
+    // TODO:apply anti-aliasing in inner edge
     if (abs(d) > stroke) discard;
- 
 
   // NOTE:debugging purpose
-  // if (p.y > 0.0f) color = vec3(p.x);
+  // if (d > 0.0f) color = vec3(alpha);
 
   // only renders the curve inside the triangle
-  if (alpha < 0.00001f) {
-    color = pow(constant.bg_color.rgb, vec3(2.2f));
-    discard;
-  }
+  if (alpha < 0.00001f) discard;
  
   frag_color = vec4(color, alpha);
 }
@@ -127,7 +127,7 @@ float sdf_circle(vec2 p, float r) {
 }
 
 // free form triangle
-float sdf_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
+float sdf_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   vec2 e0 = p1 - p0;
   vec2 e1 = p2 - p1;
   vec2 e2 = p0 - p2;
@@ -147,7 +147,7 @@ float sdf_any_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   return -sqrt(d.x) * sign(d.y);
 }
 
-// From Inigo Quilez (curve line sdf)
+// curve line sdf
 float sdf_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
   vec2 a = p1 - p0;
   vec2 b = p0 - 2.0f * p1 + p2;
@@ -187,5 +187,6 @@ float sdf_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
     res = (dx < dy) ? dx : dy;
   }
 
-  return sqrt(res);
+  // returns negative value as y coord is in negative space
+  return -sqrt(res);
 }
