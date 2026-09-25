@@ -5,7 +5,7 @@
 #include <glm/common.hpp>
 
 struct InstanceRegistry {
-    static void register_shape(detail::IPen* shape) {
+    static void register_instance(detail::IPen* shape) {
         if (array_size > 500) {
             assert("Max instances of shape registered exceeded");
             return;
@@ -108,7 +108,7 @@ using DrawPen      = Art::Pen;
 DrawQuad::Quad()
     : l(100),
       w(100) {
-    InstanceRegistry::register_shape(this);
+    InstanceRegistry::register_instance(this);
 };
 
 // NOTE:all generate vertices function for shapes except Pen has 10.0f for w and z
@@ -133,7 +133,7 @@ int DrawQuad::shape_type() const { return static_cast<int>(ShapeType::Quad); };
 // Circle
 DrawCircle::Circle()
     : radius(100.0f) {
-    InstanceRegistry::register_shape(this);
+    InstanceRegistry::register_instance(this);
 };
 
 ArrayVec4 DrawCircle::generate_vertices() const {
@@ -169,7 +169,7 @@ Vec2 DrawCircle::shape_data() { return Vec2{this->radius, this->radius}; };
 int DrawCircle::shape_type() const { return static_cast<int>(ShapeType::Circle); };
 
 // Triangle
-DrawTriangle::Triangle() { InstanceRegistry::register_shape(this); };
+DrawTriangle::Triangle() { InstanceRegistry::register_instance(this); };
 
 ArrayVec4 DrawTriangle::generate_vertices() const {
     return ArrayVec4{Vec4{this->v0, Vec2{2.0f, 2.0f}}, Vec4{this->v1, Vec2{2.0f, 2.0f}},
@@ -192,7 +192,7 @@ int DrawTriangle::shape_type() const { return static_cast<int>(ShapeType::Triang
 
 DrawPen::Pen()
     : positions({}) {
-    InstanceRegistry::register_shape(this);
+    InstanceRegistry::register_instance(this);
 };
 
 // NOTE: currently the only place where w and z is important and is being used in the shader
@@ -254,7 +254,8 @@ void Art::Draw() {
     // load shared memory
     Shared::Memory::load_shared_memory();
     {
-        const auto& reg_size = InstanceRegistry::get_size();
+        const auto reg_size = InstanceRegistry::get_size();
+
         for (size_t i = 0; i < reg_size; i++) {
             const auto& inst = InstanceRegistry::get_instance(i);
 
@@ -278,7 +279,7 @@ void Art::Draw() {
             // "position" and not "positions" which pen uses
             const auto& skew_mesh = get_skew_mesh(constants.mesh_size, inst->position);
 
-            SkewData skew_data;
+            SkewData skew_data{};
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = inst->skewPos;
             //  register pen instances

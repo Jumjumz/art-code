@@ -22,10 +22,10 @@ layout(location = 0) out vec4 frag_color;
 layout(location = 1) in vec2 uv;
 
 // forward declarations
-float sdf_quad(vec2 p, vec2 b);
-float sdf_circle(vec2 p, float r);
-float sdf_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2);
-float sdf_bezier(vec2 p, vec2 p0, vec2 p1, vec2 p2);
+float sdf_quad     (vec2 p, vec2 b);
+float sdf_circle   (vec2 p, float r);
+float sdf_triangle (vec2 p, vec2 p0, vec2 p1, vec2 p2);
+float sdf_bezier   (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
 // TODO:apply bezier sdf for line topology
 void main() {
@@ -57,9 +57,6 @@ void main() {
     p      = vert_pos - center;
 
     d = sdf_circle(p, shape_data.x);
-
-    float fw = fwidth(d);
-    alpha -= smoothstep(-fw, fw, d);
   } else if (shape == 2) {
     vec2 p0 = constant.p0;
     vec2 p1 = constant.p1;
@@ -83,28 +80,29 @@ void main() {
       p1.y += ubo.reso.y;
       p2.y += ubo.reso.y;
 
-      d          = sdf_bezier( vert_pos, p0, p1, p2 );
-      float fw   = fwidth(d);
-
-      alpha -= smoothstep(stroke - fw, stroke + fw, d);
+      d = sdf_bezier( vert_pos, p0, p1, p2 );
     } else {
       // quadratic bezier
       // uses loop-blinn for quadratic curves
-      d        = uv.x * uv.x - uv.y;
-      float fw = fwidth(d);
-
-      alpha -= smoothstep(-fw, fw, d);
+      d = uv.x * uv.x - uv.y;
     }
   }
  
-  // TODO:make anti-aliasing for all shape smoother
   // discard outside shape, aka the mesh
   if (d > 0.0f) discard;
 
+  // TODO:make anti-aliasing for all shape smoother
+  // apply anti-aliasing for every shape
+  float fw = fwidth(d);
+  alpha -= smoothstep(-fw, fw, d);
   // render the shapes in line topology
-  if (constant.fill == 0)
-    // TODO:apply anti-aliasing in inner edge
+  if (constant.fill == 0) {
+    // anti-aliasing for inner edge
+    float fw = fwidth(d);
+
+    alpha -= smoothstep(stroke - fw, stroke + fw, abs(d));
     if (abs(d) > stroke) discard;
+  }
 
   // NOTE:debugging purpose
   // if (d > 0.0f) color = vec3(alpha);

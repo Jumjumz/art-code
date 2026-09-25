@@ -40,6 +40,7 @@ void Canvas::render() {
     draw_list->AddRectFilled(ImVec2(ab_x, ab_y), ImVec2(ab_x + ab_w, ab_y + ab_h),
                              IM_COL32(255, 255, 255, 255));
 
+    // texture passed, update draw list to match what shaders has
     if (ArtboardUtils::artboard_texture != VK_NULL_HANDLE) {
         // draw the rect again but this time in transparent, this fixes white jagged issues for curve shapes
         draw_list->AddRectFilled(ImVec2(ab_x, ab_y), ImVec2(ab_x + ab_w, ab_y + ab_h),
