@@ -251,7 +251,7 @@ ArtcodeBuffer::create_export_image_buffer(const vk::Extent3D&  extent,
     region.imageOffset                     = vk::Offset3D{0, 0, 0};
     region.imageExtent                     = extent;
 
-    cmd.copyImageToBuffer(*artboard_image, vk::ImageLayout::eTransferSrcOptimal,
+    cmd.copyImageToBuffer(*this->artboard_image, vk::ImageLayout::eTransferSrcOptimal,
                           *staging_buffer, region);
 
     // transition again back to gpu

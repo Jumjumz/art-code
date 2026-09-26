@@ -44,7 +44,7 @@ void Canvas::render() {
     if (ArtboardUtils::artboard_texture != VK_NULL_HANDLE) {
         // draw the rect again but this time in transparent, this fixes white jagged issues for curve shapes
         draw_list->AddRectFilled(ImVec2(ab_x, ab_y), ImVec2(ab_x + ab_w, ab_y + ab_h),
-                                 IM_COL32(0, 0, 0, 255));
+                                 IM_COL32(0, 0, 0, 0));
         // Texture on top of the rect
         draw_list->AddImage((ImTextureID)ArtboardUtils::artboard_texture,
                             ImVec2(ab_x, ab_y), ImVec2(ab_x + ab_w, ab_y + ab_h));

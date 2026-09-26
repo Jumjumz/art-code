@@ -27,7 +27,6 @@ float sdf_circle   (vec2 p, float r);
 float sdf_triangle (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 float sdf_bezier   (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
-// TODO:apply bezier sdf for line topology
 void main() {
   vec3 color  = constant.color.rgb;
   float alpha = constant.color.a;
@@ -85,23 +84,25 @@ void main() {
       // quadratic bezier
       // uses loop-blinn for quadratic curves
       d = uv.x * uv.x - uv.y;
+
+      // handle its own anti-aliasing
+      float fw = fwidth(d);
+      alpha -= smoothstep(-fw, fw, d);
     }
   }
  
   // discard outside shape, aka the mesh
   if (d > 0.0f) discard;
 
-  // TODO:make anti-aliasing for all shape smoother
-  // apply anti-aliasing for every shape
   float fw = fwidth(d);
   alpha -= smoothstep(-fw, fw, d);
+ 
   // render the shapes in line topology
   if (constant.fill == 0) {
+    if (abs(d) > stroke) discard;
     // anti-aliasing for inner edge
     float fw = fwidth(d);
-
     alpha -= smoothstep(stroke - fw, stroke + fw, abs(d));
-    if (abs(d) > stroke) discard;
   }
 
   // NOTE:debugging purpose
