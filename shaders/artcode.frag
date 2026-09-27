@@ -94,15 +94,22 @@ void main() {
   // discard outside shape, aka the mesh
   if (d > 0.0f) discard;
 
-  float fw = fwidth(d);
-  alpha -= smoothstep(-fw, fw, d);
+  // NOTE:excempt quad and curve lines
+  // for curve lines it causes a bug where it is transparent in the middle of the line
+  if (shape != 0 && shape != 3) {
+    float fw = fwidth(d);
+    alpha -= smoothstep(-fw, fw, d);
+  }
  
   // render the shapes in line topology
   if (constant.fill == 0) {
     if (abs(d) > stroke) discard;
-    // anti-aliasing for inner edge
-    float fw = fwidth(d);
-    alpha -= smoothstep(stroke - fw, stroke + fw, abs(d));
+    // excempt quads for anti-aliasing
+    if (shape != 0) {
+      // anti-aliasing for inner edge
+      float fw = fwidth(d);
+      alpha -= smoothstep(stroke - fw, stroke + fw, abs(d));
+    }
   }
 
   // NOTE:debugging purpose

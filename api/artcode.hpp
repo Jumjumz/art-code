@@ -91,7 +91,7 @@ namespace detail {
         IPen()
             : position(200, 200),
               color("#000000"),
-              stroke(1.0f),
+              stroke(10.0f),
               rotate(0.0f),
               opacity(1.0f),
               fill(true),

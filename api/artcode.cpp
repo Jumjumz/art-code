@@ -62,7 +62,7 @@ Vec2 skew_mesh_size(const ArrayVec4& vertices) {
     }
 
     return Vec2{max_x - min_x, max_y - min_y};
-}
+};
 
 // TODO:might need to reduce this to size 4 as 0-4 indices are only needed.. though this is still in consideration
 ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
@@ -257,7 +257,8 @@ void Art::Draw() {
         const auto reg_size = InstanceRegistry::get_size();
 
         for (size_t i = 0; i < reg_size; i++) {
-            const auto& inst = InstanceRegistry::get_instance(i);
+            const auto& inst  = InstanceRegistry::get_instance(i);
+            const auto& verts = inst->generate_vertices();
 
             PushConstants constants{};
             constants.bg_color   = convert_color(Art::backgroundColor, 1.0f);
@@ -265,7 +266,7 @@ void Art::Draw() {
             constants.pos        = inst->position;
             constants.center     = inst->get_center();
             constants.shape_data = inst->shape_data();
-            constants.mesh_size  = skew_mesh_size(inst->generate_vertices());
+            constants.mesh_size  = skew_mesh_size(verts);
             constants.p0         = inst->v0;
             constants.p1         = inst->v1;
             constants.p2         = inst->v2;
@@ -286,8 +287,7 @@ void Art::Draw() {
             if (constants.shape_type == static_cast<int>(ShapeType::Pen)) {
                 // NOTE:pen instance is not responsible for increasing the shared memory size,
                 //  that is register_constants responsibility
-                Shared::Memory::register_pen_instance(inst->generate_vertices(),
-                                                      inst->generate_indices());
+                Shared::Memory::register_pen_instance(verts, inst->generate_indices());
             }
 
             Shared::Memory::register_constants(constants, skew_data);

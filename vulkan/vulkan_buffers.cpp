@@ -90,7 +90,7 @@ void VulkanBuffers::artboard_create_buffer() {
 
 void VulkanBuffers::artboard_create_sampler() {
     vk::SamplerCreateInfo sampler_info{};
-    sampler_info.magFilter    = vk::Filter::eLinear;
+    sampler_info.magFilter    = vk::Filter::eNearest;
     sampler_info.minFilter    = vk::Filter::eLinear;
     sampler_info.addressModeU = vk::SamplerAddressMode::eClampToEdge;
     sampler_info.addressModeV = vk::SamplerAddressMode::eClampToEdge;
