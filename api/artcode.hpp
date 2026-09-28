@@ -99,7 +99,8 @@ namespace detail {
               skewPos({}),
               v0(100, 0),
               v1(0, 150),
-              v2(200, 150) {}
+              v2(200, 150),
+              positions({}) {}
 
         // TODO:make skewPos a function.. or change the way skew pos syntax wise
         // uses camel case for users, snake case for api implementation
@@ -111,12 +112,14 @@ namespace detail {
         float opacity;
         bool  fill;
         bool  skew;
-        // comprehendable to write and read
+        // TODO:update this to becomprehendable to write and read
         ArrayT<SkewPos, 8> skewPos;
         // TODO:v0, v1, v2 should not be available for other shapes but for triangles
         // only, have a way to hide this
         Vec2 v0, v1, v2;
 
+        // TODO:should not be avialble for other shapes, only for pen
+        VectorT<PenHandles> positions;
         // must implement
         virtual ArrayVec4 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;
@@ -179,8 +182,6 @@ namespace Art {
     class Pen : public detail::IPen {
       public:
         Pen();
-
-        VectorT<PenHandles> positions;
 
       private:
         ArrayVec4 generate_vertices() const override;

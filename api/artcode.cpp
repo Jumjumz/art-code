@@ -97,6 +97,25 @@ ArrayT<Vec2, 36> bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2
     return lerp;
 };
 
+ArrayVec4 generate_pen_handles(const VectorT<PenHandles>& positions) {
+    ArrayVec4 vertex = {};
+    vertex.reserve(positions.size());
+
+    for (size_t i = 0; i < positions.size(); i++) {
+        const auto& pos0 = positions[i];
+        if (pos0.handles.handle) {
+            const auto& pos1 = pos0.handles;
+            const auto& pos2 = positions[i + 1];
+
+            vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
+            vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
+        } else {
+            vertex.push_back(Vec4{pos0.position, Vec2{1.0f, 1.0f}});
+        }
+    }
+    return vertex;
+};
+
 // TODO:remove vertices and indices functions
 // API implementations
 using DrawQuad     = Art::Quad;
@@ -190,10 +209,7 @@ Vec2 DrawTriangle::shape_data() {
 
 int DrawTriangle::shape_type() const { return static_cast<int>(ShapeType::Triangle); };
 
-DrawPen::Pen()
-    : positions({}) {
-    InstanceRegistry::register_instance(this);
-};
+DrawPen::Pen() { InstanceRegistry::register_instance(this); };
 
 // NOTE: currently the only place where w and z is important and is being used in the shader
 ArrayVec4 DrawPen::generate_vertices() const {
@@ -257,8 +273,7 @@ void Art::Draw() {
         const auto reg_size = InstanceRegistry::get_size();
 
         for (size_t i = 0; i < reg_size; i++) {
-            const auto& inst  = InstanceRegistry::get_instance(i);
-            const auto& verts = inst->generate_vertices();
+            const auto& inst = InstanceRegistry::get_instance(i);
 
             PushConstants constants{};
             constants.bg_color   = convert_color(Art::backgroundColor, 1.0f);
@@ -266,7 +281,7 @@ void Art::Draw() {
             constants.pos        = inst->position;
             constants.center     = inst->get_center();
             constants.shape_data = inst->shape_data();
-            constants.mesh_size  = skew_mesh_size(verts);
+            constants.mesh_size  = skew_mesh_size(inst->generate_vertices());
             constants.p0         = inst->v0;
             constants.p1         = inst->v1;
             constants.p2         = inst->v2;
@@ -276,6 +291,10 @@ void Art::Draw() {
             constants.skew       = static_cast<int>(inst->skew);
             constants.shape_type = inst->shape_type();
 
+            Shared::Memory::register_constants(constants);
+            // register pen instances
+            Shared::Memory::register_pen(inst->positions);
+
             // TODO:skew should also work for pen, curently skew mesh is using member
             // "position" and not "positions" which pen uses
             const auto& skew_mesh = get_skew_mesh(constants.mesh_size, inst->position);
@@ -283,14 +302,17 @@ void Art::Draw() {
             SkewData skew_data{};
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = inst->skewPos;
-            //  register pen instances
+
+            Shared::Memory::register_skew_data(skew_data);
+
             if (constants.shape_type == static_cast<int>(ShapeType::Pen)) {
-                // NOTE:pen instance is not responsible for increasing the shared memory size,
-                //  that is register_constants responsibility
-                Shared::Memory::register_pen_instance(verts, inst->generate_indices());
+                // TODO:replace this with register pen function
+                Shared::Memory::register_pen_instance(inst->generate_vertices(),
+                                                      inst->generate_indices());
             }
 
-            Shared::Memory::register_constants(constants, skew_data);
+            // increment instance size, mutates instance size per loop execution
+            Shared::Memory::increment_size();
         }
     }
 };

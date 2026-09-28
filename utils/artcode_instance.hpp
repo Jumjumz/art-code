@@ -37,6 +37,23 @@ struct Indx {
     ArrayT<u32, 9999> element;
 };
 
+// equivalent to PenHandles struct in the api
+// needs its own struct for the application
+struct PHandle {
+    int  handle;
+    Vec2 position;
+};
+
+struct PenData {
+    Vec2    position;
+    PHandle handles;
+};
+
+struct PenInstance {
+    size_t               size;
+    ArrayT<PenData, 999> item;
+};
+
 struct SkewData {
     ArrayT<Vec2, 8>    skew_mesh;
     ArrayT<SkewPos, 8> skew_pos;
@@ -65,6 +82,7 @@ namespace Shared {
         Vert          vertex;
         Indx          index;
         PushConstants constants;
+        PenInstance   pen_instance;
         SkewData      skew_data;
     };
 
@@ -84,7 +102,7 @@ namespace Shared {
             if (!first_init) {
                 fd = shm_open("/artcode_instances", O_RDWR, 0666);
             } else {
-                const auto& result = ftruncate(fd, sizeof(Shared::Region));
+                const auto result = ftruncate(fd, sizeof(Shared::Region));
                 if (result == -1) {
                     std::cerr << "truncate failed!" << std::endl;
                     return;
@@ -122,19 +140,48 @@ namespace Shared {
             }
         }
 
-        static void register_constants(const PushConstants& push_const,
-                                       const SkewData&      skew_data) {
+        static void register_pen(const VectorT<PenHandles>& pen_instances) {
+            check_instance_size();
+
+            auto& inst = region->instance[region->size];
+
+            for (const auto& pen : pen_instances) {
+                // map pen handles struct to the pen instances struct
+                auto pen_size = inst.pen_instance.size++;
+
+                // position
+                inst.pen_instance.item[pen_size].position = pen.position;
+                // handles
+                inst.pen_instance.item[pen_size].handles.handle =
+                    static_cast<int>(pen.handles.handle);
+                inst.pen_instance.item[pen_size].handles.position =
+                    pen.handles.handlePosition;
+            }
+        }
+
+        static void register_constants(const PushConstants& push_const) {
+            check_instance_size();
+
+            auto& inst = region->instance[region->size];
+
+            inst.constants = push_const;
+        }
+
+        static void register_skew_data(const SkewData& skew_data) {
+            check_instance_size();
+
+            auto& inst     = region->instance[region->size];
+            inst.skew_data = skew_data;
+        }
+
+        static void increment_size() { region->size++; }
+
+        static void check_instance_size() {
             if (!region || region->size > 500) {
                 assert(
                     "Max instances reached! or something wrong with instance creation!");
                 return;
             }
-
-            auto& inst = region->instance[region->size];
-
-            inst.constants = push_const;
-            inst.skew_data = skew_data;
-            region->size++;
         }
 
         static size_t get_intance_size() { return region->size; }
@@ -147,7 +194,7 @@ namespace Shared {
 
         static bool has_pen_instance() {
             bool found = false;
-            // check if pen instance exist, if found exit immidiately
+            // check if pen instance exist
             for (size_t i = 0; i < region->size; i++) {
                 const auto& constants = region->instance[i].constants;
                 // shape type == pen

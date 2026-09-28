@@ -123,8 +123,7 @@ void ArtcodeBuffer::create_index_buffer() {
     }
 };
 
-// TODO:add ssbo for pen instance
-void ArtcodeBuffer::create_ssbo_buffer() {
+void ArtcodeBuffer::create_skew_ssbo_buffer() {
     // create buffer per instance
     std::vector<vk::DescriptorBufferInfo> ssbo_infos = {};
     std::vector<vk::WriteDescriptorSet>   writes     = {};
@@ -141,9 +140,10 @@ void ArtcodeBuffer::create_ssbo_buffer() {
         buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
         buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
-        this->ssbo_buffers.push_back(vk::raii::Buffer{this->device, buffer_info, nullptr});
+        this->skew_ssbo_buffers.push_back(
+            vk::raii::Buffer{this->device, buffer_info, nullptr});
 
-        vk::MemoryRequirements mem_req = this->ssbo_buffers[i].getMemoryRequirements();
+        vk::MemoryRequirements mem_req = this->skew_ssbo_buffers[i].getMemoryRequirements();
 
         vk::MemoryAllocateInfo mem_alloc_info{};
         mem_alloc_info.allocationSize  = mem_req.size;
@@ -151,19 +151,77 @@ void ArtcodeBuffer::create_ssbo_buffer() {
             mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
                                         vk::MemoryPropertyFlagBits::eHostCoherent);
 
-        this->ssbo_memories.push_back(
+        this->skew_ssbo_memories.push_back(
             vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr});
 
-        this->ssbo_buffers[i].bindMemory(this->ssbo_memories[i], 0);
+        this->skew_ssbo_buffers[i].bindMemory(this->skew_ssbo_memories[i], 0);
 
         // map memory
-        void* map_memory = this->ssbo_memories[i].mapMemory(0, buffer_info.size);
+        void* map_memory = this->skew_ssbo_memories[i].mapMemory(0, buffer_info.size);
         memcpy(map_memory, &this->skew_data[i], buffer_info.size);
-        this->ssbo_memories[i].unmapMemory();
+        this->skew_ssbo_memories[i].unmapMemory();
 
         // write to the buffer per instance
         vk::DescriptorBufferInfo ssbo_info{};
-        ssbo_info.buffer = *this->ssbo_buffers[i];
+        ssbo_info.buffer = *this->skew_ssbo_buffers[i];
+        ssbo_info.offset = 0;
+        ssbo_info.range  = buffer_info.size;
+        ssbo_infos.push_back(ssbo_info);
+
+        vk::WriteDescriptorSet write{};
+        write.dstSet          = *this->descriptor_sets[i];
+        write.dstBinding      = 1;
+        write.dstArrayElement = 0;
+        write.descriptorCount = 1;
+        write.descriptorType  = vk::DescriptorType::eStorageBuffer;
+        write.pBufferInfo     = &ssbo_infos[i];
+        writes.push_back(write);
+    }
+    // update descriptor sets for entire writes
+    this->device.updateDescriptorSets(writes, {});
+};
+
+void ArtcodeBuffer::create_pen_ssbo_buffer() {
+    // create buffer per instance
+    std::vector<vk::DescriptorBufferInfo> ssbo_infos = {};
+    std::vector<vk::WriteDescriptorSet>   writes     = {};
+
+    // reserve size to avoid seg faults
+    const auto pen_size = this->pen_data.size();
+    ssbo_infos.reserve(pen_size);
+    writes.reserve(pen_size);
+
+    // creates ssbo buffer per shape instance, meaning every shape has an attached ssbo buffer
+    for (size_t i = 0; i < pen_size; i++) {
+        vk::BufferCreateInfo buffer_info{};
+        buffer_info.size        = sizeof(this->pen_data[0]);
+        buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
+        buffer_info.sharingMode = vk::SharingMode::eExclusive;
+
+        this->pen_ssbo_buffers.push_back(
+            vk::raii::Buffer{this->device, buffer_info, nullptr});
+
+        vk::MemoryRequirements mem_req = this->pen_ssbo_buffers[i].getMemoryRequirements();
+
+        vk::MemoryAllocateInfo mem_alloc_info{};
+        mem_alloc_info.allocationSize  = mem_req.size;
+        mem_alloc_info.memoryTypeIndex = find_memory_type(
+            mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
+                                        vk::MemoryPropertyFlagBits::eHostCoherent);
+
+        this->pen_ssbo_memories.push_back(
+            vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr});
+
+        this->pen_ssbo_buffers[i].bindMemory(this->pen_ssbo_memories[i], 0);
+
+        // map memory
+        void* map_memory = this->pen_ssbo_memories[i].mapMemory(0, buffer_info.size);
+        memcpy(map_memory, &this->pen_data[i], buffer_info.size);
+        this->pen_ssbo_memories[i].unmapMemory();
+
+        // write to the buffer per instance
+        vk::DescriptorBufferInfo ssbo_info{};
+        ssbo_info.buffer = *this->pen_ssbo_buffers[i];
         ssbo_info.offset = 0;
         ssbo_info.range  = buffer_info.size;
         ssbo_infos.push_back(ssbo_info);

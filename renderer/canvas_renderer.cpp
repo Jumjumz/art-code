@@ -88,8 +88,12 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->index_memories.clear();
 
     // clear ssbo and skew data
-    this->artcode_buffer->ssbo_buffers.clear();
-    this->artcode_buffer->ssbo_memories.clear();
+    this->artcode_buffer->pen_ssbo_buffers.clear();
+    this->artcode_buffer->pen_ssbo_memories.clear();
+    this->artcode_buffer->pen_data.clear();
+
+    this->artcode_buffer->skew_ssbo_buffers.clear();
+    this->artcode_buffer->skew_ssbo_memories.clear();
     this->artcode_buffer->skew_data.clear();
     // clear push constants
     this->push_constants.clear();
@@ -129,7 +133,7 @@ void CanvasRenderer::update_artcode_buffers() {
         this->artcode_buffer->create_index_buffer();
         has_pen_instance = false;
     }
-    this->artcode_buffer->create_ssbo_buffer();
+    this->artcode_buffer->create_skew_ssbo_buffer();
 };
 
 // NOTE: this is used only for checking if buffer data exist to
