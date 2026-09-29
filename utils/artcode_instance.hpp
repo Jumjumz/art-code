@@ -140,22 +140,20 @@ namespace Shared {
             }
         }
 
-        static void register_pen(const VectorT<PenHandles>& pen_instances) {
+        static void register_pen(const VectorT<PenHandles>& pen_instance) {
             check_instance_size();
 
             auto& inst = region->instance[region->size];
 
-            for (const auto& pen : pen_instances) {
-                // map pen handles struct to the pen instances struct
-                auto pen_size = inst.pen_instance.size++;
+            for (const auto& pen : pen_instance) {
+                auto size = inst.pen_instance.size;
 
-                // position
-                inst.pen_instance.item[pen_size].position = pen.position;
-                // handles
-                inst.pen_instance.item[pen_size].handles.handle =
+                inst.pen_instance.item[size].position = pen.position;
+                inst.pen_instance.item[size].handles.handle =
                     static_cast<int>(pen.handles.handle);
-                inst.pen_instance.item[pen_size].handles.position =
-                    pen.handles.handlePosition;
+                inst.pen_instance.item[size].handles.position = pen.handles.handlePosition;
+
+                inst.pen_instance.size++;
             }
         }
 

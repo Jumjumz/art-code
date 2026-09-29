@@ -38,12 +38,16 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
         0, vk::DescriptorType::eUniformBuffer, 1,
         vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, nullptr);
 
-    vk::DescriptorSetLayoutBinding ssbo_layout_binding(
+    vk::DescriptorSetLayoutBinding skew_ssbo_layout_binding(
         1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex,
         nullptr);
 
-    std::array<vk::DescriptorSetLayoutBinding, 2> layout_bindings = {ubo_layout_binding,
-                                                                     ssbo_layout_binding};
+    vk::DescriptorSetLayoutBinding pen_ssbo_layout_binding(
+        2, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eFragment,
+        nullptr);
+
+    std::array<vk::DescriptorSetLayoutBinding, 3> layout_bindings = {
+        ubo_layout_binding, skew_ssbo_layout_binding, pen_ssbo_layout_binding};
 
     vk::DescriptorSetLayoutCreateInfo descriptor_info{};
     descriptor_info.bindingCount = layout_bindings.size();
@@ -85,11 +89,13 @@ void ArtcodeGraphics::create_pipeline(bool has_pen_instance) {
     dynamic_state_info.pDynamicStates    = dynamic_states.data();
 
     // vert and index bindings
-    const auto  binding_desc   = Vertex::get_binding_description();
-    const auto& attribute_desc = Vertex::get_attribute_description();
+    /*const auto  binding_desc   = Vertex::get_binding_description();
+    const auto& attribute_desc = Vertex::get_attribute_description();*/
 
     vk::PipelineVertexInputStateCreateInfo vertex_info{};
-    if (has_pen_instance) {
+    vertex_info.vertexBindingDescriptionCount   = 0;
+    vertex_info.vertexAttributeDescriptionCount = 0;
+    /*if (has_pen_instance) {
         vertex_info.vertexBindingDescriptionCount = 1;
         vertex_info.vertexAttributeDescriptionCount =
             static_cast<uint32_t>(attribute_desc.size());
@@ -97,7 +103,7 @@ void ArtcodeGraphics::create_pipeline(bool has_pen_instance) {
         vertex_info.pVertexAttributeDescriptions = attribute_desc.data();
     } else {
         vertex_info.vertexBindingDescriptionCount = 0;
-    }
+    }*/
 
     vk::PipelineViewportStateCreateInfo viewport_state_info{};
     viewport_state_info.pViewports    = nullptr; // use dynamic viewport state

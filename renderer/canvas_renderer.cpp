@@ -110,7 +110,7 @@ void CanvasRenderer::update_artcode_buffers() {
 
         // NOTE: shape_type = 3 is Pen
         // TODO: have a better way to represent shape type in app..
-        if (instance.constants.shape_type == 3) {
+        /*if (instance.constants.shape_type == 3) {
             has_pen_instance = true;
             std::vector<Vec4> vertex(instance.vertex.element.begin(),
                                      instance.vertex.element.begin() + instance.vertex.size);
@@ -119,6 +119,13 @@ void CanvasRenderer::update_artcode_buffers() {
 
             this->artcode_buffer->inst_vertex.push_back(vertex);
             this->artcode_buffer->inst_index.push_back(indices);
+        }*/
+        {
+            std::vector<PenData> pen_data(instance.pen_instance.item.begin(),
+                                          instance.pen_instance.item.begin() +
+                                              instance.pen_instance.size);
+
+            this->artcode_buffer->pen_data.push_back(pen_data);
         }
         this->artcode_buffer->skew_data.push_back(instance.skew_data);
 
@@ -127,13 +134,14 @@ void CanvasRenderer::update_artcode_buffers() {
     // reset all instances
     Shared::Memory::reset_instance();
 
-    if (has_pen_instance) {
+    /*if (has_pen_instance) {
         // create buffers for each instance or shape
         this->artcode_buffer->create_vertex_buffer();
         this->artcode_buffer->create_index_buffer();
         has_pen_instance = false;
-    }
+    }*/
     this->artcode_buffer->create_skew_ssbo_buffer();
+    this->artcode_buffer->create_pen_ssbo_buffer();
 };
 
 // NOTE: this is used only for checking if buffer data exist to
@@ -418,9 +426,9 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
                                                        this->vk_buffers.extent.height}});
 
     // init pen idx variable
-    size_t pen_idx = this->artcode_buffer->inst_index.empty()
+    /*size_t pen_idx = this->artcode_buffer->inst_index.empty()
                          ? 0
-                         : this->artcode_buffer->inst_index.size() - 1;
+                         : this->artcode_buffer->inst_index.size() - 1;*/
     // draw in reverse order for shape instances
     // this makes the first declared shape always be the front shape in artboard
     for (size_t i = this->inst_size; i > 0; i--) {
@@ -439,7 +447,7 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
                                          0, this->push_constants[idx]);
 
         // different draw call for pen instance
-        if (this->push_constants[idx].shape_type == 3) {
+        /*if (this->push_constants[idx].shape_type == 3) {
             // NOTE:access the correct pen instance in the inst_index array
             const auto& inst_index = this->artcode_buffer->inst_index;
 
@@ -453,7 +461,8 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
             pen_idx--;
         } else {
             cmd.draw(6, 1, 0, 0);
-        }
+        }*/
+        cmd.draw(6, 1, 0, 0);
     }
 
     cmd.endRendering();

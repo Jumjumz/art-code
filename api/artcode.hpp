@@ -100,7 +100,7 @@ namespace detail {
               v0(100, 0),
               v1(0, 150),
               v2(200, 150),
-              positions({}) {}
+              positions({{}}) {}
 
         // TODO:make skewPos a function.. or change the way skew pos syntax wise
         // uses camel case for users, snake case for api implementation

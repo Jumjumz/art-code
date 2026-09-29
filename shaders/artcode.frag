@@ -17,6 +17,9 @@ layout(push_constant) uniform PushConstants {
   int skew;
   int shape_type;
 } constant;
+struct PHandle {int handle;vec2 position;};
+struct PenData {vec2 position;PHandle handles;};
+layout(std430, set = 0, binding = 2) readonly buffer PenBuffer {PenData data[];} pen_ssbo;
 layout(location = 0) in vec2 vert_pos;
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) in vec2 uv;
@@ -79,7 +82,9 @@ void main() {
       p1.y += ubo.reso.y;
       p2.y += ubo.reso.y;
 
-      d = sdf_bezier( vert_pos, p0, p1, p2 );
+      vec2 v2 = pen_ssbo.data[0].position;
+
+      d = sdf_bezier( vert_pos, p0, v2, p2 );
     } else {
       // quadratic bezier
       // uses loop-blinn for quadratic curves

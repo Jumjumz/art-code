@@ -20,7 +20,7 @@ layout(push_constant) uniform PushConstants {
 struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} skew_ssbo;
-layout(location = 0) in vec4 pen_pos;
+// layout(location = 0) in vec4 pen_pos;
 layout(location = 0) out vec2 vert_pos;
 layout(location = 1) out vec2 uv;
 
@@ -89,7 +89,7 @@ vec2 skew(vec2 pos) {
 
 void main() {
   if (constant.shape_type == 3) {
-    vec4 new_pos = pen_pos;
+    vec4 new_pos = vec4(1.0f, 1.0f, skew_ssbo.data.skew_pos[0].pos);
     new_pos.y += ubo.reso.y;
 
     // assign

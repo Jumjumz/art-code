@@ -191,10 +191,10 @@ void ArtcodeBuffer::create_pen_ssbo_buffer() {
     ssbo_infos.reserve(pen_size);
     writes.reserve(pen_size);
 
-    // creates ssbo buffer per shape instance, meaning every shape has an attached ssbo buffer
+    // creates pen ssbo buffer
     for (size_t i = 0; i < pen_size; i++) {
         vk::BufferCreateInfo buffer_info{};
-        buffer_info.size        = sizeof(this->pen_data[0]);
+        buffer_info.size        = sizeof(PenData) * this->pen_data[i].size();
         buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
         buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
@@ -216,7 +216,7 @@ void ArtcodeBuffer::create_pen_ssbo_buffer() {
 
         // map memory
         void* map_memory = this->pen_ssbo_memories[i].mapMemory(0, buffer_info.size);
-        memcpy(map_memory, &this->pen_data[i], buffer_info.size);
+        memcpy(map_memory, this->pen_data[i].data(), buffer_info.size);
         this->pen_ssbo_memories[i].unmapMemory();
 
         // write to the buffer per instance
@@ -228,7 +228,7 @@ void ArtcodeBuffer::create_pen_ssbo_buffer() {
 
         vk::WriteDescriptorSet write{};
         write.dstSet          = *this->descriptor_sets[i];
-        write.dstBinding      = 1;
+        write.dstBinding      = 2;
         write.dstArrayElement = 0;
         write.descriptorCount = 1;
         write.descriptorType  = vk::DescriptorType::eStorageBuffer;

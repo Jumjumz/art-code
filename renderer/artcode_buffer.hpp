@@ -28,8 +28,8 @@ class ArtcodeBuffer {
     std::vector<std::vector<glm::vec4>> inst_vertex;
     std::vector<std::vector<uint32_t>>  inst_index;
 
-    std::vector<PenData>  pen_data  = {};
-    std::vector<SkewData> skew_data = {};
+    std::vector<std::vector<PenData>> pen_data  = {};
+    std::vector<SkewData>             skew_data = {};
 
     void create_vertex_buffer();
 

@@ -305,11 +305,11 @@ void Art::Draw() {
 
             Shared::Memory::register_skew_data(skew_data);
 
-            if (constants.shape_type == static_cast<int>(ShapeType::Pen)) {
+            /*if (constants.shape_type == static_cast<int>(ShapeType::Pen)) {
                 // TODO:replace this with register pen function
                 Shared::Memory::register_pen_instance(inst->generate_vertices(),
                                                       inst->generate_indices());
-            }
+            }*/
 
             // increment instance size, mutates instance size per loop execution
             Shared::Memory::increment_size();
