@@ -67,7 +67,7 @@ struct Handles {
 
     Handles()
         : handle(false),
-          handlePosition(0, 0) {}
+          handlePosition(0.0f, 0.0f) {}
     Handles(bool h, Vec2 hp)
         : handle(h),
           handlePosition(hp) {}

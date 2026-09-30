@@ -74,6 +74,7 @@ void main() {
     if (constant.fill == 0) {
       // FIXME:works for a single curve, dont work if a curve and a line is created
       // doesnt work with multiple curves, not consistent in line shape
+      // use the pen ssbo
       vec2 p0 = constant.p0;
       vec2 p1 = constant.p1;
       vec2 p2 = constant.p2;

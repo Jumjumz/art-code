@@ -194,7 +194,7 @@ void ArtcodeBuffer::create_pen_ssbo_buffer() {
     // creates pen ssbo buffer
     for (size_t i = 0; i < pen_size; i++) {
         vk::BufferCreateInfo buffer_info{};
-        buffer_info.size        = sizeof(PenData) * this->pen_data[i].size();
+        buffer_info.size        = sizeof(this->pen_data[i][0]) * this->pen_data[i].size();
         buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
         buffer_info.sharingMode = vk::SharingMode::eExclusive;
 

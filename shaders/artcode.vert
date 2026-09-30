@@ -88,6 +88,7 @@ vec2 skew(vec2 pos) {
 }*/
 
 void main() {
+  // TODO:removev shape type check as all instances will use the mesh
   if (constant.shape_type == 3) {
     vec4 new_pos = vec4(1.0f, 1.0f, skew_ssbo.data.skew_pos[0].pos);
     new_pos.y += ubo.reso.y;

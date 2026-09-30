@@ -41,12 +41,18 @@ struct Indx {
 // needs its own struct for the application
 struct PHandle {
     int  handle;
+    int  _padding;
     Vec2 position;
+
+    PHandle()
+        : handle(0),
+          _padding(0),
+          position(0.0f, 0.0f) {}
 };
 
 struct PenData {
-    Vec2    position;
-    PHandle handles;
+    Vec2    position{};
+    PHandle handles{};
 };
 
 struct PenInstance {
@@ -146,12 +152,11 @@ namespace Shared {
             auto& inst = region->instance[region->size];
 
             for (const auto& pen : pen_instance) {
-                auto size = inst.pen_instance.size;
-
-                inst.pen_instance.item[size].position = pen.position;
-                inst.pen_instance.item[size].handles.handle =
+                inst.pen_instance.item[inst.pen_instance.size].position = pen.position;
+                inst.pen_instance.item[inst.pen_instance.size].handles.handle =
                     static_cast<int>(pen.handles.handle);
-                inst.pen_instance.item[size].handles.position = pen.handles.handlePosition;
+                inst.pen_instance.item[inst.pen_instance.size].handles.position =
+                    pen.handles.handlePosition;
 
                 inst.pen_instance.size++;
             }
