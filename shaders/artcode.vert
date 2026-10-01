@@ -20,9 +20,7 @@ layout(push_constant) uniform PushConstants {
 struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} skew_ssbo;
-// layout(location = 0) in vec4 pen_pos;
 layout(location = 0) out vec2 vert_pos;
-layout(location = 1) out vec2 uv;
 
 //TODO:remove and transfer these functions to frag shader,
 // SDF be the main core of rendering shapes from now on, that also means
@@ -88,34 +86,24 @@ vec2 skew(vec2 pos) {
 }*/
 
 void main() {
-  // TODO:removev shape type check as all instances will use the mesh
-  if (constant.shape_type == 3) {
-    vec4 new_pos = vec4(1.0f, 1.0f, skew_ssbo.data.skew_pos[0].pos);
-    new_pos.y += ubo.reso.y;
+  vec2 position        = constant.pos;
+  const vec2 mesh_size = constant.mesh_size;
+  // set position to ubo coord
+  position.y = ubo.reso.y + position.y;
 
-    // assign
-    vert_pos = new_pos.xy;
-    uv       = new_pos.wz;
-  } else {
-    vec2 position        = constant.pos;
-    const vec2 mesh_size = constant.mesh_size;
-    // set position to ubo coord
-    position.y = ubo.reso.y + position.y;
+  // sets the quad to position and mesh size
+  const vec2 positions[6] = vec2[](
+    position,
+    vec2( position.x + mesh_size.x, position.y  ),
+    vec2( position.x,  position.y + mesh_size.y ),
+    vec2( position.x + mesh_size.x, position.y  ),
+    vec2( position.x,  position.y + mesh_size.y ),
+    position + mesh_size
+  );
 
-    // sets the quad to position and mesh size
-    const vec2 positions[6] = vec2[](
-      position,
-      vec2( position.x + mesh_size.x, position.y  ),
-      vec2( position.x,  position.y + mesh_size.y ),
-      vec2( position.x + mesh_size.x, position.y  ),
-      vec2( position.x,  position.y + mesh_size.y ),
-      position + mesh_size
-    );
+  vec2 art_pos = positions[gl_VertexIndex];
 
-    vec2 art_pos = positions[gl_VertexIndex];
-
-    vert_pos = art_pos;
-  }
+  vert_pos = art_pos;
 
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);
 }

@@ -72,20 +72,20 @@ void main() {
     d = sdf_triangle( vert_pos, p0, p1, p2 );
   } else if (shape == 3) {
     if (constant.fill == 0) {
-      // FIXME:works for a single curve, dont work if a curve and a line is created
-      // doesnt work with multiple curves, not consistent in line shape
-      // use the pen ssbo
-      vec2 p0 = constant.p0;
-      vec2 p1 = constant.p1;
-      vec2 p2 = constant.p2;
+      // TODO:implement pen sdf
+      for(int i = 0; i < pen_ssbo.data.length(); i++) {
+        vec2 p0 = pen_ssbo.data[i].position;
+        if (pen_ssbo.data[i].handles.handle == 1) {
+          vec2 p1 = pen_ssbo.data[i].handles.position;
+          vec2 p2 = pen_ssbo.data[i + 1].position;
 
-      p0.y += ubo.reso.y;
-      p1.y += ubo.reso.y;
-      p2.y += ubo.reso.y;
+          p0.y += ubo.reso.y;
+          p1.y += ubo.reso.y;
+          p2.y += ubo.reso.y;
 
-      vec2 v2 = pen_ssbo.data[0].position;
-
-      d = sdf_bezier( vert_pos, p0, v2, p2 );
+          d = sdf_bezier( vert_pos, p0, p1, p2 );
+        }
+      }
     } else {
       // quadratic bezier
       // uses loop-blinn for quadratic curves

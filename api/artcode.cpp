@@ -245,20 +245,16 @@ ArrayU32 DrawPen::generate_indices() const {
     return indices;
 };
 
-// TODO:add v0, v1 and v2 for line curves
 Vec2 DrawPen::shape_data() {
     // FIXME:this will not work for multiple curves.. should have a different approach
-    // NOTE:mutating v0, v1 and v2 doesnt have to do with shape data,
-    // this is for test purpose
-    for (size_t i = 0; i < this->positions.size(); i++) {
-        const auto& pos = this->positions[i];
-        if (pos.handles.handle) {
-            this->v0 = pos.position;
-            this->v1 = pos.handles.handlePosition;
-            this->v2 = this->positions[i + 1].position;
-            continue;
-        }
+    // NOTE:gets the position of the mesh, important as this will
+    // decide if a pen render is correct in sdf or not
+    Vec2 position = Vec2(FLT_MAX, FLT_MAX);
+    for (const auto& verts : generate_vertices()) {
+        position.x = glm::min(position.x, verts.x);
+        position.y = glm::min(position.y, verts.y);
     }
+    this->position = position;
 
     return this->position;
 };
@@ -273,14 +269,15 @@ void Art::Draw() {
         const auto reg_size = InstanceRegistry::get_size();
 
         for (size_t i = 0; i < reg_size; i++) {
-            const auto& inst = InstanceRegistry::get_instance(i);
+            const auto& inst       = InstanceRegistry::get_instance(i);
+            const auto& shape_data = inst->shape_data();
 
             PushConstants constants{};
             constants.bg_color   = convert_color(Art::backgroundColor, 1.0f);
             constants.color      = convert_color(inst->color, inst->opacity);
             constants.pos        = inst->position;
             constants.center     = inst->get_center();
-            constants.shape_data = inst->shape_data();
+            constants.shape_data = shape_data;
             constants.mesh_size  = skew_mesh_size(inst->generate_vertices());
             constants.p0         = inst->v0;
             constants.p1         = inst->v1;
