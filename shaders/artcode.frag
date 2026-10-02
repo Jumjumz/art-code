@@ -28,6 +28,7 @@ layout(location = 1) in vec2 uv;
 float sdf_quad     (vec2 p, vec2 b);
 float sdf_circle   (vec2 p, float r);
 float sdf_triangle (vec2 p, vec2 p0, vec2 p1, vec2 p2);
+float sdf_segment  (vec2 p, vec2 a, vec2 b);
 float sdf_bezier   (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
 void main() {
@@ -72,10 +73,12 @@ void main() {
     d = sdf_triangle( vert_pos, p0, p1, p2 );
   } else if (shape == 3) {
     if (constant.fill == 0) {
+      // TODO:ssbo data structure might need to be updated
       // TODO:implement pen sdf
-      for(int i = 0; i < pen_ssbo.data.length(); i++) {
-        vec2 p0 = pen_ssbo.data[i].position;
+      for(int i = 0; i < pen_ssbo.data.length() - 1; i++) {
+        // TODO:needs to connect the curve part and the line
         if (pen_ssbo.data[i].handles.handle == 1) {
+          vec2 p0 = pen_ssbo.data[i].position;
           vec2 p1 = pen_ssbo.data[i].handles.position;
           vec2 p2 = pen_ssbo.data[i + 1].position;
 
@@ -84,12 +87,32 @@ void main() {
           p2.y += ubo.reso.y;
 
           d = sdf_bezier( vert_pos, p0, p1, p2 );
+        } else {
+          vec2 a = pen_ssbo.data[i].position;
+          vec2 b = pen_ssbo.data[i + 1].position;
+
+          a.y += ubo.reso.y;
+          b.y += ubo.reso.y;
+
+          d = sdf_segment( vert_pos, a, b);
         }
       }
     } else {
       // quadratic bezier
       // uses loop-blinn for quadratic curves
-      d = uv.x * uv.x - uv.y;
+      for(int i = 0; i < pen_ssbo.data.length(); i++) {
+        if (pen_ssbo.data[i].handles.handle == 1) {
+          vec4 p0 = vec4(pen_ssbo.data[i].position, vec2(0.0f, 0.0f));
+          vec4 p1 = vec4(pen_ssbo.data[i].handles.position, vec2(0.5f, 0.0f));
+          vec4 p2 = vec4(pen_ssbo.data[i + 1].position, vec2(1.0f, 1.0f));
+
+          p0.y += ubo.reso.y;
+          p1.y += ubo.reso.y;
+          p2.y += ubo.reso.y;
+
+          d = uv.x * uv.x - uv.y;
+        }
+      }
 
       // handle its own anti-aliasing
       float fw = fwidth(d);
@@ -157,6 +180,14 @@ float sdf_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
                       vec2( dot( pq2, pq2 ), s * ( v2.x * e2.y - v2.y * e2.x ) ) );
 
   return -sqrt(d.x) * sign(d.y);
+}
+
+float sdf_segment(vec2 p, vec2 a, vec2 b) {
+  vec2 pa = p - a;
+  vec2 ba = b - a;
+  float h = clamp( dot(pa, ba) / dot(ba, ba), 0.0f, 1.0f);
+
+  return length(pa - ba * h);
 }
 
 // curve line sdf
