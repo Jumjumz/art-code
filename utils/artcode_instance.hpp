@@ -37,27 +37,22 @@ struct Indx {
     ArrayT<u32, 9999> element;
 };
 
-// equivalent to PenHandles struct in the api
-// needs its own struct for the application
 struct PHandle {
-    int  handle;
-    int  _padding;
     Vec2 position;
+    Vec2 uv;
+    int  id;
+    int  _padding;
 
     PHandle()
-        : handle(0),
-          _padding(0),
-          position(0.0f, 0.0f) {}
-};
-
-struct PenData {
-    Vec2    position{};
-    PHandle handles{};
+        : position(0.0f, 0.0f),
+          uv(0.0f, 0.0f),
+          id(0),
+          _padding(0) {}
 };
 
 struct PenInstance {
     size_t               size;
-    ArrayT<PenData, 999> item;
+    ArrayT<PHandle, 500> items;
 };
 
 struct SkewData {
@@ -88,7 +83,7 @@ namespace Shared {
         Vert          vertex;
         Indx          index;
         PushConstants constants;
-        PenInstance   pen_instance;
+        PenInstance   pen_data;
         SkewData      skew_data;
     };
 
@@ -146,19 +141,35 @@ namespace Shared {
             }
         }
 
-        static void register_pen(const VectorT<PenHandles>& pen_instance) {
+        static void register_pen(const VectorT<PenHandles>& pen_handles) {
             check_instance_size();
 
             auto& inst = region->instance[region->size];
 
-            for (const auto& pen : pen_instance) {
-                inst.pen_instance.item[inst.pen_instance.size].position = pen.position;
-                inst.pen_instance.item[inst.pen_instance.size].handles.handle =
-                    static_cast<int>(pen.handles.handle);
-                inst.pen_instance.item[inst.pen_instance.size].handles.position =
-                    pen.handles.handlePosition;
+            size_t i = 0;
+            while (i < pen_handles.size()) {
+                // set to segment
+                inst.pen_data.items[inst.pen_data.size].position = pen_handles[i].position;
+                inst.pen_data.items[inst.pen_data.size].uv = Vec2{0.0f, 0.0f};
+                // id = 1 indicates that this position starts for a segment
+                inst.pen_data.items[inst.pen_data.size].id = 1;
+                if (pen_handles[i].handles.handle) {
+                    // id = 0 indicates that this position starts for a curve
+                    inst.pen_data.items[inst.pen_data.size].id = 0;
 
-                inst.pen_instance.size++;
+                    inst.pen_data.size += 1;
+                    inst.pen_data.items[inst.pen_data.size].position =
+                        pen_handles[i].handles.handlePosition;
+                    inst.pen_data.items[inst.pen_data.size].uv = Vec2{0.5f, 0.0f};
+                    inst.pen_data.items[inst.pen_data.size].id = 0;
+                } else {
+                    inst.pen_data.items[inst.pen_data.size].position =
+                        pen_handles[i].position;
+                    inst.pen_data.items[inst.pen_data.size].uv = Vec2{1.0f, 1.0f};
+                    inst.pen_data.items[inst.pen_data.size].id = 1;
+                }
+                i++;
+                inst.pen_data.size++;
             }
         }
 

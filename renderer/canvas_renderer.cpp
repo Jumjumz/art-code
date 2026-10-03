@@ -121,9 +121,9 @@ void CanvasRenderer::update_artcode_buffers() {
             this->artcode_buffer->inst_index.push_back(indices);
         }*/
         {
-            std::vector<PenData> pen_data(instance.pen_instance.item.begin(),
-                                          instance.pen_instance.item.begin() +
-                                              instance.pen_instance.size);
+            std::vector<PHandle> pen_data(instance.pen_data.items.begin(),
+                                          instance.pen_data.items.begin() +
+                                              instance.pen_data.size);
 
             this->artcode_buffer->pen_data.push_back(pen_data);
         }

@@ -17,12 +17,10 @@ layout(push_constant) uniform PushConstants {
   int skew;
   int shape_type;
 } constant;
-struct PHandle {int handle;vec2 position;};
-struct PenData {vec2 position;PHandle handles;};
+struct PenData {vec2 position;vec2 uv;int id;};
 layout(std430, set = 0, binding = 2) readonly buffer PenBuffer {PenData data[];} pen_ssbo;
 layout(location = 0) in vec2 vert_pos;
 layout(location = 0) out vec4 frag_color;
-layout(location = 1) in vec2 uv;
 
 // forward declarations
 float sdf_quad     (vec2 p, vec2 b);
@@ -72,51 +70,20 @@ void main() {
     // free form triangle
     d = sdf_triangle( vert_pos, p0, p1, p2 );
   } else if (shape == 3) {
-    if (constant.fill == 0) {
+    for (int i = 0; i < pen_ssbo.data.length(); i++) {
+      if (constant.fill == 0) {
       // TODO:ssbo data structure might need to be updated
       // TODO:implement pen sdf
-      for(int i = 0; i < pen_ssbo.data.length() - 1; i++) {
-        // TODO:needs to connect the curve part and the line
-        if (pen_ssbo.data[i].handles.handle == 1) {
-          vec2 p0 = pen_ssbo.data[i].position;
-          vec2 p1 = pen_ssbo.data[i].handles.position;
-          vec2 p2 = pen_ssbo.data[i + 1].position;
-
-          p0.y += ubo.reso.y;
-          p1.y += ubo.reso.y;
-          p2.y += ubo.reso.y;
-
-          d = sdf_bezier( vert_pos, p0, p1, p2 );
-        } else {
-          vec2 a = pen_ssbo.data[i].position;
-          vec2 b = pen_ssbo.data[i + 1].position;
-
-          a.y += ubo.reso.y;
-          b.y += ubo.reso.y;
-
-          d = sdf_segment( vert_pos, a, b);
-        }
+      } else {
+        // FIXME:not working!
+        // quadratic bezier
+        // uses loop-blinn for quadratic curves
+        vec2 uv = pen_ssbo.data[i].uv;
+        d       = uv.x * uv.x - uv.y;
+        // handle its own anti-aliasing
+        float fw = fwidth(d);
+        alpha -= smoothstep(-fw, fw, d);
       }
-    } else {
-      // quadratic bezier
-      // uses loop-blinn for quadratic curves
-      for(int i = 0; i < pen_ssbo.data.length(); i++) {
-        if (pen_ssbo.data[i].handles.handle == 1) {
-          vec4 p0 = vec4(pen_ssbo.data[i].position, vec2(0.0f, 0.0f));
-          vec4 p1 = vec4(pen_ssbo.data[i].handles.position, vec2(0.5f, 0.0f));
-          vec4 p2 = vec4(pen_ssbo.data[i + 1].position, vec2(1.0f, 1.0f));
-
-          p0.y += ubo.reso.y;
-          p1.y += ubo.reso.y;
-          p2.y += ubo.reso.y;
-
-          d = uv.x * uv.x - uv.y;
-        }
-      }
-
-      // handle its own anti-aliasing
-      float fw = fwidth(d);
-      alpha -= smoothstep(-fw, fw, d);
     }
   }
  
