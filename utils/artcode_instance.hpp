@@ -147,6 +147,7 @@ namespace Shared {
             auto& inst = region->instance[region->size];
 
             size_t i = 0;
+            // flatten the pen_handles array
             while (i < pen_handles.size()) {
                 // set to segment
                 inst.pen_data.items[inst.pen_data.size].position = pen_handles[i].position;
@@ -158,10 +159,11 @@ namespace Shared {
                     inst.pen_data.items[inst.pen_data.size].id = 0;
 
                     inst.pen_data.size += 1;
+                    // this is the handle
                     inst.pen_data.items[inst.pen_data.size].position =
                         pen_handles[i].handles.handlePosition;
                     inst.pen_data.items[inst.pen_data.size].uv = Vec2{0.5f, 0.0f};
-                    inst.pen_data.items[inst.pen_data.size].id = 0;
+                    inst.pen_data.items[inst.pen_data.size].id = 2;
                 } else {
                     inst.pen_data.items[inst.pen_data.size].position =
                         pen_handles[i].position;

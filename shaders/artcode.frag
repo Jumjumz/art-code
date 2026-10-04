@@ -46,7 +46,7 @@ void main() {
   pos.y = ubo.reso.y + pos.y;
 
   float stroke = constant.stroke;
-  float d      = 0.0f;
+  float d      = 1.0f;
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
@@ -70,19 +70,40 @@ void main() {
     // free form triangle
     d = sdf_triangle( vert_pos, p0, p1, p2 );
   } else if (shape == 3) {
-    for (int i = 0; i < pen_ssbo.data.length(); i++) {
+    // init to 0 first
+    int i = 0;
+    // FIXME:curves and segment works individually
+    // curve to segment works
+    // breaks if curve to curve and segment to segment
+    while (i < pen_ssbo.data.length() - 1) {
       if (constant.fill == 0) {
-      // TODO:ssbo data structure might need to be updated
-      // TODO:implement pen sdf
+        int id = pen_ssbo.data[i].id;
+        if (id == 0) {
+          vec2 p0 = pen_ssbo.data[i].position;
+          vec2 p1 = pen_ssbo.data[i + 1].position;
+          vec2 p2 = pen_ssbo.data[i + 2].position;
+
+          p0.y += ubo.reso.y;
+          p1.y += ubo.reso.y;
+          p2.y += ubo.reso.y;
+
+          d = min(d, sdf_bezier( vert_pos, p0, p1, p2 ));
+          // i+1,. adding it here makes i jumps
+          // to the fourth index right away with the i++
+          i += 2;
+        } else {
+          vec2 a = pen_ssbo.data[i].position;
+          vec2 b = pen_ssbo.data[i + 1].position;
+
+          a.y += ubo.reso.y;
+          b.y += ubo.reso.y;
+
+          d = max(d, sdf_segment( vert_pos, a, b));
+          i++;
+        }
       } else {
-        // FIXME:not working!
-        // quadratic bezier
-        // uses loop-blinn for quadratic curves
-        vec2 uv = pen_ssbo.data[i].uv;
-        d       = uv.x * uv.x - uv.y;
-        // handle its own anti-aliasing
-        float fw = fwidth(d);
-        alpha -= smoothstep(-fw, fw, d);
+        // TODO:add pen sdf for fill
+        i++;
       }
     }
   }
@@ -113,7 +134,7 @@ void main() {
 
   // only renders the curve inside the triangle
   if (alpha < 0.00001f) discard;
- 
+
   frag_color = vec4(color, alpha);
 }
 
@@ -154,7 +175,7 @@ float sdf_segment(vec2 p, vec2 a, vec2 b) {
   vec2 ba = b - a;
   float h = clamp( dot(pa, ba) / dot(ba, ba), 0.0f, 1.0f);
 
-  return length(pa - ba * h);
+  return -length(pa - ba * h);
 }
 
 // curve line sdf
