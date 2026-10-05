@@ -88,8 +88,7 @@ void main() {
           p2.y += ubo.reso.y;
 
           d = min(d, sdf_bezier( vert_pos, p0, p1, p2 ));
-          // i+1,. adding it here makes i jumps
-          // to the fourth index right away with the i++
+          // i+2, adding it here makes i jumps to 3rd item
           i += 2;
         } else {
           vec2 a = pen_ssbo.data[i].position;

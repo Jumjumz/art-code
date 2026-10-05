@@ -12,31 +12,6 @@
 // this header uses the artcode typedef such as Vec2, ArrayT and such,
 // to avoid confusion and for the sake of consistency, only this header file uses the
 // artcode typedef and nothing else
-struct Vertex {
-    Vec4 pos;
-
-    static vk::VertexInputBindingDescription get_binding_description() {
-        return {0, sizeof(Vertex), vk::VertexInputRate::eVertex};
-    };
-
-    static ArrayT<vk::VertexInputAttributeDescription, 1> get_attribute_description() {
-        return {
-            vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32B32A32Sfloat,
-                                                offsetof(Vertex, pos)},
-        };
-    };
-};
-
-struct Vert {
-    size_t            size;
-    ArrayT<Vec4, 999> element;
-};
-
-struct Indx {
-    size_t            size;
-    ArrayT<u32, 9999> element;
-};
-
 struct PHandle {
     Vec2 position;
     Vec2 uv;
@@ -80,8 +55,6 @@ struct PushConstants {
 
 namespace Shared {
     struct Instance {
-        Vert          vertex;
-        Indx          index;
         PushConstants constants;
         PenInstance   pen_data;
         SkewData      skew_data;
@@ -119,60 +92,11 @@ namespace Shared {
         }
 
         // TODO:currently this function only runs if the program "safely" exits, this
-        // means program crashes and other things this function doesnt get executed, find
-        // a way to execute this no matter what happen!
+        // means if program crashes, undefined behaviour causing a crash this function
+        // doesnt get executed, find a way to execute this no matter what happen!
         static void cleanup() {
             munmap(region, sizeof(Shared::Region));
             shm_unlink("/artcode_instances");
-        }
-
-        static void register_pen_instance(const ArrayVec4& vertex, const ArrayU32& index) {
-            if (region->size > 500 || !region)
-                return;
-
-            auto& inst = region->instance[region->size];
-            // insert vertex
-            for (const auto& vert : vertex) {
-                inst.vertex.element[inst.vertex.size++] = vert;
-            }
-            // insert indices
-            for (const auto& idx : index) {
-                inst.index.element[inst.index.size++] = idx;
-            }
-        }
-
-        static void register_pen(const VectorT<PenHandles>& pen_handles) {
-            check_instance_size();
-
-            auto& inst = region->instance[region->size];
-
-            size_t i = 0;
-            // flatten the pen_handles array
-            while (i < pen_handles.size()) {
-                // set to segment
-                inst.pen_data.items[inst.pen_data.size].position = pen_handles[i].position;
-                inst.pen_data.items[inst.pen_data.size].uv = Vec2{0.0f, 0.0f};
-                // id = 1 indicates that this position starts for a segment
-                inst.pen_data.items[inst.pen_data.size].id = 1;
-                if (pen_handles[i].handles.handle) {
-                    // id = 0 indicates that this position starts for a curve
-                    inst.pen_data.items[inst.pen_data.size].id = 0;
-
-                    inst.pen_data.size += 1;
-                    // this is the handle
-                    inst.pen_data.items[inst.pen_data.size].position =
-                        pen_handles[i].handles.handlePosition;
-                    inst.pen_data.items[inst.pen_data.size].uv = Vec2{0.5f, 0.0f};
-                    inst.pen_data.items[inst.pen_data.size].id = 2;
-                } else {
-                    inst.pen_data.items[inst.pen_data.size].position =
-                        pen_handles[i].position;
-                    inst.pen_data.items[inst.pen_data.size].uv = Vec2{1.0f, 1.0f};
-                    inst.pen_data.items[inst.pen_data.size].id = 1;
-                }
-                i++;
-                inst.pen_data.size++;
-            }
         }
 
         static void register_constants(const PushConstants& push_const) {
@@ -190,7 +114,43 @@ namespace Shared {
             inst.skew_data = skew_data;
         }
 
-        static void increment_size() { region->size++; }
+        static void register_pen_data(const VectorT<PenHandles>& pen_handles) {
+            check_instance_size();
+
+            auto& inst = region->instance[region->size];
+
+            size_t i = 0;
+            // flatten the pen_handles array
+            while (i < pen_handles.size()) {
+                // set to segment
+                inst.pen_data.items[inst.pen_data.size].position = pen_handles[i].position;
+                inst.pen_data.items[inst.pen_data.size].uv = Vec2{0.0f, 0.0f};
+                // id = 1 indicates that this position starts for a segment
+                inst.pen_data.items[inst.pen_data.size].id = 1;
+                if (pen_handles[i].handles.handle) {
+                    // id = 0 indicates that this position starts for a curve
+                    inst.pen_data.items[inst.pen_data.size].id = 0;
+
+                    // increment to insert to the next item
+                    inst.pen_data.size += 1;
+                    // this is the handle
+                    inst.pen_data.items[inst.pen_data.size].position =
+                        pen_handles[i].handles.handlePosition;
+                    inst.pen_data.items[inst.pen_data.size].uv = Vec2{0.5f, 0.0f};
+                    inst.pen_data.items[inst.pen_data.size].id = 2;
+                } else {
+                    inst.pen_data.items[inst.pen_data.size].position =
+                        pen_handles[i].position;
+                    inst.pen_data.items[inst.pen_data.size].uv = Vec2{1.0f, 1.0f};
+                    // id = 1 indicates that this position is a segment
+                    inst.pen_data.items[inst.pen_data.size].id = 1;
+                }
+                i++;
+                inst.pen_data.size++;
+            }
+        }
+
+        static void increment_instance_size() { region->size++; }
 
         static void check_instance_size() {
             if (!region || region->size > 500) {
@@ -206,20 +166,6 @@ namespace Shared {
 
         static PushConstants get_constants(size_t idx) {
             return region->instance[idx].constants;
-        }
-
-        static bool has_pen_instance() {
-            bool found = false;
-            // check if pen instance exist
-            for (size_t i = 0; i < region->size; i++) {
-                const auto& constants = region->instance[i].constants;
-                // shape type == pen
-                if (constants.shape_type == 3) {
-                    found = true;
-                    break;
-                }
-            }
-            return found;
         }
 
         static SkewData get_skew_data(size_t idx) {

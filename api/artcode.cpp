@@ -269,7 +269,8 @@ void Art::Draw() {
         const auto reg_size = InstanceRegistry::get_size();
 
         for (size_t i = 0; i < reg_size; i++) {
-            const auto& inst       = InstanceRegistry::get_instance(i);
+            const auto& inst = InstanceRegistry::get_instance(i);
+            // execute shape data function first
             const auto& shape_data = inst->shape_data();
 
             PushConstants constants{};
@@ -290,7 +291,7 @@ void Art::Draw() {
 
             Shared::Memory::register_constants(constants);
             // register pen instances
-            Shared::Memory::register_pen(inst->positions);
+            Shared::Memory::register_pen_data(inst->positions);
 
             // TODO:skew should also work for pen, curently skew mesh is using member
             // "position" and not "positions" which pen uses
@@ -302,14 +303,8 @@ void Art::Draw() {
 
             Shared::Memory::register_skew_data(skew_data);
 
-            /*if (constants.shape_type == static_cast<int>(ShapeType::Pen)) {
-                // TODO:replace this with register pen function
-                Shared::Memory::register_pen_instance(inst->generate_vertices(),
-                                                      inst->generate_indices());
-            }*/
-
             // increment instance size, mutates instance size per loop execution
-            Shared::Memory::increment_size();
+            Shared::Memory::increment_instance_size();
         }
     }
 };

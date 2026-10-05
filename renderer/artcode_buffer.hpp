@@ -12,28 +12,14 @@ class ArtcodeBuffer {
                   const vk::raii::CommandPool&                cmd_pool,
                   const vk::raii::Image&                      artboard_image,
                   const std::vector<vk::raii::DescriptorSet>& descriptor_sets);
-    // TODO:remove vertex and index related buffers
-    std::vector<vk::raii::Buffer>       vertex_buffers;
-    std::vector<vk::raii::DeviceMemory> vertex_memories;
-
-    std::vector<vk::raii::Buffer>       index_buffers;
-    std::vector<vk::raii::DeviceMemory> index_memories;
-
     std::vector<vk::raii::Buffer>       skew_ssbo_buffers  = {};
     std::vector<vk::raii::DeviceMemory> skew_ssbo_memories = {};
 
     std::vector<vk::raii::Buffer>       pen_ssbo_buffers  = {};
     std::vector<vk::raii::DeviceMemory> pen_ssbo_memories = {};
 
-    std::vector<std::vector<glm::vec4>> inst_vertex;
-    std::vector<std::vector<uint32_t>>  inst_index;
-
-    std::vector<std::vector<PHandle>> pen_data  = {};
     std::vector<SkewData>             skew_data = {};
-
-    void create_vertex_buffer();
-
-    void create_index_buffer();
+    std::vector<std::vector<PHandle>> pen_data  = {};
 
     void create_skew_ssbo_buffer();
 

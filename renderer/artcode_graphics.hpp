@@ -8,13 +8,13 @@ class ArtcodeGraphics {
     ArtcodeGraphics(const vk::raii::Device& device, vk::Format& image_format);
 
     vk::raii::DescriptorSetLayout artcode_set_layout = nullptr;
-    vk::raii::Pipeline            pipeline_triangle  = nullptr;
+    vk::raii::Pipeline            artcode_pipeline   = nullptr;
     vk::raii::PipelineLayout      layout             = nullptr;
 
-    std::vector<vk::PipelineShaderStageCreateInfo> shader_stages;
+    std::vector<vk::PipelineShaderStageCreateInfo> shader_stages = {};
 
     void create_shaders();
-    void create_pipeline(bool has_pen_instance);
+    void create_pipeline();
 
   private:
     const vk::raii::Device& device;
