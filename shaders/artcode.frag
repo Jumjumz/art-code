@@ -46,7 +46,7 @@ void main() {
   pos.y = ubo.reso.y + pos.y;
 
   float stroke = constant.stroke;
-  float d      = 1.0f;
+  float d      = 1e10;
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
@@ -72,17 +72,16 @@ void main() {
   } else if (shape == 3) {
     // init to 0 first
     int i = 0;
-    // FIXME:curves and segment works individually
-    // curve to segment works
-    // breaks if curve to curve and segment to segment
     while (i < pen_ssbo.data.length() - 1) {
       if (constant.fill == 0) {
         int id = pen_ssbo.data[i].id;
+        // render curve
         if (id == 0) {
           vec2 p0 = pen_ssbo.data[i].position;
-          vec2 p1 = pen_ssbo.data[i + 1].position;
+          vec2 p1 = pen_ssbo.data[i + 1].position; // handle
           vec2 p2 = pen_ssbo.data[i + 2].position;
 
+          // normalize to ubo cooridnates
           p0.y += ubo.reso.y;
           p1.y += ubo.reso.y;
           p2.y += ubo.reso.y;
@@ -94,10 +93,11 @@ void main() {
           vec2 a = pen_ssbo.data[i].position;
           vec2 b = pen_ssbo.data[i + 1].position;
 
+          // normalize to ubo cooridnates
           a.y += ubo.reso.y;
           b.y += ubo.reso.y;
 
-          d = max(d, sdf_segment( vert_pos, a, b));
+          d = min(d, sdf_segment( vert_pos, a, b ));
           i++;
         }
       } else {
@@ -108,7 +108,8 @@ void main() {
   }
  
   // discard outside shape, aka the mesh
-  if (d > 0.0f) discard;
+  // pen has different rendering
+  if (shape != 3 && d > 0.0f) discard;
 
   // NOTE:excempt quad and curve lines
   // for curve lines it causes a bug where it is transparent in the middle of the line
@@ -119,7 +120,12 @@ void main() {
  
   // render the shapes in line topology
   if (constant.fill == 0) {
+    if (shape == 3) {
+      if (d > stroke) discard;
+    }
+
     if (abs(d) > stroke) discard;
+
     // excempt quads for anti-aliasing
     if (shape != 0) {
       // anti-aliasing for inner edge
@@ -174,7 +180,7 @@ float sdf_segment(vec2 p, vec2 a, vec2 b) {
   vec2 ba = b - a;
   float h = clamp( dot(pa, ba) / dot(ba, ba), 0.0f, 1.0f);
 
-  return -length(pa - ba * h);
+  return length(pa - ba * h);
 }
 
 // curve line sdf
@@ -218,5 +224,5 @@ float sdf_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
   }
 
   // returns negative value as y coord is in negative space
-  return -sqrt(res);
+  return sqrt(res);
 }
