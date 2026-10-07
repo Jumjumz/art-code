@@ -29,6 +29,10 @@ float sdf_triangle (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 float sdf_segment  (vec2 p, vec2 a, vec2 b);
 float sdf_bezier   (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
+// helper functions
+int ray_cross     (vec2 p, vec2 a, vec2 b);
+vec2 bezier_point (vec2 p0, vec2 p1, vec2 p2, float t);
+
 void main() {
   vec3 color  = constant.color.rgb;
   float alpha = constant.color.a;
@@ -46,7 +50,8 @@ void main() {
   pos.y = ubo.reso.y + pos.y;
 
   float stroke = constant.stroke;
-  float d      = 1e10;
+  float d      = 1e10; // large number for pen to work
+  int winding  = 0;
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
@@ -73,35 +78,55 @@ void main() {
     // init to 0 first
     int i = 0;
     while (i < pen_ssbo.data.length() - 1) {
-      if (constant.fill == 0) {
-        int id = pen_ssbo.data[i].id;
-        // render curve
-        if (id == 0) {
-          vec2 p0 = pen_ssbo.data[i].position;
-          vec2 p1 = pen_ssbo.data[i + 1].position; // handle
-          vec2 p2 = pen_ssbo.data[i + 2].position;
+      int id = pen_ssbo.data[i].id;
+      if (id == 0) {
+        vec2 p0 = pen_ssbo.data[i].position;
+        vec2 p1 = pen_ssbo.data[i + 1].position; // handle
+        vec2 p2 = pen_ssbo.data[i + 2].position;
 
-          // normalize to ubo cooridnates
-          p0.y += ubo.reso.y;
-          p1.y += ubo.reso.y;
-          p2.y += ubo.reso.y;
+        // normalize to ubo cooridnates
+        p0.y += ubo.reso.y;
+        p1.y += ubo.reso.y;
+        p2.y += ubo.reso.y;
 
+        if (constant.fill == 0) {
           d = min(d, sdf_bezier( vert_pos, p0, p1, p2 ));
-          // i+2, adding it here makes i jumps to 3rd item
-          i += 2;
         } else {
-          vec2 a = pen_ssbo.data[i].position;
-          vec2 b = pen_ssbo.data[i + 1].position;
+          // NOTE:this subdivides the curve into 32 segments
+          // this is the same as if bezier curve is created in cpu
+          // this is not good, causes poor performance and expensive to render
+          // smoothness is not the same as the non fill pen
+          // FIXME:update to a better implementation
+          const int STEPS = 32;
+          for (int s = 0; s < STEPS; s++) {
+            const float t0 = s / float(STEPS);
+            const float t1 = (s + 1) / float(STEPS);
 
-          // normalize to ubo cooridnates
-          a.y += ubo.reso.y;
-          b.y += ubo.reso.y;
+            vec2 a = bezier_point(p0, p1, p2, t0);
+            vec2 b = bezier_point(p0, p1, p2, t1);
 
-          d = min(d, sdf_segment( vert_pos, a, b ));
-          i++;
+            // ray crossing point
+            winding += ray_cross( vert_pos, a, b );
+          }
         }
+        // i+2, adding it here makes i jumps to 3rd item
+        i += 2;
       } else {
-        // TODO:add pen sdf for fill
+        vec2 a = pen_ssbo.data[i].position;
+        vec2 b = pen_ssbo.data[i + 1].position;
+
+        // normalize to ubo cooridnates
+        a.y += ubo.reso.y;
+        b.y += ubo.reso.y;
+
+        if (constant.fill == 0) {
+          // NOTE:enclosing a render doesnt display the full stroke width
+          // it only displays half of it making the render not consistent
+          // dont know how to fix this yet, might play around the mesh and the render area
+          d = min(d, sdf_segment( vert_pos, a, b ));
+        } else {
+          winding += ray_cross( vert_pos, a, b );
+        }
         i++;
       }
     }
@@ -110,6 +135,9 @@ void main() {
   // discard outside shape, aka the mesh
   // pen has different rendering
   if (shape != 3 && d > 0.0f) discard;
+
+  // only for rendering fill pen shapes
+  if (shape == 3 && constant.fill == 1 && winding == 0) discard;
 
   // NOTE:excempt quad and curve lines
   // for curve lines it causes a bug where it is transparent in the middle of the line
@@ -120,11 +148,13 @@ void main() {
  
   // render the shapes in line topology
   if (constant.fill == 0) {
+    // pen doesnt follow the same check for discarding
     if (shape == 3) {
       if (d > stroke) discard;
+    } else {
+      // discard inner to create an annular shape
+      if (abs(d) > stroke) discard;
     }
-
-    if (abs(d) > stroke) discard;
 
     // excempt quads for anti-aliasing
     if (shape != 0) {
@@ -225,4 +255,18 @@ float sdf_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
 
   // returns negative value as y coord is in negative space
   return sqrt(res);
+}
+
+int ray_cross(vec2 p, vec2 a, vec2 b) {
+  if (a.y > p.y != b.y > p.y) {
+    float x_intersect = a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x);
+    if (p.x < x_intersect)
+      return (a.y < b.y) ? 1 : -1;
+  }
+  return 0;
+}
+
+vec2 bezier_point(vec2 p0, vec2 p1, vec2 p2, float t) {
+  float mt = 1.0 - t;
+  return mt * mt * p0 + 2.0 * mt * t * p1 + t * t * p2;
 }

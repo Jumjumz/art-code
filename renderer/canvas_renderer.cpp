@@ -279,7 +279,8 @@ void CanvasRenderer::record_artboard_command(const uint32_t current_frame) {
                             vk::PipelineStageFlagBits2::eColorAttachmentOutput,
                             vk::ImageAspectFlagBits::eColor);
 
-    // prepare to render canvas
+    // NOTE:msaa for artboard might not be needed, update
+    //  prepare to render canvas
     vk::RenderingAttachmentInfo artboard_attachment_info{};
     artboard_attachment_info.imageView   = *this->vk_buffers.msaa_image_view;
     artboard_attachment_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
@@ -309,7 +310,7 @@ void CanvasRenderer::record_artboard_command(const uint32_t current_frame) {
                            this->graphics_pipeline->layout, 0,
                            *this->artboard_commands->artboard_descriptor_set[0], nullptr);
 
-    // add filler data
+    // init push constant data
     if (this->push_constants.empty()) {
         PushConstants partial{};
         this->push_constants.push_back(partial);

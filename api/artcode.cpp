@@ -209,7 +209,12 @@ Vec2 DrawTriangle::shape_data() {
 
 int DrawTriangle::shape_type() const { return static_cast<int>(ShapeType::Triangle); };
 
-DrawPen::Pen() { InstanceRegistry::register_instance(this); };
+DrawPen::Pen() {
+    // pen is false by default
+    this->fill = false;
+
+    InstanceRegistry::register_instance(this);
+};
 
 // NOTE: currently the only place where w and z is important and is being used in the shader
 ArrayVec4 DrawPen::generate_vertices() const {
