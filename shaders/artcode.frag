@@ -29,9 +29,8 @@ float sdf_triangle (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 float sdf_segment  (vec2 p, vec2 a, vec2 b);
 float sdf_bezier   (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
-// helper functions
-int ray_cross     (vec2 p, vec2 a, vec2 b);
-vec2 bezier_point (vec2 p0, vec2 p1, vec2 p2, float t);
+int ray_cross      (vec2 p, vec2 a, vec2 b);
+int sdf_winding    (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
 void main() {
   vec3 color  = constant.color.rgb;
@@ -51,7 +50,7 @@ void main() {
 
   float stroke = constant.stroke;
   float d      = 1e10; // large number for pen to work
-  int winding  = 0;
+  int winding  = 0;    // for pen fill instances
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
@@ -75,7 +74,6 @@ void main() {
     // free form triangle
     d = sdf_triangle( vert_pos, p0, p1, p2 );
   } else if (shape == 3) {
-    // init to 0 first
     int i = 0;
     while (i < pen_ssbo.data.length() - 1) {
       int id = pen_ssbo.data[i].id;
@@ -92,22 +90,7 @@ void main() {
         if (constant.fill == 0) {
           d = min(d, sdf_bezier( vert_pos, p0, p1, p2 ));
         } else {
-          // NOTE:this subdivides the curve into 32 segments
-          // this is the same as if bezier curve is created in cpu
-          // this is not good, causes poor performance and expensive to render
-          // smoothness is not the same as the non fill pen
-          // FIXME:update to a better implementation
-          const int STEPS = 32;
-          for (int s = 0; s < STEPS; s++) {
-            const float t0 = s / float(STEPS);
-            const float t1 = (s + 1) / float(STEPS);
-
-            vec2 a = bezier_point(p0, p1, p2, t0);
-            vec2 b = bezier_point(p0, p1, p2, t1);
-
-            // ray crossing point
-            winding += ray_cross( vert_pos, a, b );
-          }
+          winding += sdf_winding( vert_pos, p0, p1, p2 );
         }
         // i+2, adding it here makes i jumps to 3rd item
         i += 2;
@@ -122,7 +105,8 @@ void main() {
         if (constant.fill == 0) {
           // NOTE:enclosing a render doesnt display the full stroke width
           // it only displays half of it making the render not consistent
-          // dont know how to fix this yet, might play around the mesh and the render area
+          // across segments, dont know how to fix this yet, might play
+          // around the mesh and the render area
           d = min(d, sdf_segment( vert_pos, a, b ));
         } else {
           winding += ray_cross( vert_pos, a, b );
@@ -136,17 +120,22 @@ void main() {
   // pen has different rendering
   if (shape != 3 && d > 0.0f) discard;
 
+  // FIXME:this renders a jagged filled pen
   // only for rendering fill pen shapes
-  if (shape == 3 && constant.fill == 1 && winding == 0) discard;
+  if (constant.fill == 1 && shape == 3 && winding == 0) discard;
+
+  // NOTE:trying to find a way to render curves
+  // that fill look like a horizontal/vertical lines
+  const float AA_SPREAD = fwidth(d);
 
   // NOTE:excempt quad and curve lines
-  // for curve lines it causes a bug where it is transparent in the middle of the line
+  // for curve lines it causes a bug where it has transparent
+  // curve in the middle of the curve
   if (shape != 0 && shape != 3) {
-    float fw = fwidth(d);
-    alpha -= smoothstep(-fw, fw, d);
+    alpha -= smoothstep(-AA_SPREAD, AA_SPREAD, d);
   }
  
-  // render the shapes in line topology
+  // render annular shapes
   if (constant.fill == 0) {
     // pen doesnt follow the same check for discarding
     if (shape == 3) {
@@ -159,18 +148,19 @@ void main() {
     // excempt quads for anti-aliasing
     if (shape != 0) {
       // anti-aliasing for inner edge
-      float fw = fwidth(d);
-      alpha -= smoothstep(stroke - fw, stroke + fw, abs(d));
+      alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
     }
   }
 
   // NOTE:debugging purpose
   // if (d > 0.0f) color = vec3(alpha);
 
-  // only renders the curve inside the triangle
-  if (alpha < 0.00001f) discard;
+  // only renders the curves
+  // if (alpha < 0.00001f) discard;
 
   frag_color = vec4(color, alpha);
+  // NOTE:testing mixing colors
+  // frag_color = mix(vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(color, alpha), alpha);
 }
 
 // shapes From Inigo Quilez
@@ -257,6 +247,41 @@ float sdf_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
   return sqrt(res);
 }
 
+int sdf_winding(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
+  // quadratic for y intersection
+  float a = p0.y - 2.0f * p1.y + p2.y;
+  float b = 2.0f * (p1.y - p0.y);
+  float c = p0.y - p.y;
+
+  float discriminant = b * b - 4.0 * a * c;
+  if (discriminant < 0.0f) return 0; // no intersection
+
+  int winding = 0;
+  float sqrt_d = sqrt(discriminant);
+
+  // possible t values
+  float t1 = (-b + sqrt_d) / (2.0f * a);
+  float t2 = (-b - sqrt_d) / (2.0f * a);
+
+  if (t1 >= 0.0f && t1 <= 1.0f) {
+    float x = (1.0f - t1) * (1.0f - t1) * p0.x + 2.0f * (1.0f - t1) * t1 * p1.x + t1 * t1 * p2.x;
+    if (x > p.x) {
+      float dy = 2.0f * (1.0f - t1) * (p1.y - p0.y) + 2.0f * t1 * (p2.y - p1.y);
+      winding += (dy > 0.0f) ? 1 : -1;
+    }
+  }
+
+  if (t2 >= 0.0f && t2 <= 1.0f) {
+    float x = (1.0f - t2) * (1.0f - t2) * p0.x + 2.0f * (1.0f - t2) * t2 * p1.x + t2 * t2 * p2.x;
+    if (x > p.x) {
+      float dy = 2.0f * (1.0f - t2) * (p1.y - p0.y) + 2.0f * t2 * (p2.y - p1.y);
+      winding += (dy > 0.0f) ? 1 : -1;
+    }
+  }
+
+  return winding;
+}
+
 int ray_cross(vec2 p, vec2 a, vec2 b) {
   if (a.y > p.y != b.y > p.y) {
     float x_intersect = a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x);
@@ -264,9 +289,4 @@ int ray_cross(vec2 p, vec2 a, vec2 b) {
       return (a.y < b.y) ? 1 : -1;
   }
   return 0;
-}
-
-vec2 bezier_point(vec2 p0, vec2 p1, vec2 p2, float t) {
-  float mt = 1.0 - t;
-  return mt * mt * p0 + 2.0 * mt * t * p1 + t * t * p2;
 }
