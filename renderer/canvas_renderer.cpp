@@ -355,6 +355,7 @@ void CanvasRenderer::record_artboard_command(const uint32_t current_frame) {
     cmd.end();
 };
 
+// FIXME:MSAA NOT WORKING!
 void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
     auto& cmd = this->artcode_commands->artcode_command_buffers[current_frame];
     // render

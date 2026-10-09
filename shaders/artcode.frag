@@ -29,8 +29,8 @@ float sdf_triangle (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 float sdf_segment  (vec2 p, vec2 a, vec2 b);
 float sdf_bezier   (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
-int ray_cross      (vec2 p, vec2 a, vec2 b);
 int sdf_winding    (vec2 p, vec2 p0, vec2 p1, vec2 p2);
+int ray_cross      (vec2 p, vec2 a, vec2 b);
 
 void main() {
   vec3 color  = constant.color.rgb;
@@ -74,6 +74,7 @@ void main() {
     // free form triangle
     d = sdf_triangle( vert_pos, p0, p1, p2 );
   } else if (shape == 3) {
+    // FIXME:pen renders doesnt fit the entire mesh
     int i = 0;
     while (i < pen_ssbo.data.length() - 1) {
       int id = pen_ssbo.data[i].id;
@@ -87,11 +88,9 @@ void main() {
         p1.y += ubo.reso.y;
         p2.y += ubo.reso.y;
 
-        if (constant.fill == 0) {
-          d = min(d, sdf_bezier( vert_pos, p0, p1, p2 ));
-        } else {
-          winding += sdf_winding( vert_pos, p0, p1, p2 );
-        }
+        d = min(d, sdf_bezier ( vert_pos, p0, p1, p2 ));
+        winding += sdf_winding( vert_pos, p0, p1, p2 );
+
         // i+2, adding it here makes i jumps to 3rd item
         i += 2;
       } else {
@@ -102,53 +101,55 @@ void main() {
         a.y += ubo.reso.y;
         b.y += ubo.reso.y;
 
-        if (constant.fill == 0) {
-          // NOTE:enclosing a render doesnt display the full stroke width
-          // it only displays half of it making the render not consistent
-          // across segments, dont know how to fix this yet, might play
-          // around the mesh and the render area
-          d = min(d, sdf_segment( vert_pos, a, b ));
-        } else {
-          winding += ray_cross( vert_pos, a, b );
-        }
+        // NOTE:enclosing a render doesnt display the full stroke width
+        // it only displays half of it making the render not consistent
+        // across segments, dont know how to fix this yet, might play
+        // around the mesh and the render area
+        d = min(d, sdf_segment( vert_pos, a, b ));
+        winding += ray_cross( vert_pos, a, b );
+
         i++;
       }
     }
   }
- 
+
+  // TODO:improve AA for all shapes
+
   // discard outside shape, aka the mesh
   // pen has different rendering
   if (shape != 3 && d > 0.0f) discard;
 
-  // FIXME:this renders a jagged filled pen
-  // only for rendering fill pen shapes
-  if (constant.fill == 1 && shape == 3 && winding == 0) discard;
-
-  // NOTE:trying to find a way to render curves
-  // that fill look like a horizontal/vertical lines
   const float AA_SPREAD = fwidth(d);
 
   // NOTE:excempt quad and curve lines
   // for curve lines it causes a bug where it has transparent
   // curve in the middle of the curve
-  if (shape != 0 && shape != 3) {
+  if (shape != 0 && shape != 3)
     alpha -= smoothstep(-AA_SPREAD, AA_SPREAD, d);
+    // alpha *= clamp(0.5f - d / AA_SPREAD, 0.0f, 1.0f);
+
+  // NOTE:renders pen instance and smoothing for fill pens
+  if (shape == 3) {
+    const float PEN_SPREAD = fwidth(d) * 1.3f;
+    if (constant.fill == 0) {
+      alpha -= smoothstep(stroke - PEN_SPREAD, stroke + PEN_SPREAD, abs(d));
+    } else {
+      // smooth outer edge for fill
+      if (winding == 0)
+        alpha -= smoothstep(stroke - PEN_SPREAD, stroke + PEN_SPREAD, abs(d));
+    }
   }
  
   // render annular shapes
   if (constant.fill == 0) {
-    // pen doesnt follow the same check for discarding
-    if (shape == 3) {
-      if (d > stroke) discard;
-    } else {
-      // discard inner to create an annular shape
-      if (abs(d) > stroke) discard;
-    }
+    // discard inner to create an annular shape
+    if (abs(d) > stroke) alpha = 0.0f;
 
-    // excempt quads for anti-aliasing
+    // excempt quads for annular anti-aliasing
     if (shape != 0) {
       // anti-aliasing for inner edge
-      alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
+      // alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
+      alpha *= clamp(0.5f - (d - stroke) / AA_SPREAD, 0.0f, 1.0f);
     }
   }
 
@@ -156,26 +157,27 @@ void main() {
   // if (d > 0.0f) color = vec3(alpha);
 
   // only renders the curves
-  // if (alpha < 0.00001f) discard;
+  if (shape == 3)
+    if (alpha < 0.00001f) discard;
 
   frag_color = vec4(color, alpha);
   // NOTE:testing mixing colors
-  // frag_color = mix(vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(color, alpha), alpha);
+  // frag_color = mix(vec4(color, 0.1f), vec4(color, 1.0f), alpha);
 }
 
 // shapes From Inigo Quilez
-float sdf_quad(vec2 p, vec2 b) {
+float sdf_quad(in vec2 p, in vec2 b) {
   const vec2 d = abs(p) - b;
 
   return length(max(d, 0.0f)) + min(max(d.x, d.y), 0.0f);
 }
 
-float sdf_circle(vec2 p, float r) {
+float sdf_circle(in vec2 p, in float r) {
   return length(p) - r;
 }
 
 // free form triangle
-float sdf_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
+float sdf_triangle(in vec2 p, in vec2 p0, in vec2 p1, in vec2 p2) {
   vec2 e0 = p1 - p0;
   vec2 e1 = p2 - p1;
   vec2 e2 = p0 - p2;
@@ -195,7 +197,7 @@ float sdf_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   return -sqrt(d.x) * sign(d.y);
 }
 
-float sdf_segment(vec2 p, vec2 a, vec2 b) {
+float sdf_segment(in vec2 p, in vec2 a, in vec2 b) {
   vec2 pa = p - a;
   vec2 ba = b - a;
   float h = clamp( dot(pa, ba) / dot(ba, ba), 0.0f, 1.0f);
@@ -204,7 +206,7 @@ float sdf_segment(vec2 p, vec2 a, vec2 b) {
 }
 
 // curve line sdf
-float sdf_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
+float sdf_bezier(in vec2 pos, in vec2 p0, in vec2 p1, in vec2 p2) {
   vec2 a = p1 - p0;
   vec2 b = p0 - 2.0f * p1 + p2;
   vec2 c = a * 2.0f;
@@ -247,7 +249,7 @@ float sdf_bezier(vec2 pos, vec2 p0, vec2 p1, vec2 p2) {
   return sqrt(res);
 }
 
-int sdf_winding(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
+int sdf_winding(in vec2 p, in vec2 p0, in vec2 p1, in vec2 p2) {
   // quadratic for y intersection
   float a = p0.y - 2.0f * p1.y + p2.y;
   float b = 2.0f * (p1.y - p0.y);
@@ -282,7 +284,7 @@ int sdf_winding(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
   return winding;
 }
 
-int ray_cross(vec2 p, vec2 a, vec2 b) {
+int ray_cross(in vec2 p, in vec2 a, in vec2 b) {
   if (a.y > p.y != b.y > p.y) {
     float x_intersect = a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x);
     if (p.x < x_intersect)

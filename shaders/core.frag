@@ -30,7 +30,7 @@ layout(location = 0) in vec2 artboard_pos;
 layout(location = 0) out vec4 frag_color;
 
 void main() {
-  vec3 color = pow(constant.bg_color.rgb, vec3(2.2f));
+  vec3 color  = pow(constant.bg_color.rgb, vec3(2.2f));
   float alpha = constant.bg_color.a;
 
   frag_color = vec4(color, alpha);

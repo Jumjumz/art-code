@@ -102,7 +102,7 @@ void VulkanBuffers::artboard_create_msaa() {
     // set image info
     vk::ImageCreateInfo msaa_image_info{};
     msaa_image_info.imageType   = vk::ImageType::e2D;
-    msaa_image_info.format      = vk::Format::eR8G8B8A8Srgb;
+    msaa_image_info.format      = this->image_format;
     msaa_image_info.extent      = this->extent;
     msaa_image_info.mipLevels   = 1;
     msaa_image_info.arrayLayers = 1;
@@ -110,7 +110,7 @@ void VulkanBuffers::artboard_create_msaa() {
     msaa_image_info.tiling      = vk::ImageTiling::eOptimal;
     msaa_image_info.usage       = vk::ImageUsageFlagBits::eColorAttachment |
                             vk::ImageUsageFlagBits::eTransientAttachment;
-    msaa_image_info.initialLayout = vk::ImageLayout::eUndefined;
+    msaa_image_info.initialLayout = vk::ImageLayout::ePreinitialized;
 
     this->msaa_image = vk::raii::Image{this->device, msaa_image_info, nullptr};
 

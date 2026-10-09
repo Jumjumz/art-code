@@ -251,7 +251,6 @@ ArrayU32 DrawPen::generate_indices() const {
 };
 
 Vec2 DrawPen::shape_data() {
-    // FIXME:this will not work for multiple curves.. should have a different approach
     // NOTE:gets the position of the mesh, important as this will
     // decide if a pen render is correct in sdf or not
     Vec2 position = Vec2(FLT_MAX, FLT_MAX);
