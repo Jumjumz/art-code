@@ -121,7 +121,7 @@ namespace detail {
         // TODO:should not be avialble for other shapes, only for pen
         VectorT<PenHandles> positions;
         // must implement
-        virtual ArrayVec4 generate_vertices() const = 0;
+        virtual ArrayVec2 generate_vertices() const = 0;
         virtual ArrayU32  generate_indices() const  = 0;
         // NOTE:new functions for sdf to work
         virtual Vec2 shape_data()       = 0;
@@ -148,7 +148,7 @@ namespace Art {
         float l, w;
 
       private:
-        ArrayVec4 generate_vertices() const override;
+        ArrayVec2 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
         Vec2      shape_data() override;
         int       shape_type() const override;
@@ -161,7 +161,7 @@ namespace Art {
         float radius;
 
       private:
-        ArrayVec4 generate_vertices() const override;
+        ArrayVec2 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
         Vec2      shape_data() override;
         int       shape_type() const override;
@@ -173,7 +173,7 @@ namespace Art {
         Triangle();
 
       private:
-        ArrayVec4 generate_vertices() const override;
+        ArrayVec2 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
         Vec2      shape_data() override;
         int       shape_type() const override;
@@ -184,7 +184,7 @@ namespace Art {
         Pen();
 
       private:
-        ArrayVec4 generate_vertices() const override;
+        ArrayVec2 generate_vertices() const override;
         ArrayU32  generate_indices() const override;
         Vec2      shape_data() override;
         int       shape_type() const override;

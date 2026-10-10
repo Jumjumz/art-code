@@ -99,9 +99,8 @@ void VulkanGraphics::create_graphics_pipeline() {
     rasterization_state_info.lineWidth        = 1.0f;
 
     vk::PipelineMultisampleStateCreateInfo multisampling_state_info{};
-    multisampling_state_info.rasterizationSamples = vk::SampleCountFlagBits::e4;
+    multisampling_state_info.rasterizationSamples = vk::SampleCountFlagBits::e1;
     multisampling_state_info.sampleShadingEnable  = vk::False;
-    // multisampling_state_info.minSampleShading     = 1.0f;
 
     vk::PipelineDepthStencilStateCreateInfo stencil_state_info{};
     stencil_state_info.depthTestEnable       = vk::False;

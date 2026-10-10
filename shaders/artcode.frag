@@ -17,7 +17,7 @@ layout(push_constant) uniform PushConstants {
   int skew;
   int shape_type;
 } constant;
-struct PenData {vec2 position;vec2 uv;int id;};
+struct PenData {vec2 position;int id;};
 layout(std430, set = 0, binding = 2) readonly buffer PenBuffer {PenData data[];} pen_ssbo;
 layout(location = 0) in vec2 vert_pos;
 layout(location = 0) out vec4 frag_color;
@@ -90,7 +90,6 @@ void main() {
 
         d = min(d, sdf_bezier ( vert_pos, p0, p1, p2 ));
         winding += sdf_winding( vert_pos, p0, p1, p2 );
-
         // i+2, adding it here makes i jumps to 3rd item
         i += 2;
       } else {
@@ -106,38 +105,43 @@ void main() {
         // across segments, dont know how to fix this yet, might play
         // around the mesh and the render area
         d = min(d, sdf_segment( vert_pos, a, b ));
-        winding += ray_cross( vert_pos, a, b );
-
+        winding += ray_cross  ( vert_pos, a, b );
         i++;
       }
     }
   }
 
-  // TODO:improve AA for all shapes
+  // FIXME:the AA implementation is FUCKED!
+  // improve AA for all shapes
 
   // discard outside shape, aka the mesh
   // pen has different rendering
-  if (shape != 3 && d > 0.0f) discard;
+  if (shape != 3 && d > 0.1f) alpha = 0.0f;
 
-  const float AA_SPREAD = fwidth(d);
+  const float AA_SPREAD = fwidth(d) * 2.0f;
 
   // NOTE:excempt quad and curve lines
   // for curve lines it causes a bug where it has transparent
   // curve in the middle of the curve
   if (shape != 0 && shape != 3)
-    alpha -= smoothstep(-AA_SPREAD, AA_SPREAD, d);
+    alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
     // alpha *= clamp(0.5f - d / AA_SPREAD, 0.0f, 1.0f);
 
   // NOTE:renders pen instance and smoothing for fill pens
   if (shape == 3) {
-    const float PEN_SPREAD = fwidth(d) * 1.3f;
-    if (constant.fill == 0) {
-      alpha -= smoothstep(stroke - PEN_SPREAD, stroke + PEN_SPREAD, abs(d));
+    const float PEN_SPREAD = fwidth(d) * 2.0f;
+      // smooth outer edge for fill
+    if (winding == 0)
+      alpha = 1.0f - smoothstep(stroke - PEN_SPREAD, stroke + PEN_SPREAD, abs(d));
+    /*if (constant.fill == 0) {
+      alpha = 1.0f - smoothstep(stroke - PEN_SPREAD, stroke + PEN_SPREAD, abs(d));
+      // alpha *= clamp(0.5f - (d - stroke) / PEN_SPREAD, 0.0f, 1.0f);
     } else {
       // smooth outer edge for fill
       if (winding == 0)
-        alpha -= smoothstep(stroke - PEN_SPREAD, stroke + PEN_SPREAD, abs(d));
-    }
+        alpha = 1.0f - smoothstep(stroke - PEN_SPREAD, stroke + PEN_SPREAD, abs(d));
+        // alpha *= clamp(0.5f - (d - stroke) / PEN_SPREAD, 0.0f, 1.0f);
+    }*/
   }
  
   // render annular shapes
@@ -148,8 +152,8 @@ void main() {
     // excempt quads for annular anti-aliasing
     if (shape != 0) {
       // anti-aliasing for inner edge
-      // alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
-      alpha *= clamp(0.5f - (d - stroke) / AA_SPREAD, 0.0f, 1.0f);
+      alpha = 1.0f - smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
+      // alpha *= clamp(0.5f - (d - stroke) / AA_SPREAD, 0.0f, 1.0f);
     }
   }
 
@@ -238,8 +242,8 @@ float sdf_bezier(in vec2 pos, in vec2 p0, in vec2 p1, in vec2 p2) {
     float n  = sin(v) * 1.732050808f;
     vec3 t2  = clamp(vec3(m + m, -n - m, n - m) * z - kx, 0.0f, 1.0f);
     vec2 qx  = d + (c + b * t2.x) * t2.x;
-    float dx = dot(qx, qx);
     vec2 qy  = d + (c + b * t2.y) * t2.y;
+    float dx = dot(qx, qx);
     float dy = dot(qy, qy);
 
     res = (dx < dy) ? dx : dy;

@@ -14,13 +14,11 @@
 // artcode typedef and nothing else
 struct PHandle {
     Vec2 position;
-    Vec2 uv;
     int  id;
     int  _padding;
 
     PHandle()
         : position(0.0f, 0.0f),
-          uv(0.0f, 0.0f),
           id(0),
           _padding(0) {}
 };
@@ -124,7 +122,6 @@ namespace Shared {
             while (i < pen_handles.size()) {
                 // set to segment
                 inst.pen_data.items[inst.pen_data.size].position = pen_handles[i].position;
-                inst.pen_data.items[inst.pen_data.size].uv = Vec2{0.0f, 0.0f};
                 // id = 1 indicates that this position starts for a segment
                 inst.pen_data.items[inst.pen_data.size].id = 1;
                 if (pen_handles[i].handles.handle) {
@@ -136,12 +133,10 @@ namespace Shared {
                     // this is the handle
                     inst.pen_data.items[inst.pen_data.size].position =
                         pen_handles[i].handles.handlePosition;
-                    inst.pen_data.items[inst.pen_data.size].uv = Vec2{0.5f, 0.0f};
                     inst.pen_data.items[inst.pen_data.size].id = 2;
                 } else {
                     inst.pen_data.items[inst.pen_data.size].position =
                         pen_handles[i].position;
-                    inst.pen_data.items[inst.pen_data.size].uv = Vec2{1.0f, 1.0f};
                     // id = 1 indicates that this position is a segment
                     inst.pen_data.items[inst.pen_data.size].id = 1;
                 }

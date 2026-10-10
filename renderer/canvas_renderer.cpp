@@ -282,16 +282,11 @@ void CanvasRenderer::record_artboard_command(const uint32_t current_frame) {
     // NOTE:msaa for artboard might not be needed, update
     //  prepare to render canvas
     vk::RenderingAttachmentInfo artboard_attachment_info{};
-    artboard_attachment_info.imageView   = *this->vk_buffers.msaa_image_view;
+    artboard_attachment_info.imageView   = *this->vk_buffers.image_views;
     artboard_attachment_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
     artboard_attachment_info.loadOp      = vk::AttachmentLoadOp::eClear;
     artboard_attachment_info.storeOp     = vk::AttachmentStoreOp::eDontCare;
     artboard_attachment_info.clearValue  = this->clear_color;
-
-    // resolve
-    artboard_attachment_info.resolveMode      = vk::ResolveModeFlagBits::eAverage;
-    artboard_attachment_info.resolveImageView = *this->vk_buffers.image_views;
-    artboard_attachment_info.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
 
     vk::RenderingInfo artboard_rendering_info{};
     artboard_rendering_info.renderArea.offset = this->offset;
@@ -355,24 +350,17 @@ void CanvasRenderer::record_artboard_command(const uint32_t current_frame) {
     cmd.end();
 };
 
-// FIXME:MSAA NOT WORKING!
 void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
     auto& cmd = this->artcode_commands->artcode_command_buffers[current_frame];
     // render
     cmd.begin({});
 
-    // use MSAA
     vk::RenderingAttachmentInfo artcode_attachement_info{};
-    artcode_attachement_info.imageView   = *this->vk_buffers.msaa_image_view;
+    artcode_attachement_info.imageView   = *this->vk_buffers.image_views;
     artcode_attachement_info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
     artcode_attachement_info.loadOp      = vk::AttachmentLoadOp::eClear;
     artcode_attachement_info.storeOp     = vk::AttachmentStoreOp::eDontCare;
     artcode_attachement_info.clearValue  = this->clear_color;
-
-    // resolve with image view
-    artcode_attachement_info.resolveMode      = vk::ResolveModeFlagBits::eAverage;
-    artcode_attachement_info.resolveImageView = *this->vk_buffers.image_views;
-    artcode_attachement_info.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
 
     vk::RenderingInfo artcode_rendering_info{};
     artcode_rendering_info.renderArea.offset = this->offset;
@@ -438,7 +426,6 @@ void CanvasRenderer::update_artboard() {
         // create image views and msaa image view
         this->vk_buffers.artboard_create_image(width, height);
         this->vk_buffers.artboard_create_image_views();
-        this->vk_buffers.artboard_create_msaa();
     }
     // remove old texture
     ImGui_ImplVulkan_RemoveTexture(ArtboardUtils::artboard_texture);
