@@ -309,5 +309,7 @@ void Art::Draw() {
             // increment instance size, mutates instance size per loop execution
             Shared::Memory::increment_instance_size();
         }
+        // reset registry after transfering data to shared memory
+        InstanceRegistry::reset_registry();
     }
 };

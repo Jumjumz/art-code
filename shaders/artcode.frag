@@ -83,14 +83,14 @@ void main() {
         vec2 p1 = pen_ssbo.data[i + 1].position; // handle
         vec2 p2 = pen_ssbo.data[i + 2].position;
 
-        // normalize to ubo cooridnates
+        // normalize to ubo coordinates
         p0.y += ubo.reso.y;
         p1.y += ubo.reso.y;
         p2.y += ubo.reso.y;
 
         d = min(d, sdf_bezier ( vert_pos, p0, p1, p2 ));
         winding += sdf_winding( vert_pos, p0, p1, p2 );
-        // i+2, adding it here makes i jumps to 3rd item
+        // i+2, adding it makes i jumps to the 3rd item
         i += 2;
       } else {
         vec2 a = pen_ssbo.data[i].position;
@@ -106,67 +106,53 @@ void main() {
         // around the mesh and the render area
         d = min(d, sdf_segment( vert_pos, a, b ));
         winding += ray_cross  ( vert_pos, a, b );
+        // move to the next index
         i++;
       }
     }
   }
 
-  // FIXME:the AA implementation is FUCKED!
-  // improve AA for all shapes
-
   // discard outside shape, aka the mesh
   // pen has different rendering
-  if (shape != 3 && d > 0.1f) alpha = 0.0f;
+  if (shape != 3 && d > 0.0f) alpha = 0.0f;
 
-  const float AA_SPREAD = fwidth(d) * 2.0f;
+  const float AA_SPREAD = fwidth(d) * 1.8f;
 
   // NOTE:excempt quad and curve lines
-  // for curve lines it causes a bug where it has transparent
-  // curve in the middle of the curve
+  // as it has its own smoothing method
   if (shape != 0 && shape != 3)
     alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
-    // alpha *= clamp(0.5f - d / AA_SPREAD, 0.0f, 1.0f);
 
-  // NOTE:renders pen instance and smoothing for fill pens
+  // NOTE:smoothing fill pens
   if (shape == 3) {
-    const float PEN_SPREAD = fwidth(d) * 2.0f;
-      // smooth outer edge for fill
+    // FIXME:this causes the pen render issue with mesh
+    // where pen fill doesnt fit entirely in the mesh
+    // because stroke is rendered outside of the fill
+    // smooth outer edge for fill
     if (winding == 0)
-      alpha = 1.0f - smoothstep(stroke - PEN_SPREAD, stroke + PEN_SPREAD, abs(d));
-    /*if (constant.fill == 0) {
-      alpha = 1.0f - smoothstep(stroke - PEN_SPREAD, stroke + PEN_SPREAD, abs(d));
-      // alpha *= clamp(0.5f - (d - stroke) / PEN_SPREAD, 0.0f, 1.0f);
-    } else {
-      // smooth outer edge for fill
-      if (winding == 0)
-        alpha = 1.0f - smoothstep(stroke - PEN_SPREAD, stroke + PEN_SPREAD, abs(d));
-        // alpha *= clamp(0.5f - (d - stroke) / PEN_SPREAD, 0.0f, 1.0f);
-    }*/
+      alpha = 1.0f - smoothstep(stroke -AA_SPREAD, stroke + AA_SPREAD, abs(d));
   }
  
   // render annular shapes
   if (constant.fill == 0) {
-    // discard inner to create an annular shape
-    if (abs(d) > stroke) alpha = 0.0f;
+    // quads dont need to check alpha values
+    // set to 0 to have a flat inner edge
+    if (shape == 0)
+      if (abs(d) > stroke) alpha = 0.0f;
 
-    // excempt quads for annular anti-aliasing
-    if (shape != 0) {
-      // anti-aliasing for inner edge
+    // excempt quads and pen instances
+    if (shape != 0 && shape != 3)
+      alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
+
+    // produces better smoothing for outer and inner edges
+    if (shape == 3)
       alpha = 1.0f - smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
-      // alpha *= clamp(0.5f - (d - stroke) / AA_SPREAD, 0.0f, 1.0f);
-    }
   }
 
   // NOTE:debugging purpose
   // if (d > 0.0f) color = vec3(alpha);
 
-  // only renders the curves
-  if (shape == 3)
-    if (alpha < 0.00001f) discard;
-
   frag_color = vec4(color, alpha);
-  // NOTE:testing mixing colors
-  // frag_color = mix(vec4(color, 0.1f), vec4(color, 1.0f), alpha);
 }
 
 // shapes From Inigo Quilez
