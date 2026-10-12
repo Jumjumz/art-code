@@ -48,7 +48,7 @@ void main() {
   // set pos to ubo coord
   pos.y = ubo.reso.y + pos.y;
 
-  float stroke = constant.stroke;
+  float stroke = constant.fill == 0 ? constant.stroke : 0.0f;
   float d      = 1e10; // large number for pen to work
   int winding  = 0;    // for pen fill instances
   if (shape == 0) {
@@ -124,13 +124,14 @@ void main() {
     alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
 
   // NOTE:smoothing fill pens
-  if (shape == 3) {
-    // FIXME:this causes the pen render issue with mesh
-    // where pen fill doesnt fit entirely in the mesh
-    // because stroke is rendered outside of the fill
-    // smooth outer edge for fill
+  if (constant.fill == 1 && shape == 3) {
+    // winding must be 0 to render the path and fill the space
     if (winding == 0)
-      alpha = 1.0f - smoothstep(stroke -AA_SPREAD, stroke + AA_SPREAD, abs(d));
+      alpha -= smoothstep(-AA_SPREAD, AA_SPREAD, d);
+
+    // NOTE:applies an AA but smoothing is bad
+    // stroke should not be the basis on here as for fill stroke is always equal to 0
+    alpha -= smoothstep(stroke + AA_SPREAD, stroke - AA_SPREAD, abs(d));
   }
  
   // render annular shapes
@@ -148,9 +149,6 @@ void main() {
     if (shape == 3)
       alpha = 1.0f - smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
   }
-
-  // NOTE:debugging purpose
-  // if (d > 0.0f) color = vec3(alpha);
 
   frag_color = vec4(color, alpha);
 }
