@@ -125,13 +125,19 @@ void main() {
 
   // NOTE:smoothing fill pens
   if (constant.fill == 1 && shape == 3) {
-    // winding must be 0 to render the path and fill the space
+    // winding == 0 is the outside of the shape
+    // winding == -1 is the inside of the shape
+    // this removes the outside aka the mesh
     if (winding == 0)
       alpha -= smoothstep(-AA_SPREAD, AA_SPREAD, d);
 
-    // NOTE:applies an AA but smoothing is bad
-    // stroke should not be the basis on here as for fill stroke is always equal to 0
-    alpha -= smoothstep(stroke + AA_SPREAD, stroke - AA_SPREAD, abs(d));
+    // NOTE:having a stroke here smoothens the edge of the curve
+    // issue is the fill becomes smaller because of the stroke
+    // making it not viable for this implementation
+    if (d > 0.0f) {
+      stroke = 2.0f;
+      alpha -= smoothstep(stroke + AA_SPREAD, stroke - AA_SPREAD, abs(d));
+    }
   }
  
   // render annular shapes
@@ -145,9 +151,14 @@ void main() {
     if (shape != 0 && shape != 3)
       alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
 
-    // produces better smoothing for outer and inner edges
-    if (shape == 3)
-      alpha = 1.0f - smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
+    // FIXME:this renders the stroke for both ends of the path
+    // making the stroke doubled in size, the correct render
+    // should be stroke lesser than d
+    // render pen and produces better smoothing
+    // for outer and inner edges
+    if (shape == 3) {
+      alpha = 1.0f - smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, d);
+    }
   }
 
   frag_color = vec4(color, alpha);
@@ -233,7 +244,6 @@ float sdf_bezier(in vec2 pos, in vec2 p0, in vec2 p1, in vec2 p2) {
     res = (dx < dy) ? dx : dy;
   }
 
-  // returns negative value as y coord is in negative space
   return sqrt(res);
 }
 
