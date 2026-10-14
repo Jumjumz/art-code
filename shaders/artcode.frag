@@ -49,8 +49,12 @@ void main() {
   pos.y = ubo.reso.y + pos.y;
 
   float stroke = constant.fill == 0 ? constant.stroke : 0.0f;
-  float d      = 1e10; // large number for pen to work
-  int winding  = 0;    // for pen fill instances
+  // NOTE:pen has a different stroke because along the path d
+  // stroke is being rendered on both ends, meaning it doubles the stroke render
+  // deviding it in half makes it accurate, should only apply works for fill == 0
+  float pen_stroke = constant.fill == 1 ? 0.0f : stroke / 2.0f;
+  float d          = 1e10; // large number for pen to work
+  int winding      = 0;    // for pen fill instances
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
@@ -74,7 +78,6 @@ void main() {
     // free form triangle
     d = sdf_triangle( vert_pos, p0, p1, p2 );
   } else if (shape == 3) {
-    // FIXME:pen renders doesnt fit the entire mesh
     int i = 0;
     while (i < pen_ssbo.data.length() - 1) {
       int id = pen_ssbo.data[i].id;
@@ -88,26 +91,29 @@ void main() {
         p1.y += ubo.reso.y;
         p2.y += ubo.reso.y;
 
+        // offset to pen strokes
+        p0 -= pen_stroke;
+        p1 -= pen_stroke;
+        p2 -= pen_stroke;
+
         d = min(d, sdf_bezier ( vert_pos, p0, p1, p2 ));
         winding += sdf_winding( vert_pos, p0, p1, p2 );
-        // i+2, adding it makes i jumps to the 3rd item
-        i += 2;
+        i += 2; // i+2, jumps to the 3rd index
       } else {
         vec2 a = pen_ssbo.data[i].position;
         vec2 b = pen_ssbo.data[i + 1].position;
 
-        // normalize to ubo cooridnates
+        // normalize to ubo coordinates
         a.y += ubo.reso.y;
         b.y += ubo.reso.y;
 
-        // NOTE:enclosing a render doesnt display the full stroke width
-        // it only displays half of it making the render not consistent
-        // across segments, dont know how to fix this yet, might play
-        // around the mesh and the render area
+        // offset to pen strokes
+        a -= pen_stroke;
+        b -= pen_stroke;
+
         d = min(d, sdf_segment( vert_pos, a, b ));
         winding += ray_cross  ( vert_pos, a, b );
-        // move to the next index
-        i++;
+        i++; // move to the next index
       }
     }
   }
@@ -123,20 +129,19 @@ void main() {
   if (shape != 0 && shape != 3)
     alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
 
-  // NOTE:smoothing fill pens
+  // smoothing fill pens
   if (constant.fill == 1 && shape == 3) {
-    // winding == 0 is the outside of the shape
+    // winding ==  0 is the outside of the shape
     // winding == -1 is the inside of the shape
     // this removes the outside aka the mesh
     if (winding == 0)
       alpha -= smoothstep(-AA_SPREAD, AA_SPREAD, d);
 
-    // NOTE:having a stroke here smoothens the edge of the curve
-    // issue is the fill becomes smaller because of the stroke
-    // making it not viable for this implementation
     if (d > 0.0f) {
-      stroke = 2.0f;
-      alpha -= smoothstep(stroke + AA_SPREAD, stroke - AA_SPREAD, abs(d));
+      // NOTE:uses its own stroke, this is the allowed stroke along the path d
+      // to be used and applied to create a smoother edges of a pen shape
+      float path_stroke = 0.5f;
+      alpha -= smoothstep(path_stroke + AA_SPREAD, path_stroke - AA_SPREAD, d);
     }
   }
  
@@ -151,14 +156,9 @@ void main() {
     if (shape != 0 && shape != 3)
       alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
 
-    // FIXME:this renders the stroke for both ends of the path
-    // making the stroke doubled in size, the correct render
-    // should be stroke lesser than d
-    // render pen and produces better smoothing
-    // for outer and inner edges
-    if (shape == 3) {
-      alpha = 1.0f - smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, d);
-    }
+    // NOTE:smoothnes not that good yet
+    if (shape == 3)
+      alpha -= smoothstep(pen_stroke - AA_SPREAD, pen_stroke + AA_SPREAD, abs(d));
   }
 
   frag_color = vec4(color, alpha);
@@ -256,7 +256,7 @@ int sdf_winding(in vec2 p, in vec2 p0, in vec2 p1, in vec2 p2) {
   float discriminant = b * b - 4.0 * a * c;
   if (discriminant < 0.0f) return 0; // no intersection
 
-  int winding = 0;
+  int winding  = 0;
   float sqrt_d = sqrt(discriminant);
 
   // possible t values
