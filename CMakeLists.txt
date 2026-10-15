@@ -21,8 +21,8 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
   glm
-  GIT_REPOSITORY https://github.com/g-truc/glm.git
-  GIT_TAG 0.9.9.8
+  GIT_REPOSITORY	https://github.com/g-truc/glm.git
+  GIT_TAG 	0af55ccecd98d4e5a8d1fad7de25ba429d60e863 #refs/tags/1.0.1
 )
 
 FetchContent_Declare(

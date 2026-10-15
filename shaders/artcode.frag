@@ -32,29 +32,30 @@ float sdf_bezier   (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 int sdf_winding    (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 int ray_cross      (vec2 p, vec2 a, vec2 b);
 
+// TODO:implement rotate and skew to sdf shapes
 void main() {
   vec3 color  = constant.color.rgb;
   float alpha = constant.color.a;
   // convert color to linear space using gamma correction 2.2
   color = pow(color, vec3(2.2f));
-
-  int shape = constant.shape_type;
-
+ 
   // init variables
-  vec2 shape_data = constant.shape_data;
+  const int shape       = constant.shape_type;
+  const vec2 shape_data = constant.shape_data;
+
   vec2 pos        = constant.pos;
   vec2 center     = vec2(0.0f, 0.0f);
   vec2 p          = vec2(0.0f, 0.0f);
   // set pos to ubo coord
   pos.y = ubo.reso.y + pos.y;
 
-  float stroke = constant.fill == 0 ? constant.stroke : 0.0f;
+  const float stroke = constant.fill == 0 ? constant.stroke : 0.0f;
   // NOTE:pen has a different stroke because along the path d
   // stroke is being rendered on both ends, meaning it doubles the stroke render
   // deviding it in half makes it accurate, should only apply works for fill == 0
-  float pen_stroke = constant.fill == 1 ? 0.0f : stroke / 2.0f;
-  float d          = 1e10; // large number for pen to work
-  int winding      = 0;    // for pen fill instances
+  const float pen_stroke = constant.fill == 1 ? 0.0f : stroke / 2.0f;
+  float d                = 1e10; // large number for pen to work
+  int winding            = 0;    // for pen fill instances
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;

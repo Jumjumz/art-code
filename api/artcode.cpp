@@ -2,7 +2,6 @@
 #include "artcode_instance.hpp"
 #include <cassert>
 #include <cmath>
-#include <glm/common.hpp>
 
 struct InstanceRegistry {
     static void register_instance(detail::IPen* shape) {
@@ -50,15 +49,15 @@ Vec4 convert_color(const string& color, float opacity) {
 };
 
 // find length and width of any shapes (forms a quad)
-Vec2 skew_mesh_size(const ArrayVec2& vertices) {
+Vec2 mesh_size(const ArrayVec2& vertices) {
     float max_x = -FLT_MAX, min_x = FLT_MAX;
     float max_y = -FLT_MAX, min_y = FLT_MAX;
 
     for (const auto& vertex : vertices) {
-        max_x = glm::max(max_x, vertex.x);
-        min_x = glm::min(min_x, vertex.x);
-        max_y = glm::max(max_y, vertex.y);
-        min_y = glm::min(min_y, vertex.y);
+        max_x = std::max(max_x, vertex.x);
+        min_x = std::min(min_x, vertex.x);
+        max_y = std::max(max_y, vertex.y);
+        min_y = std::min(min_y, vertex.y);
     }
 
     return Vec2{max_x - min_x, max_y - min_y};
@@ -75,45 +74,6 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
             shape_pos + Vec2{mesh_size.x * 0.5f, mesh_size.y},
             shape_pos + Vec2{0.0f, mesh_size.y},
             shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
-};
-
-ArrayT<Vec2, 36> bezier_curve(const Vec2& handle, const Vec2& st_vec, const Vec2& en_vec) {
-    constexpr size_t        LERP_SIZE = 36;
-    ArrayT<Vec2, LERP_SIZE> lerp      = {};
-
-    // generate lerp along bezier curve
-    for (size_t i = 0; i < LERP_SIZE; i++) {
-        float t   = i / static_cast<float>(LERP_SIZE - 1);
-        float t2  = squared(t);
-        float mt  = 1.0f - t;
-        float mt2 = squared(mt);
-
-        // quardratic bezier formula
-        const auto pt = Vec2{(mt2 * st_vec.x) + (2 * mt * t * handle.x) + (t2 * en_vec.x),
-                             (mt2 * st_vec.y) + (2 * mt * t * handle.y) + (t2 * en_vec.y)};
-
-        lerp[i] = pt;
-    }
-    return lerp;
-};
-
-ArrayVec2 generate_pen_handles(const VectorT<PenHandles>& positions) {
-    ArrayVec2 vertex = {};
-    vertex.reserve(positions.size());
-
-    for (size_t i = 0; i < positions.size(); i++) {
-        const auto& pos0 = positions[i];
-        if (pos0.handles.handle) {
-            const auto& pos1 = pos0.handles;
-            const auto& pos2 = positions[i + 1];
-
-            vertex.push_back(Vec4{pos0.position, Vec2{0.0f, 0.0f}});
-            vertex.push_back(Vec4{pos1.handlePosition, Vec2{0.0f, 0.5f}});
-        } else {
-            vertex.push_back(Vec4{pos0.position, Vec2{1.0f, 1.0f}});
-        }
-    }
-    return vertex;
 };
 
 // TODO:remove vertices and indices functions
@@ -273,7 +233,8 @@ void Art::Draw() {
 
         for (size_t i = 0; i < reg_size; i++) {
             const auto& inst = InstanceRegistry::get_instance(i);
-            // execute shape data function first
+            // NOTE:execute shape data function first as pen instance heavily depends on
+            // it produce a new position using the its generate vertices function
             const auto& shape_data = inst->shape_data();
 
             PushConstants constants{};
@@ -282,7 +243,7 @@ void Art::Draw() {
             constants.pos        = inst->position;
             constants.center     = inst->get_center();
             constants.shape_data = shape_data;
-            constants.mesh_size  = skew_mesh_size(inst->generate_vertices());
+            constants.mesh_size  = mesh_size(inst->generate_vertices());
             constants.p0         = inst->v0;
             constants.p1         = inst->v1;
             constants.p2         = inst->v2;

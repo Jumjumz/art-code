@@ -91,7 +91,7 @@ void main() {
   // set position to ubo coord
   position.y = ubo.reso.y + position.y;
 
-  // TODO:add padding in mesh
+  // NOTE:might need to add padding in mesh
   // sets the quad to position and mesh size
   const vec2 positions[6] = vec2[](
     position,
