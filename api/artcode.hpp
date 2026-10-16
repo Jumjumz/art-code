@@ -122,7 +122,6 @@ namespace detail {
         VectorT<PenHandles> positions;
         // must implement
         virtual ArrayVec2 generate_vertices() const = 0;
-        virtual ArrayU32  generate_indices() const  = 0;
         // NOTE:new functions for sdf to work
         virtual Vec2 shape_data()       = 0;
         virtual int  shape_type() const = 0;
@@ -149,7 +148,6 @@ namespace Art {
 
       private:
         ArrayVec2 generate_vertices() const override;
-        ArrayU32  generate_indices() const override;
         Vec2      shape_data() override;
         int       shape_type() const override;
     };
@@ -162,7 +160,6 @@ namespace Art {
 
       private:
         ArrayVec2 generate_vertices() const override;
-        ArrayU32  generate_indices() const override;
         Vec2      shape_data() override;
         int       shape_type() const override;
     };
@@ -174,7 +171,6 @@ namespace Art {
 
       private:
         ArrayVec2 generate_vertices() const override;
-        ArrayU32  generate_indices() const override;
         Vec2      shape_data() override;
         int       shape_type() const override;
     };
@@ -185,7 +181,6 @@ namespace Art {
 
       private:
         ArrayVec2 generate_vertices() const override;
-        ArrayU32  generate_indices() const override;
         Vec2      shape_data() override;
         int       shape_type() const override;
     };

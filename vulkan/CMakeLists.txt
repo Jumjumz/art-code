@@ -12,5 +12,7 @@ target_include_directories(vulkan
 )
 
 target_link_libraries(vulkan
-  PRIVATE utils
+  PRIVATE
+    GRAPHICS_STACK
+    utils
 )

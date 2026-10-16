@@ -59,9 +59,17 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
 ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
+# umbrella target
+add_library(GRAPHICS_STACK INTERFACE)
+
+target_link_libraries(GRAPHICS_STACK INTERFACE
   Vulkan::Vulkan
+  glfw
   glm::glm
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  GRAPHICS_STACK
   api
   core
   imgui

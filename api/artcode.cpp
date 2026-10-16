@@ -90,9 +90,6 @@ DrawQuad::Quad()
     InstanceRegistry::register_instance(this);
 };
 
-// NOTE:all generate vertices function for shapes except Pen has 10.0f for w and z
-// properties this to isolate real usage of w and z in Pen tool
-// will update in the future
 ArrayVec2 DrawQuad::generate_vertices() const {
     //  quad coordinates and size
     return ArrayVec2{
@@ -102,8 +99,6 @@ ArrayVec2 DrawQuad::generate_vertices() const {
         this->position + Vec2{0.0f, this->l},
     };
 };
-
-ArrayU32 DrawQuad::generate_indices() const { return ArrayU32{0, 1, 3, 1, 2, 3}; };
 
 Vec2 DrawQuad::shape_data() { return Vec2{this->w, this->l}; };
 
@@ -130,19 +125,6 @@ ArrayVec2 DrawCircle::generate_vertices() const {
     return vertex;
 };
 
-ArrayU32 DrawCircle::generate_indices() const {
-    ArrayU32 indices = {};
-
-    const auto num_seg = 8;
-    for (size_t i = 0; i < num_seg; i++) {
-        indices.push_back(0);
-        indices.push_back(i + 1);
-        indices.push_back((i + 1) % num_seg + 1);
-    }
-
-    return indices;
-};
-
 Vec2 DrawCircle::shape_data() { return Vec2{this->radius, this->radius}; };
 
 int DrawCircle::shape_type() const { return static_cast<int>(ShapeType::Circle); };
@@ -153,8 +135,6 @@ DrawTriangle::Triangle() { InstanceRegistry::register_instance(this); };
 ArrayVec2 DrawTriangle::generate_vertices() const {
     return ArrayVec2{this->v0, this->v1, this->v2};
 };
-
-ArrayU32 DrawTriangle::generate_indices() const { return ArrayU32{0, 1, 2}; };
 
 // NOTE:triangle doesnt need to return shape data
 // just needs to assign p0, p1 and p2
@@ -175,7 +155,6 @@ DrawPen::Pen() {
     InstanceRegistry::register_instance(this);
 };
 
-// NOTE: currently the only place where w and z is important and is being used in the shader
 ArrayVec2 DrawPen::generate_vertices() const {
     ArrayVec2 vertex = {};
     vertex.reserve(this->positions.size());
@@ -193,20 +172,6 @@ ArrayVec2 DrawPen::generate_vertices() const {
         }
     }
     return vertex;
-};
-
-// NOTE:this generates duplicate indices for index 0
-ArrayU32 DrawPen::generate_indices() const {
-    ArrayU32 indices = {};
-
-    const auto pen_size = generate_vertices().size();
-    for (size_t i = 0; i < pen_size - 1; i++) {
-        indices.push_back(0);
-        indices.push_back(i);
-        indices.push_back(i + 1);
-    }
-
-    return indices;
 };
 
 Vec2 DrawPen::shape_data() {

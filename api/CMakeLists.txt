@@ -13,6 +13,7 @@ target_include_directories(api
 )
 
 target_link_libraries(api
-  PRIVATE glm::glm
-  PRIVATE utils
+  PRIVATE
+    GRAPHICS_STACK
+    utils
 )

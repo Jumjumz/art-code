@@ -7,5 +7,7 @@ target_include_directories(solution
 )
 
 target_link_libraries(solution
-  PRIVATE utils
+  PRIVATE
+    GRAPHICS_STACK
+    utils
 )

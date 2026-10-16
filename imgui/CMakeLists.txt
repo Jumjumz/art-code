@@ -15,4 +15,6 @@ target_include_directories(imgui
 )
 
 target_link_libraries(imgui
-PRIVATE Vulkan::Vulkan)
+  PRIVATE
+    GRAPHICS_STACK
+)
