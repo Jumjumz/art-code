@@ -7,7 +7,6 @@
 #include <iostream>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <vulkan/vulkan_raii.hpp>
 
 // this header uses the artcode typedef such as Vec2, ArrayT and such,
 // to avoid confusion and for the sake of consistency, only this header file uses the
@@ -65,7 +64,7 @@ namespace Shared {
 
     struct Memory {
         static inline Shared::Region* region;
-
+        // TODO:add windows implementation for shared memory
         static void load_shared_memory() {
             // uses POSIX functions, returns -1 cuz of O_EXCL if process exists
             int fd = shm_open("/artcode_instances", O_CREAT | O_EXCL | O_RDWR, 0666);
