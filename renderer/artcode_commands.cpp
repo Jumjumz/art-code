@@ -41,8 +41,7 @@ void ArtcodeCommands::artcode_create_command_buffer() {
 // TODO:move this somewhere! or have a better way for other buffers to access this
 void ArtcodeCommands::artcode_create_descriptor_pool() {
     std::array<vk::DescriptorPoolSize, 2> pool_size{
-        vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer,
-                               static_cast<uint32_t>(this->MAX_FRAMES_IN_FLIGHT)},
+        vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, this->max_instances},
         vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, this->max_instances}};
 
     vk::DescriptorPoolCreateInfo pool_info{};

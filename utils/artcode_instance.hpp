@@ -7,10 +7,10 @@
 #include <iostream>
 // NOTE:for now this projects only works for windows and linux
 #ifdef _WIN32
-    #include <windows.h>
+#include <windows.h>
 #else
-    #include <sys/mman.h>
-    #include <unistd.h>
+#include <sys/mman.h>
+#include <unistd.h>
 #endif
 
 // NOTE:this header uses the artcode typedef such as Vec2, ArrayT and such,
@@ -66,25 +66,28 @@ namespace Shared {
         ArrayT<Shared::Instance, 500> instance;
     };
 
+#ifdef _WIN32
     inline static HANDLE hmap_file = nullptr;
     inline static void*  ptr       = nullptr;
+#endif
 
     struct Memory {
         static inline Shared::Region* region;
 
         static void load_shared_memory() {
-            bool   first_init      = false;
+            bool       first_init  = false;
             const auto region_size = sizeof(Shared::Region);
-            #ifdef _WIN32
+#ifdef _WIN32
             // open shared memory first
-            hmap_file = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, "Local\\artcode_instances");
+            hmap_file =
+                OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, "Local\\artcode_instances");
 
             if (hmap_file == nullptr) {
                 // create if not exist yet
                 hmap_file =
                     CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0,
-                                      region_size, "Local\\artcode_instances");
-                
+                                       region_size, "Local\\artcode_instances");
+
                 if (hmap_file != NULL || hmap_file != INVALID_HANDLE_VALUE) {
                     ptr = MapViewOfFile(hmap_file, FILE_MAP_ALL_ACCESS, 0, 0, region_size);
 
@@ -112,26 +115,26 @@ namespace Shared {
                 // set region
                 region = static_cast<Shared::Region*>(ptr);
             }
-            #else
-                // uses POSIX functions, returns -1 cuz of O_EXCL if process exists
-                int fd = shm_open("/artcode_instances", O_CREAT | O_EXCL | O_RDWR, 0666);
-                first_init = fd != -1;
-                // immidiate close if fd already exist
-                if (!first_init) {
-                    fd = shm_open("/artcode_instances", O_RDWR, 0666);
-                } else {
-                    // TODO:add proper error handling
-                    const auto result = ftruncate(fd, region_size);
-                    if (result == -1) {
-                        std::cerr << "truncate failed!" << std::endl;
-                        return;
-                    }
+#else
+            // uses POSIX functions, returns -1 cuz of O_EXCL if process exists
+            int fd     = shm_open("/artcode_instances", O_CREAT | O_EXCL | O_RDWR, 0666);
+            first_init = fd != -1;
+            // immidiate close if fd already exist
+            if (!first_init) {
+                fd = shm_open("/artcode_instances", O_RDWR, 0666);
+            } else {
+                // TODO:add proper error handling
+                const auto result = ftruncate(fd, region_size);
+                if (result == -1) {
+                    std::cerr << "truncate failed!" << std::endl;
+                    return;
                 }
-                region = (Shared::Region*)mmap(nullptr, region_size,
-                                           PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+            }
+            region = (Shared::Region*)mmap(nullptr, region_size, PROT_READ | PROT_WRITE,
+                                           MAP_SHARED, fd, 0);
 
-                close(fd);
-            #endif
+            close(fd);
+#endif
             if (first_init)
                 Shared::Memory::reset_instance();
         }
@@ -140,13 +143,13 @@ namespace Shared {
         // means if program crashes, undefined behaviour causing a crash this function
         // doesnt get executed, find a way to execute this no matter what happen!
         static void cleanup() {
-            #ifdef _WIN32
-                UnmapViewOfFile(ptr);
-                CloseHandle(hmap_file);
-            #else
-                munmap(region, sizeof(Shared::Region));
-                shm_unlink("/artcode_instances");
-            #endif
+#ifdef _WIN32
+            UnmapViewOfFile(ptr);
+            CloseHandle(hmap_file);
+#else
+            munmap(region, sizeof(Shared::Region));
+            shm_unlink("/artcode_instances");
+#endif
         }
 
         static void register_constants(const PushConstants& push_const) {
