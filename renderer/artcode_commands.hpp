@@ -22,8 +22,8 @@ class ArtcodeCommands {
 
     const int &graphics_family, MAX_FRAMES_IN_FLIGHT;
 
-    // max num of instnaces from the shapes
-    const uint32_t max_instances = 500;
+    // max num of instances from the shapes
+    const uint32_t max_instances = 1;
 
     void artcode_create_command_pool();
 

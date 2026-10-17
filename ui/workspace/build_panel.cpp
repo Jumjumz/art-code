@@ -119,7 +119,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
     // execute and use gcc compiler
     {
         const auto&       project_dir = ProjectPath::get_project_path();
-        const std::string build       = project_dir / "build/artcode";
+        const std::string build       = project_dir.string() + "build/artcode";
 
         // TODO:might need to move the shader compilation to compile
         switch (flag) {
@@ -135,6 +135,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
                 fs::path api_dir = exe_dir / "api";
 
                 // NOTE:in the future support multiple compilers
+                // TODO:add msvc compiler as an option
                 // compile c++
                 cmd += "g++ -std=c++20 " + executables;
                 // compile main with artcode shared lib
@@ -168,9 +169,18 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
 };
 
 // TODO:add progress bar/indicator when executing this function
+// add windows implementation
 int BuildPanel::execute(const std::string& cmd) {
     std::string result = "";
-    FILE*       pipe   = popen(cmd.c_str(), "r");
+    FILE*       pipe   = nullptr;
+    int         exit_code = 1;
+
+    #ifdef _WIN32
+        pipe = _popen(cmd.c_str(), "r");
+    #else
+        pipe = popen(cmd.c_str(), "r");
+    #endif
+    
     if (!pipe) {
         int return_err_code = -1;
         result              = "Failed to run the command. Error occured somewhere";
@@ -186,11 +196,14 @@ int BuildPanel::execute(const std::string& cmd) {
     while (fgets(buffer, sizeof(buffer), pipe)) {
         result += buffer;
     }
-
-    int exit_code = pclose(pipe);
+    #ifdef _WIN32
+        exit_code = _pclose(pipe);
+    #else
+        exit_code = pclose(pipe);
+    #endif
     // set global variables
     ExecuteResult::set_exit_code(exit_code);
     ExecuteResult::set_result(result);
-
+    
     return exit_code;
 };

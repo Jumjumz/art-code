@@ -2,6 +2,7 @@
 #include "artcode_instance.hpp"
 #include <cassert>
 #include <cmath>
+#include <numbers>
 
 struct InstanceRegistry {
     static void register_instance(detail::IPen* shape) {
@@ -54,10 +55,10 @@ Vec2 mesh_size(const ArrayVec2& vertices) {
     float max_y = -FLT_MAX, min_y = FLT_MAX;
 
     for (const auto& vertex : vertices) {
-        max_x = std::max(max_x, vertex.x);
-        min_x = std::min(min_x, vertex.x);
-        max_y = std::max(max_y, vertex.y);
-        min_y = std::min(min_y, vertex.y);
+        max_x = glm::max<float>(max_x, vertex.x);
+        min_x = glm::min<float>(min_x, vertex.x);
+        max_y = glm::max<float>(max_y, vertex.y);
+        min_y = glm::min<float>(min_y, vertex.y);
     }
 
     return Vec2{max_x - min_x, max_y - min_y};
@@ -117,7 +118,7 @@ ArrayVec2 DrawCircle::generate_vertices() const {
 
     const size_t num_seg = 8;
     for (size_t i = 0; i < num_seg; i++) {
-        float angle = i * 2.0f * M_PI / num_seg;
+        float angle = i * 2.0f * std::numbers::pi / num_seg;
 
         vertex.push_back(Vec4{this->position.x + cos(angle) * this->radius,
                               this->position.y + sin(angle) * this->radius, 2.0f, 2.0f});
@@ -179,8 +180,8 @@ Vec2 DrawPen::shape_data() {
     // decide if a pen render is correct in sdf or not
     Vec2 position = Vec2(FLT_MAX, FLT_MAX);
     for (const auto& verts : generate_vertices()) {
-        position.x = glm::min(position.x, verts.x);
-        position.y = glm::min(position.y, verts.y);
+        position.x = glm::min<float>(position.x, verts.x);
+        position.y = glm::min<float>(position.y, verts.y);
     }
     this->position = position;
 

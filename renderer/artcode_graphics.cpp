@@ -50,7 +50,7 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
         ubo_layout_binding, skew_ssbo_layout_binding, pen_ssbo_layout_binding};
 
     vk::DescriptorSetLayoutCreateInfo descriptor_info{};
-    descriptor_info.bindingCount = layout_bindings.size();
+    descriptor_info.bindingCount = static_cast<uint32_t>(layout_bindings.size());
     descriptor_info.pBindings    = layout_bindings.data();
 
     this->artcode_set_layout =
@@ -151,7 +151,7 @@ void ArtcodeGraphics::create_pipeline() {
     this->layout = vk::raii::PipelineLayout{this->device, layout_info, nullptr};
 
     vk::GraphicsPipelineCreateInfo pipeline_info{};
-    pipeline_info.stageCount          = this->shader_stages.size();
+    pipeline_info.stageCount          = static_cast<uint32_t>(this->shader_stages.size());
     pipeline_info.pStages             = this->shader_stages.data();
     pipeline_info.pNext               = &rendering_info;
     pipeline_info.pVertexInputState   = &vertex_info;

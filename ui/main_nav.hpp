@@ -9,7 +9,11 @@ class MainNavigation {
     void render();
 
   private:
-    const char*        home_dir    = getenv("HOME");
+    #ifdef _WIN32
+        const char* home_dir = getenv("USERPROFILE");
+    #else
+        const char* home_dir = getenv("HOME");
+    #endif
     ImGui::FileBrowser file_dialog = ImGui::FileBrowser{
         ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir,
         home_dir};

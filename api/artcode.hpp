@@ -6,6 +6,16 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+    #ifdef API_EXPORTS
+        #define API_EXPORT __declspec(dllexport)
+    #else
+        #define API_EXPORT __declspec(dllimport)
+    #endif
+#else
+    #define API_EXPORT
+#endif
+
 // strings
 typedef std::string string;
 
@@ -84,7 +94,7 @@ template <typename T> using VectorT             = std::vector<T>;
 
 // TODO:remove vertices and indices generation funcions
 namespace detail {
-    class IPen {
+    class API_EXPORT IPen {
       public:
         virtual ~IPen() = default;
 
@@ -140,7 +150,7 @@ namespace detail {
 } // namespace detail
 
 namespace Art {
-    class Quad : public detail::IPen {
+    class API_EXPORT Quad : public detail::IPen {
       public:
         Quad();
 
@@ -152,7 +162,7 @@ namespace Art {
         int       shape_type() const override;
     };
 
-    class Circle : public detail::IPen {
+    class API_EXPORT Circle : public detail::IPen {
       public:
         Circle();
 
@@ -165,7 +175,7 @@ namespace Art {
     };
 
     // TODO:this triangle should be a free form triangle, base and height is not needed
-    class Triangle : public detail::IPen {
+    class API_EXPORT Triangle : public detail::IPen {
       public:
         Triangle();
 
@@ -175,7 +185,7 @@ namespace Art {
         int       shape_type() const override;
     };
 
-    class Pen : public detail::IPen {
+    class API_EXPORT Pen : public detail::IPen {
       public:
         Pen();
 
@@ -188,7 +198,7 @@ namespace Art {
     // sets background color of the canvas
     inline string backgroundColor = "#FFFFFF";
 
-    void Draw();
+    void API_EXPORT Draw();
 }; // namespace Art
 
 // TODO:add expresssion templates

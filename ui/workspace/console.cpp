@@ -12,7 +12,7 @@ void Console::render() {
     const auto exit_code      = ExecuteResult::get_exit_code();
 
     ImGui::PushFont(this->font);
-    ImGui::TextUnformatted(project_path.c_str());
+    ImGui::TextUnformatted(project_path.string().c_str());
     // 0 != compilation errors/runtime errors (seg faults)
     if (exit_code != 0) {
         ImGui::Text("%s", execute_result.c_str());

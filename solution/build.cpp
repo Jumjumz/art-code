@@ -6,6 +6,7 @@
 #include <ostream>
 
 bool Build::set_project_directory(const fs::path& dir, const glm::vec3& artboard) {
+    // own dir and artboard params to build class members
     this->project_directory = dir;
     this->artboard_size     = artboard;
 
@@ -13,7 +14,7 @@ bool Build::set_project_directory(const fs::path& dir, const glm::vec3& artboard
 };
 
 bool Build::create_project_content() const {
-    const std::vector<fs::path> content_directories = {
+    const std::array<fs::path, 2> content_directories = {
         this->project_directory / "build", this->project_directory / "components"};
     const auto& file_name = this->project_directory.filename().string() + this->sln_ext;
     const auto& solution_path = this->project_directory / file_name;

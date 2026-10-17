@@ -33,7 +33,12 @@ class StartScreen {
 
     Build build;
 
-    const char* home = getenv("HOME"); // set home directory
+    // TODO:update this
+    #ifdef _WIN32
+        const char* home = getenv("USERPROFILE"); 
+    #else
+        const char* home = getenv("HOME"); 
+    #endif 
 
     ImGui::FileBrowser file_dialog = ImGui::FileBrowser(
         ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_SelectDirectory,

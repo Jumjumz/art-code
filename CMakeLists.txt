@@ -84,15 +84,19 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 add_dependencies(${PROJECT_NAME} assets)
 add_dependencies(${PROJECT_NAME} shaders)
 
+#TODO:this fails on windows because this is for GCC and clang
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_options(${PROJECT_NAME} PRIVATE
-  -fsanitize=address
-  -fno-omit-frame-pointer
-  -g3
-  -O0
-  -Wall
-  -Wextra
-)
-
-  target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+  if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+  else()
+    target_compile_options(${PROJECT_NAME} PRIVATE
+      -fsanitize=address
+      -fno-omit-frame-pointer
+      -g3
+      -O0
+      -Wall
+      -Wextra
+    )
+    target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+  endif()
 endif()

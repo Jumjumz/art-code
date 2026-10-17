@@ -198,7 +198,7 @@ void CanvasRenderer::canvas_events(GLFWwindow* app_window) {
             return;
 
         if (canvas->ctrl_pressed) {
-            CanvasControls::zoom += y * 0.10;
+            CanvasControls::zoom += static_cast<float>(y) * 0.10f;
             CanvasControls::zoom  = glm::clamp(CanvasControls::zoom, 0.1f, 10.0f);
         }
     });
@@ -256,7 +256,7 @@ void CanvasRenderer::save_art() {
         // missing, also sets to .png if passed extension is wrong
         save_path.replace_extension(".png");
 
-        stbi_write_png(save_path.c_str(), width, height, 4, data, width * 4);
+        stbi_write_png(save_path.string().c_str(), width, height, 4, data, width * 4);
 
         // unmap after creating
         staging_memory.unmapMemory();

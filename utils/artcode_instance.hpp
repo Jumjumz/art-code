@@ -5,10 +5,15 @@
 #include <fcntl.h>
 #include <glm/glm.hpp>
 #include <iostream>
-#include <sys/mman.h>
-#include <unistd.h>
+// NOTE:for now this projects only works for windows and linux
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <sys/mman.h>
+    #include <unistd.h>
+#endif
 
-// this header uses the artcode typedef such as Vec2, ArrayT and such,
+// NOTE:this header uses the artcode typedef such as Vec2, ArrayT and such,
 // to avoid confusion and for the sake of consistency, only this header file uses the
 // artcode typedef and nothing else
 struct PHandle {
@@ -32,7 +37,6 @@ struct SkewData {
     ArrayT<SkewPos, 8> skew_pos;
 };
 
-// TODO:shape data will be pass in push constants, except for shapes or intances that needed vertices and indices
 struct PushConstants {
     Vec4  bg_color;
     Vec4  color;
@@ -62,28 +66,72 @@ namespace Shared {
         ArrayT<Shared::Instance, 500> instance;
     };
 
+    inline static HANDLE hmap_file = nullptr;
+    inline static void*  ptr       = nullptr;
+
     struct Memory {
         static inline Shared::Region* region;
-        // TODO:add windows implementation for shared memory
+
         static void load_shared_memory() {
-            // uses POSIX functions, returns -1 cuz of O_EXCL if process exists
-            int fd = shm_open("/artcode_instances", O_CREAT | O_EXCL | O_RDWR, 0666);
-            const bool first_init = fd != -1;
-            // immidiate close if fd already exist
-            if (!first_init) {
-                fd = shm_open("/artcode_instances", O_RDWR, 0666);
-            } else {
-                const auto result = ftruncate(fd, sizeof(Shared::Region));
-                if (result == -1) {
-                    std::cerr << "truncate failed!" << std::endl;
+            bool   first_init      = false;
+            const auto region_size = sizeof(Shared::Region);
+            #ifdef _WIN32
+            // open shared memory first
+            hmap_file = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, "Local\\artcode_instances");
+
+            if (hmap_file == nullptr) {
+                // create if not exist yet
+                hmap_file =
+                    CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0,
+                                      region_size, "Local\\artcode_instances");
+                
+                if (hmap_file != NULL || hmap_file != INVALID_HANDLE_VALUE) {
+                    ptr = MapViewOfFile(hmap_file, FILE_MAP_ALL_ACCESS, 0, 0, region_size);
+
+                    if (ptr != NULL || ptr == INVALID_HANDLE_VALUE) {
+                        CloseHandle(hmap_file);
+                        assert("Failed to read shared memory!");
+                        return;
+                    }
+                } else {
+                    assert("Failed to create shared memory!");
                     return;
                 }
+                // set region
+                region = static_cast<Shared::Region*>(ptr);
+
+                first_init = true;
+            } else {
+                ptr = MapViewOfFile(hmap_file, FILE_MAP_ALL_ACCESS, 0, 0, region_size);
+
+                if (ptr == nullptr) {
+                    CloseHandle(hmap_file);
+                    assert("Failed to read shared memory!");
+                    return;
+                }
+                // set region
+                region = static_cast<Shared::Region*>(ptr);
             }
-            region = (Shared::Region*)mmap(nullptr, sizeof(Shared::Region),
+            #else
+                // uses POSIX functions, returns -1 cuz of O_EXCL if process exists
+                int fd = shm_open("/artcode_instances", O_CREAT | O_EXCL | O_RDWR, 0666);
+                first_init = fd != -1;
+                // immidiate close if fd already exist
+                if (!first_init) {
+                    fd = shm_open("/artcode_instances", O_RDWR, 0666);
+                } else {
+                    // TODO:add proper error handling
+                    const auto result = ftruncate(fd, region_size);
+                    if (result == -1) {
+                        std::cerr << "truncate failed!" << std::endl;
+                        return;
+                    }
+                }
+                region = (Shared::Region*)mmap(nullptr, region_size,
                                            PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
-            close(fd);
-
+                close(fd);
+            #endif
             if (first_init)
                 Shared::Memory::reset_instance();
         }
@@ -92,8 +140,13 @@ namespace Shared {
         // means if program crashes, undefined behaviour causing a crash this function
         // doesnt get executed, find a way to execute this no matter what happen!
         static void cleanup() {
-            munmap(region, sizeof(Shared::Region));
-            shm_unlink("/artcode_instances");
+            #ifdef _WIN32
+                UnmapViewOfFile(ptr);
+                CloseHandle(hmap_file);
+            #else
+                munmap(region, sizeof(Shared::Region));
+                shm_unlink("/artcode_instances");
+            #endif
         }
 
         static void register_constants(const PushConstants& push_const) {
@@ -146,6 +199,7 @@ namespace Shared {
 
         static void increment_instance_size() { region->size++; }
 
+        // TODO:add proper error handling
         static void check_instance_size() {
             if (!region || region->size > 500) {
                 assert(

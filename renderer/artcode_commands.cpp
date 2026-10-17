@@ -48,7 +48,7 @@ void ArtcodeCommands::artcode_create_descriptor_pool() {
     vk::DescriptorPoolCreateInfo pool_info{};
     pool_info.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
     pool_info.maxSets       = this->max_instances;
-    pool_info.poolSizeCount = pool_size.size();
+    pool_info.poolSizeCount = static_cast<uint32_t>(pool_size.size());
     pool_info.pPoolSizes    = pool_size.data();
 
     this->artcode_descriptor_pool =
@@ -61,7 +61,7 @@ void ArtcodeCommands::artcode_create_descriptor_set() {
 
     vk::DescriptorSetAllocateInfo set_alloc_info{};
     set_alloc_info.descriptorPool     = *this->artcode_descriptor_pool;
-    set_alloc_info.descriptorSetCount = layouts.size();
+    set_alloc_info.descriptorSetCount = static_cast<uint32_t>(layouts.size());
     set_alloc_info.pSetLayouts        = layouts.data();
 
     this->artcode_descriptor_sets = this->device.allocateDescriptorSets(set_alloc_info);
