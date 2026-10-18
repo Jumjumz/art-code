@@ -5,9 +5,12 @@
 #include "vk_types.hpp"
 
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <filesystem>
 #include <fstream>
+#include <iostream>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace fs = std::filesystem;
 
@@ -118,15 +121,50 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
     std::string cmd;
     // execute and use gcc compiler
     {
-        const auto&       project_dir = ProjectPath::get_project_path();
-        const std::string build       = project_dir.string() + "/build/artcode";
+        const auto&           project_dir = ProjectPath::get_project_path();
+        std::filesystem::path build       = "";
+#ifdef _WIN32
+        build = project_dir / "build";
+#else
+        build = project_dir / "build" / "artcode";
+#endif
 
         // TODO:might need to move the shader compilation to compile
         switch (flag) {
         case BuildPanel::Flags::C: {
+            const auto executables = executable_files();
+            // NOTE:in the future support multiple compilers
             // compile user codes
+#ifdef _WIN32
             {
-                const auto executables = executable_files();
+                char exe_path[MAX_PATH];
+                GetModuleFileNameA(nullptr, exe_path, MAX_PATH);
+                fs::path exe_dir = fs::path(exe_path).parent_path();
+                fs::path api_dir = exe_dir / "api";
+
+                cmd  = "cd " + project_dir.string();
+                cmd += " && ";
+                // TODO:make finding the vcvars64.bat dynamic
+                cmd += "\"C:\\Program Files\\Microsoft Visual "
+                       "Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\"";
+                cmd += " && ";
+                // MSVC compiler
+                cmd += "cl /EHsc /std:c++20 /MT " + executables;
+                cmd += "/I\"" + api_dir.string() + "\" "; // include dir
+
+                // output location
+                cmd += "/Fo:\"" + build.string() + "\\\\\" "; // obj to build dir
+                cmd += "/link ";
+                cmd += "\"" + (api_dir / "api.lib").string() + "\" ";        // link .lib
+                cmd += "/OUT:\"" + (build / "artcode.exe").string() + "\" "; // exe output
+                cmd += " 2>&1";
+
+                // Copy api.dll
+                fs::copy_file(api_dir / "api.dll", build / "api.dll",
+                              fs::copy_options::overwrite_existing);
+            }
+#else
+            {
                 // change to project dir before compiling
                 cmd  = "cd " + project_dir.string();
                 cmd += " && ";
@@ -134,27 +172,24 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
                 fs::path exe_dir = fs::canonical("/proc/self/exe").parent_path();
                 fs::path api_dir = exe_dir / "api";
 
-                // NOTE:in the future support multiple compilers
-                // TODO:add msvc compiler as an option
-                // compile c++
+                // compile using gcc
                 cmd += "g++ -std=c++20 " + executables;
                 // compile main with artcode shared lib
                 cmd += "-I" + api_dir.string() + " ";
                 cmd += "-L" + api_dir.string() + " ";
                 cmd += "-lapi ";
                 cmd += "-Wl,-rpath," + api_dir.string() + " ";
-                cmd += "-o " + build + " 2>&1";
-                // static lib
-                /*cmd += "g++ -std=c++20 " + executables;
-                // compile main with artcode shared lib
-                cmd += "-I" + api_dir.string() + " ";
-                cmd += api_dir.string() + "/libapi.a ";
-                cmd += "-o " + build + " 2>&1"; */
+                cmd += "-o " + build.string() + " 2>&1";
             }
+#endif
             break;
         };
         case BuildPanel::Flags::R: {
-            cmd      = build;
+#ifdef _WIN32
+            cmd = (build / "artcode.exe").string();
+#else
+            cmd = build.string();
+#endif
             int exit = execute(cmd);
             if (exit != 0)
                 break;
@@ -180,8 +215,7 @@ int BuildPanel::execute(const std::string& cmd) {
 #else
     pipe = popen(cmd.c_str(), "r");
 #endif
-
-    if (!pipe) {
+    if (pipe == nullptr) {
         int return_err_code = -1;
         result              = "Failed to run the command. Error occured somewhere";
         ExecuteResult::set_result(result);
@@ -204,6 +238,8 @@ int BuildPanel::execute(const std::string& cmd) {
     // set global variables
     ExecuteResult::set_exit_code(exit_code);
     ExecuteResult::set_result(result);
+    std::cout << "result: " << result << std::endl;
+    std::cout << "exit code: " << exit_code << std::endl;
 
     return exit_code;
 };

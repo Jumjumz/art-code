@@ -1,7 +1,6 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
 #include <cassert>
-#include <cmath>
 #include <numbers>
 
 struct InstanceRegistry {
@@ -120,8 +119,9 @@ ArrayVec2 DrawCircle::generate_vertices() const {
     for (size_t i = 0; i < num_seg; i++) {
         float angle = i * 2.0f * std::numbers::pi / num_seg;
 
-        vertex.push_back(Vec4{this->position.x + cos(angle) * this->radius,
-                              this->position.y + sin(angle) * this->radius, 2.0f, 2.0f});
+        vertex.push_back(Vec4{this->position.x + glm::cos(angle) * this->radius,
+                              this->position.y + glm::sin(angle) * this->radius, 2.0f,
+                              2.0f});
     }
     return vertex;
 };
@@ -164,7 +164,6 @@ ArrayVec2 DrawPen::generate_vertices() const {
         const auto& pos0 = this->positions[i];
         if (pos0.handles.handle) {
             const auto& pos1 = pos0.handles;
-            const auto& pos2 = this->positions[i + 1];
 
             vertex.push_back(pos0.position);
             vertex.push_back(pos1.handlePosition);

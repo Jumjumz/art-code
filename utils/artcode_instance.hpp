@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <glm/glm.hpp>
-#include <iostream>
 // NOTE:for now this projects only works for windows and linux
 #ifdef _WIN32
 #include <windows.h>

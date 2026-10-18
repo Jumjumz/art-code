@@ -7,13 +7,13 @@
 #include <vector>
 
 #ifdef _WIN32
-    #ifdef API_EXPORTS
-        #define API_EXPORT __declspec(dllexport)
-    #else
-        #define API_EXPORT __declspec(dllimport)
-    #endif
+#ifdef API_EXPORTS
+#define API_EXPORT __declspec(dllexport)
 #else
-    #define API_EXPORT
+#define API_EXPORT __declspec(dllimport)
+#endif
+#else
+#define API_EXPORT
 #endif
 
 // strings

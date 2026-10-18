@@ -40,9 +40,12 @@ void ArtcodeCommands::artcode_create_command_buffer() {
 
 // TODO:move this somewhere! or have a better way for other buffers to access this
 void ArtcodeCommands::artcode_create_descriptor_pool() {
-    std::array<vk::DescriptorPoolSize, 2> pool_size{
+    constexpr uint32_t NUM_OF_SSBO = 2; // skew and pen
+
+    std::array<vk::DescriptorPoolSize, 2> pool_size = {
         vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, this->max_instances},
-        vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, this->max_instances}};
+        vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer,
+                               this->max_instances * NUM_OF_SSBO}};
 
     vk::DescriptorPoolCreateInfo pool_info{};
     pool_info.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;

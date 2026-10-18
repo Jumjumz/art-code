@@ -13,7 +13,7 @@ void Console::render() {
 
     ImGui::PushFont(this->font);
     ImGui::TextUnformatted(project_path.string().c_str());
-    // 0 != compilation errors/runtime errors (seg faults)
+    // 0 != compilation errors/runtime errors (seg faults etc.)
     if (exit_code != 0) {
         ImGui::Text("%s", execute_result.c_str());
     } else {

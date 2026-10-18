@@ -7,19 +7,18 @@ if (WIN32)
   target_compile_definitions(api PRIVATE
     $<$<BOOL:${WIN32}>:API_EXPORTS>
   )
-
-  add_custom_command(TARGET api POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_CURRENT_SOURCE_DIR}/artcode.hpp
-    ${CMAKE_CURRENT_BINARY_DIR}/artcode.hpp
-  )
-else()
-  add_custom_command(TARGET api POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_CURRENT_SOURCE_DIR}/artcode.hpp
-    ${CMAKE_CURRENT_BINARY_DIR}/artcode.hpp
-  )
 endif()
+add_custom_command(TARGET api POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy
+  ${CMAKE_CURRENT_SOURCE_DIR}/artcode.hpp
+  ${CMAKE_CURRENT_BINARY_DIR}/artcode.hpp
+)
+# include glm headers
+add_custom_command(TARGET api POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${glm_SOURCE_DIR}/glm
+  ${CMAKE_CURRENT_BINARY_DIR}/glm
+)
 
 target_include_directories(api
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
