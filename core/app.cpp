@@ -214,7 +214,7 @@ void Application::submit_buffers(const std::vector<vk::CommandBuffer>& command_b
         &*this->commands.finished_semaphores[this->current_frame];
     present_info.swapchainCount = 1;
     present_info.pSwapchains    = &*this->swapchain.swapchain;
-    present_info.pImageIndices  = &image_index;
+    present_info.pImageIndices  = &this->image_index;
 
     this->draw_result = this->ctx.present_queue.presentKHR(present_info);
 

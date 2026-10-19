@@ -66,7 +66,7 @@ void VulkanCommands::create_sync_objects() {
         this->finished_semaphores.emplace_back(this->device, vk::SemaphoreCreateInfo());
     }
 
-    for (size_t i = 0; i < (size_t)this->MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(this->MAX_FRAMES_IN_FLIGHT); i++) {
         this->available_semaphores.emplace_back(this->device, vk::SemaphoreCreateInfo());
 
         vk::FenceCreateInfo fence_info{};

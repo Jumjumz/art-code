@@ -7,7 +7,6 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -149,7 +148,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
                        "Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\"";
                 cmd += " && ";
                 // MSVC compiler
-                cmd += "cl /EHsc /std:c++20 /MT " + executables;
+                cmd += "cl /EHsc /std:c++20 /GS- /MT " + executables;
                 cmd += "/I\"" + api_dir.string() + "\" "; // include dir
 
                 // output location
@@ -185,15 +184,16 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
             break;
         };
         case BuildPanel::Flags::R: {
+            int exit = 0;
 #ifdef _WIN32
-            cmd = (build / "artcode.exe").string();
+            cmd  = (build / "artcode.exe").string();
+            exit = execute(cmd);
 #else
-            cmd = build.string();
-#endif
-            int exit = execute(cmd);
+            cmd  = build.string();
+            exit = execute(cmd);
             if (exit != 0)
                 break;
-
+#endif
             ShadersCompiled::is_compiled = true;
             break;
         };
@@ -238,8 +238,6 @@ int BuildPanel::execute(const std::string& cmd) {
     // set global variables
     ExecuteResult::set_exit_code(exit_code);
     ExecuteResult::set_result(result);
-    std::cout << "result: " << result << std::endl;
-    std::cout << "exit code: " << exit_code << std::endl;
 
     return exit_code;
 };

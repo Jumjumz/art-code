@@ -94,7 +94,6 @@ void CanvasRenderer::update_artcode_buffers() {
         const auto& instance = Shared::Memory::get_instance(i);
 
         this->artcode_buffer->skew_data.push_back(instance.skew_data);
-
         {
             std::vector<PHandle> pen_data(instance.pen_data.items.begin(),
                                           instance.pen_data.items.begin() +

@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <glm/glm.hpp>
+#include <stdexcept>
 // NOTE:for now this projects only works for windows and linux
 #ifdef _WIN32
 #include <windows.h>
@@ -73,6 +74,7 @@ namespace Shared {
     struct Memory {
         static inline Shared::Region* region;
 
+        // TODO:add exceptions
         static void load_shared_memory() {
             bool       first_init  = false;
             const auto region_size = sizeof(Shared::Region);
@@ -81,23 +83,22 @@ namespace Shared {
             hmap_file =
                 OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, "Local\\artcode_instances");
 
-            if (hmap_file == nullptr) {
+            if (hmap_file == NULL) {
                 // create if not exist yet
                 hmap_file =
                     CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0,
                                        region_size, "Local\\artcode_instances");
 
-                if (hmap_file != NULL || hmap_file != INVALID_HANDLE_VALUE) {
+                if (hmap_file != NULL) {
                     ptr = MapViewOfFile(hmap_file, FILE_MAP_ALL_ACCESS, 0, 0, region_size);
 
-                    if (ptr != NULL || ptr == INVALID_HANDLE_VALUE) {
+                    if (ptr == NULL) {
                         CloseHandle(hmap_file);
-                        assert("Failed to read shared memory!");
-                        return;
+                        throw std::runtime_error(
+                            "Failed to create and read shared memory!");
                     }
                 } else {
-                    assert("Failed to create shared memory!");
-                    return;
+                    throw std::runtime_error("Failed to create shared memory!");
                 }
                 // set region
                 region = static_cast<Shared::Region*>(ptr);
@@ -108,8 +109,7 @@ namespace Shared {
 
                 if (ptr == nullptr) {
                     CloseHandle(hmap_file);
-                    assert("Failed to read shared memory!");
-                    return;
+                    throw std::runtime_error("Failed to read shared memory!");
                 }
                 // set region
                 region = static_cast<Shared::Region*>(ptr);
@@ -125,7 +125,7 @@ namespace Shared {
                 // TODO:add proper error handling
                 const auto result = ftruncate(fd, region_size);
                 if (result == -1) {
-                    std::cerr << "truncate failed!" << std::endl;
+                    assert("truncate failed!");
                     return;
                 }
             }
@@ -166,7 +166,7 @@ namespace Shared {
             inst.skew_data = skew_data;
         }
 
-        static void register_pen_data(const VectorT<PenHandles>& pen_handles) {
+        static void register_pen_data(const ArrayT<PenHandles, 500>& pen_handles) {
             check_instance_size();
 
             auto& inst = region->instance[region->size];
@@ -174,12 +174,10 @@ namespace Shared {
             size_t i = 0;
             // flatten the pen_handles array
             while (i < pen_handles.size()) {
-                // set to segment
-                inst.pen_data.items[inst.pen_data.size].position = pen_handles[i].position;
-                // id = 1 indicates that this position starts for a segment
-                inst.pen_data.items[inst.pen_data.size].id = 1;
                 if (pen_handles[i].handles.handle) {
                     // id = 0 indicates that this position starts for a curve
+                    inst.pen_data.items[inst.pen_data.size].position =
+                        pen_handles[i].position;
                     inst.pen_data.items[inst.pen_data.size].id = 0;
 
                     // increment to insert to the next item
@@ -191,10 +189,14 @@ namespace Shared {
                 } else {
                     inst.pen_data.items[inst.pen_data.size].position =
                         pen_handles[i].position;
-                    // id = 1 indicates that this position is a segment
+                    // id = 1 indicates that this position starts and ends in segment
                     inst.pen_data.items[inst.pen_data.size].id = 1;
                 }
                 i++;
+                // immidiate exit
+                if (i == pen_handles.size())
+                    break;
+
                 inst.pen_data.size++;
             }
         }

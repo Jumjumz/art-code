@@ -128,8 +128,8 @@ namespace detail {
         // only, have a way to hide this
         Vec2 v0, v1, v2;
 
-        // TODO:should not be avialble for other shapes, only for pen
-        VectorT<PenHandles> positions;
+        // TODO:should not be available for other shapes, only for pen
+        ArrayT<PenHandles, 500> positions;
         // must implement
         virtual ArrayVec2 generate_vertices() const = 0;
         // NOTE:new functions for sdf to work

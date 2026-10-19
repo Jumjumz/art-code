@@ -1,6 +1,11 @@
 #include "artcode_graphics.hpp"
 #include "artcode_instance.hpp"
+#include <filesystem>
 #include <fstream>
+#ifdef _WIN32
+#include <minwindef.h>
+#else
+#endif
 
 ArtcodeGraphics::ArtcodeGraphics(const vk::raii::Device& device, vk::Format& image_format)
     : device(device),
@@ -58,11 +63,20 @@ void ArtcodeGraphics::create_descriptor_set_layout() {
 };
 
 void ArtcodeGraphics::create_shaders() {
+    // get correct path to shaders spv files for both windows and linux platforms
+    std::filesystem::path exe_dir;
+#ifdef _WIN32
+    char exe_path[MAX_PATH];
+    GetModuleFileName(nullptr, exe_path, MAX_PATH);
+    exe_dir = std::filesystem::path(exe_path).parent_path();
+#else
+    exe_dir = std::filesystem::canonical("/proc/self/exe").parent_path();
+#endif
+    const auto vert = exe_dir / "shaders" / "artcode.vert.spv";
+    const auto frag = exe_dir / "shaders" / "artcode.frag.spv";
     // create shaders
-    this->vert_shader_module =
-        create_shader_module(read_file("shaders/artcode.vert.spv"));
-    this->frag_shader_module =
-        create_shader_module(read_file("shaders/artcode.frag.spv"));
+    this->vert_shader_module = create_shader_module(read_file(vert.string()));
+    this->frag_shader_module = create_shader_module(read_file(frag.string()));
 
     vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
     vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;

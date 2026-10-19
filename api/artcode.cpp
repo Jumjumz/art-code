@@ -2,13 +2,12 @@
 #include "artcode_instance.hpp"
 #include <cassert>
 #include <numbers>
+#include <stdexcept>
 
 struct InstanceRegistry {
     static void register_instance(detail::IPen* shape) {
-        if (array_size > 500) {
-            assert("Max instances of shape registered exceeded");
-            return;
-        }
+        if (array_size > 500)
+            throw std::runtime_error("Max instance reach. Shapes instances max is 500!");
 
         instances[array_size] = shape;
         array_size++;

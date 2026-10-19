@@ -1,6 +1,11 @@
 #include "vulkan_graphics.hpp"
 #include "artcode_instance.hpp"
+#include <filesystem>
 #include <fstream>
+#ifdef _WIN32
+#include <minwindef.h>
+#else
+#endif // _WIN32
 
 VulkanGraphics::VulkanGraphics(const vk::raii::Device& device,
                                const vk::Format&       image_format)
@@ -49,9 +54,20 @@ void VulkanGraphics::create_descriptor_set_layout() {
 };
 
 void VulkanGraphics::create_shaders() {
-    this->vert_shader_module = create_shader_module(read_file("shaders/core.vert.spv"));
+    std::filesystem::path exe_dir;
+#ifdef _WIN32
+    char exe_path[MAX_PATH];
+    GetModuleFileName(nullptr, exe_path, MAX_PATH);
+    exe_dir = std::filesystem::path(exe_path).parent_path();
+#else
+    exe_dir = std::filesystem::canonical("/proc/self/exe").parent_path();
+#endif
+    const auto vert = exe_dir / "shaders" / "core.vert.spv";
+    const auto frag = exe_dir / "shaders" / "core.frag.spv";
+
+    this->vert_shader_module = create_shader_module(read_file(vert.string()));
     // uses project shader from api user
-    this->frag_shader_module = create_shader_module(read_file("shaders/core.frag.spv"));
+    this->frag_shader_module = create_shader_module(read_file(frag.string()));
 
     vk::PipelineShaderStageCreateInfo vert_shader_stage_info{};
     vert_shader_stage_info.stage  = vk::ShaderStageFlagBits::eVertex;
