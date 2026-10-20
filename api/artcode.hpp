@@ -8,12 +8,12 @@
 
 #ifdef _WIN32
 #ifdef API_EXPORTS
-#define API_EXPORT __declspec(dllexport)
+#define ARTCODE_API __declspec(dllexport)
 #else
-#define API_EXPORT __declspec(dllimport)
+#define ARTCODE_API __declspec(dllimport)
 #endif
 #else
-#define API_EXPORT
+#define ARTCODE_API
 #endif
 
 // strings
@@ -46,6 +46,8 @@ typedef std::vector<u16>    ArrayU16;
 typedef std::vector<u32>    ArrayU32;
 typedef std::vector<u64>    ArrayU64;
 
+template <typename T, size_t size> using ArrayT = std::array<T, size>;
+template <typename T> using VectorT             = std::vector<T>;
 // TODO:currently this can receive chars or strings, update to only receive NUMBERS
 //  squared and cubic
 template <typename T> T squared(T sq) { return sq * sq; };
@@ -89,16 +91,13 @@ struct PenHandles {
     Handles handles;
 };
 
-template <typename T, size_t size> using ArrayT = std::array<T, size>;
-template <typename T> using VectorT             = std::vector<T>;
-
 // TODO:remove vertices and indices generation funcions
-namespace detail {
-    class API_EXPORT IPen {
+/*namespace detail {
+    class ARTCODE_API IShape {
       public:
-        virtual ~IPen() = default;
+        virtual ~IShape() = default;
 
-        IPen()
+        IShape()
             : position(200, 200),
               color("#000000"),
               stroke(10.0f),
@@ -110,18 +109,13 @@ namespace detail {
               v0(100, 0),
               v1(0, 150),
               v2(200, 150),
-              positions({{}}) {}
+              positions({{{}}}) {}
 
         // TODO:make skewPos a function.. or change the way skew pos syntax wise
         // uses camel case for users, snake case for api implementation
-        // TODO: replace position with PenHeandles struct, as in the future a warp feature will be added
-        Vec2  position;
-        Color color;
-        float stroke;
-        float rotate;
-        float opacity;
-        bool  fill;
-        bool  skew;
+        // TODO: replace position with PenHeandles struct, as in the future a warp feature
+will be added Vec2  position; Color color; float stroke; float rotate; float opacity; bool
+fill; bool  skew;
         // TODO:update this to becomprehendable to write and read
         ArrayT<SkewPos, 8> skewPos;
         // TODO:v0, v1, v2 should not be available for other shapes but for triangles
@@ -149,8 +143,8 @@ namespace detail {
     };
 } // namespace detail
 
-namespace Art {
-    class API_EXPORT Quad : public detail::IPen {
+namespace Artt {
+    class ARTCODE_API Quad : public detail::IShape {
       public:
         Quad();
 
@@ -162,7 +156,7 @@ namespace Art {
         int       shape_type() const override;
     };
 
-    class API_EXPORT Circle : public detail::IPen {
+    class ARTCODE_API Circle : public detail::IShape {
       public:
         Circle();
 
@@ -175,7 +169,7 @@ namespace Art {
     };
 
     // TODO:this triangle should be a free form triangle, base and height is not needed
-    class API_EXPORT Triangle : public detail::IPen {
+    class ARTCODE_API Triangle : public detail::IShape {
       public:
         Triangle();
 
@@ -185,7 +179,7 @@ namespace Art {
         int       shape_type() const override;
     };
 
-    class API_EXPORT Pen : public detail::IPen {
+    class ARTCODE_API Pen : public detail::IShape {
       public:
         Pen();
 
@@ -198,7 +192,82 @@ namespace Art {
     // sets background color of the canvas
     inline string backgroundColor = "#FFFFFF";
 
-    void API_EXPORT Draw();
+    void ARTCODE_API Draw();
+};*/ // namespace Artt
+
+namespace Art {
+    class ARTCODE_API Quad {
+      public:
+        Quad();
+
+        Quad& position(float x, float y);
+        Quad& shapeData(float width, float length);
+        Quad& fill(bool fill = true);
+        Quad& rotate(float rotate = 0.0f);
+        Quad& skew(bool skew = false);
+        Quad& skewPos(int index, Vec2 position);
+        Quad& stroke(float stroke = 10.0f);
+        Quad& color(Color color = "#000000", float opacity = 1.0f);
+
+      private:
+        void      center();
+        void      mesh();
+        void      shape_type();
+        ArrayVec2 generate_vertices() const;
+    };
+
+    class ARTCODE_API Circle {
+      public:
+        Circle();
+
+        Circle& position(float x, float y);
+        Circle& shapeData(float radius);
+        Circle& fill(bool fill = false);
+        Circle& rotate(float rotate);
+        Circle& skew(bool skew = false);
+        Circle& skewPos(int index, Vec2 position);
+        Circle& color(Color color);
+
+      private:
+        ArrayVec2 generate_vertices() const;
+        int       shape_type() const;
+    };
+
+    class ARTCODE_API Triangle {
+      public:
+        Triangle();
+
+        Triangle& position(float x, float y);
+        Triangle& shapeData(Vec2 v0, Vec2 v1, Vec2 v2);
+        Triangle& fill(bool fill = false);
+        Triangle& rotate(float rotate);
+        Triangle& skew(bool skew = false);
+        Triangle& skewPos(int index, Vec2 position);
+        Triangle& color(Color color);
+
+      private:
+        ArrayVec2 generate_vertices() const;
+        int       shape_type() const;
+    };
+
+    class ARTCODE_API Pen {
+      public:
+        Pen();
+
+        Pen& point(float x, float y);
+        Pen& curve(float p_x, float p_y, float h_x, float h_y);
+        Pen& fill(bool fill = false);
+        Pen& rotate(float rotate);
+        Pen& skew(bool skew = false);
+        Pen& skewPos(int index, Vec2 position);
+        Pen& color(Color color);
+
+      private:
+        ArrayVec2 generate_vertices() const;
+        int       shape_type() const;
+    };
+
+    ARTCODE_API void Draw();
 }; // namespace Art
 
 // TODO:add expresssion templates

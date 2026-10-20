@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -148,7 +149,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
                        "Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\"";
                 cmd += " && ";
                 // MSVC compiler
-                cmd += "cl /EHsc /std:c++20 /GS- /MT " + executables;
+                cmd += "cl /EHsc /std:c++20 /MT " + executables;
                 cmd += "/I\"" + api_dir.string() + "\" "; // include dir
 
                 // output location
@@ -188,6 +189,8 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
 #ifdef _WIN32
             cmd  = (build / "artcode.exe").string();
             exit = execute(cmd);
+            if (exit != 0)
+                std::cerr << "something went wrong!" << std::endl;
 #else
             cmd  = build.string();
             exit = execute(cmd);
@@ -208,7 +211,7 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
 int BuildPanel::execute(const std::string& cmd) {
     std::string result    = "";
     FILE*       pipe      = nullptr;
-    int         exit_code = 1;
+    int         exit_code = 0;
 
 #ifdef _WIN32
     pipe = _popen(cmd.c_str(), "r");
@@ -238,6 +241,10 @@ int BuildPanel::execute(const std::string& cmd) {
     // set global variables
     ExecuteResult::set_exit_code(exit_code);
     ExecuteResult::set_result(result);
+    // FIXME:somewhere in api, program or wharever causes
+    // exit code of -1073740791 in debug mode when user code
+    // runs at runtime, release works just fine where exit code is 0
+    std::cout << exit_code << std::endl;
 
     return exit_code;
 };

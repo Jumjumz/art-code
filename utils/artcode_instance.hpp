@@ -107,7 +107,7 @@ namespace Shared {
             } else {
                 ptr = MapViewOfFile(hmap_file, FILE_MAP_ALL_ACCESS, 0, 0, region_size);
 
-                if (ptr == nullptr) {
+                if (ptr == NULL) {
                     CloseHandle(hmap_file);
                     throw std::runtime_error("Failed to read shared memory!");
                 }
@@ -206,7 +206,7 @@ namespace Shared {
         // TODO:add proper error handling
         static void check_instance_size() {
             if (!region || region->size > 500) {
-                assert(
+                throw std::runtime_error(
                     "Max instances reached! or something wrong with instance creation!");
                 return;
             }

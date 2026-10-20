@@ -1,11 +1,12 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
 #include <cassert>
+#include <iostream>
 #include <numbers>
 #include <stdexcept>
 
-struct InstanceRegistry {
-    static void register_instance(detail::IPen* shape) {
+/*struct InstanceRegistry {
+    static void register_instance(detail::IShape* shape) {
         if (array_size > 500)
             throw std::runtime_error("Max instance reach. Shapes instances max is 500!");
 
@@ -15,7 +16,7 @@ struct InstanceRegistry {
 
     static size_t get_size() { return array_size; }
 
-    static detail::IPen* get_instance(size_t index) { return instances[index]; }
+    static detail::IShape* get_instance(size_t index) { return instances[index]; }
 
     static void reset_registry() {
         array_size = 0;
@@ -24,11 +25,59 @@ struct InstanceRegistry {
 
   private:
     // init elements to nullptr, max num of instance only allowed
-    static inline ArrayT<detail::IPen*, 500> instances  = {};
-    static inline size_t                     array_size = 0;
+    static inline ArrayT<detail::IShape*, 500> instances  = {};
+    static inline size_t                       array_size = 0;
+};*/
+
+struct ShapeAttributes {
+    Vec4  color      = Vec4{1.0f};
+    Vec2  position   = Vec2{100.0f, 100.0f};
+    Vec2  center     = Vec2{50.0f, 50.0f};
+    Vec2  shape_data = Vec2{50.0f, 50.0f};
+    Vec2  mesh_size  = Vec2{50.0f, 50.0f};
+    Vec2  p0         = Vec2{50.0f, 50.0f};
+    Vec2  p1         = Vec2{50.0f, 50.0f};
+    Vec2  p2         = Vec2{50.0f, 50.0f};
+    float stroke     = 10.0f;
+    float rotate     = 0.0f;
+    int   fill       = 1;
+    int   skew       = 0;
+    int   shape_type = 0;
+};
+
+struct ShapeRegistry {
+    static inline size_t                       size      = 0;
+    static inline ArrayT<ShapeAttributes, 500> instances = {};
+
+    static size_t get_size() { return size; }
+
+    static ShapeAttributes get_shape(size_t index) { return instances[index]; }
+
+    static void check_instance_size() {
+        if (size > 500)
+            throw std::runtime_error(
+                "Max number of shapes reach! Shapes instances max is 500!");
+    }
+
+    static void reset_registry() {
+        size = 0;
+        std::fill(instances.begin(), instances.end(), ShapeAttributes{});
+    }
+
+  private:
 };
 
 enum class ShapeType { Quad, Circle, Triangle, Pen };
+
+// centroid vertices
+Vec2 get_center(const ArrayVec2& vertices) {
+    Vec2 center = {0.0f, 0.0f};
+
+    for (const auto& v : vertices) {
+        center += Vec2{v.x, v.y};
+    }
+    return center /= static_cast<float>(vertices.size());
+};
 
 Vec4 convert_color(const string& color, float opacity) {
     string hex   = color[0] == '#' ? color.substr(1) : color;
@@ -75,12 +124,82 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
             shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
 };
 
+using Quad = Art::Quad;
+
+Quad::Quad() { ShapeRegistry::size++; };
+
+Quad& Quad::position(float x, float y) {
+    ShapeRegistry::instances[ShapeRegistry::size].position = Vec2{x, y};
+    return *this;
+};
+
+Quad& Quad::shapeData(float width, float length) {
+    ShapeRegistry::instances[ShapeRegistry::size].shape_data = Vec2{width, length};
+    return *this;
+};
+
+Quad& Quad::fill(bool fill) {
+    ShapeRegistry::instances[ShapeRegistry::size].fill = static_cast<int>(fill);
+    return *this;
+};
+
+Quad& Quad::rotate(float rotate) {
+    ShapeRegistry::instances[ShapeRegistry::size].rotate = rotate;
+    return *this;
+};
+
+Quad& Quad::skew(bool skew) {
+    ShapeRegistry::instances[ShapeRegistry::size].skew = static_cast<int>(skew);
+    return *this;
+};
+
+Quad& Quad::skewPos(int index, Vec2 position) {
+    // TODO:implement skew pos
+    return *this;
+};
+
+Quad& Quad::stroke(float stroke) {
+    ShapeRegistry::instances[ShapeRegistry::size].stroke = stroke;
+    return *this;
+};
+
+Quad& Quad::color(Color color, float opacity) {
+    ShapeRegistry::instances[ShapeRegistry::size].color = convert_color(color, opacity);
+    return *this;
+};
+
+void Quad::center() {
+    ShapeRegistry::instances[ShapeRegistry::size].center =
+        get_center(this->generate_vertices());
+}
+
+void Quad::mesh() {
+    ShapeRegistry::instances[ShapeRegistry::size].mesh_size =
+        mesh_size(this->generate_vertices());
+};
+
+void Quad::shape_type() {
+    ShapeRegistry::instances[ShapeRegistry::size].shape_type =
+        static_cast<int>(ShapeType::Quad);
+};
+
+ArrayVec2 Quad::generate_vertices() const {
+    //  quad coordinates and size
+    const auto& shape_inst = ShapeRegistry::instances[ShapeRegistry::size];
+    return ArrayVec2{
+        shape_inst.position,
+        shape_inst.position + Vec2{shape_inst.shape_data.x, 0.0f},
+        shape_inst.position + Vec2{shape_inst.shape_data.x, shape_inst.shape_data.y},
+        shape_inst.position + Vec2{0.0f, shape_inst.shape_data.y},
+    };
+};
+
 // TODO:remove vertices and indices functions
 // API implementations
-using DrawQuad     = Art::Quad;
-using DrawCircle   = Art::Circle;
-using DrawTriangle = Art::Triangle;
-using DrawPen      = Art::Pen;
+/*using DrawQuad     = Artt::Quad;
+using DrawCircle   = Artt::Circle;
+using DrawTriangle = Artt::Triangle;
+using DrawPen      = Artt::Pen;
 
 // Quad
 DrawQuad::Quad()
@@ -187,9 +306,59 @@ Vec2 DrawPen::shape_data() {
 };
 
 int DrawPen::shape_type() const { return static_cast<int>(ShapeType::Pen); };
+*/
+void Art::Draw() {
+    // load shared memory
+    Shared::Memory::load_shared_memory();
+    {
+        // check size first
+        ShapeRegistry::check_instance_size();
+
+        const auto shape_size = ShapeRegistry::get_size();
+
+        for (size_t i = 0; i < shape_size; i++) {
+            const auto& shape = ShapeRegistry::instances[shape_size];
+
+            PushConstants constants{};
+            constants.bg_color   = convert_color("#FFFFFF", 1.0f);
+            constants.color      = shape.color;
+            constants.pos        = shape.position;
+            constants.center     = shape.center;
+            constants.shape_data = shape.shape_data;
+            constants.mesh_size  = shape.mesh_size;
+            constants.p0         = {0.0f, 0.0f};
+            constants.p1         = {0.0f, 0.0f};
+            constants.p2         = {0.0f, 0.0f};
+            constants.stroke     = shape.stroke;
+            constants.rotate     = shape.rotate;
+            constants.fill       = shape.fill;
+            constants.skew       = shape.skew;
+            constants.shape_type = shape.shape_type;
+
+            Shared::Memory::register_constants(constants);
+            // register pen instances
+            Shared::Memory::register_pen_data({{{}}});
+
+            // TODO:skew should also work for pen, curently skew mesh is using member
+            // "position" and not "positions" which pen uses
+            const auto& skew_mesh = get_skew_mesh(constants.mesh_size, constants.pos);
+
+            SkewData skew_data{};
+            skew_data.skew_mesh = skew_mesh;
+            skew_data.skew_pos  = {{{Vec2{20, 20}, 3}}};
+
+            Shared::Memory::register_skew_data(skew_data);
+
+            // increment instance size, mutates instance size per loop execution
+            Shared::Memory::increment_instance_size();
+        }
+        // reset registry after transfering data to shared memory
+        ShapeRegistry::reset_registry();
+    }
+};
 
 // draw every shape instance registered
-void Art::Draw() {
+/*void Artt::Draw() {
     // load shared memory
     Shared::Memory::load_shared_memory();
     {
@@ -202,7 +371,7 @@ void Art::Draw() {
             const auto& shape_data = inst->shape_data();
 
             PushConstants constants{};
-            constants.bg_color   = convert_color(Art::backgroundColor, 1.0f);
+            constants.bg_color   = convert_color(Artt::backgroundColor, 1.0f);
             constants.color      = convert_color(inst->color, inst->opacity);
             constants.pos        = inst->position;
             constants.center     = inst->get_center();
@@ -237,4 +406,4 @@ void Art::Draw() {
         // reset registry after transfering data to shared memory
         InstanceRegistry::reset_registry();
     }
-};
+};*/
