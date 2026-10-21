@@ -31,7 +31,6 @@ typedef glm::vec2 Vec2;
 typedef glm::vec3 Vec3;
 typedef glm::vec4 Vec4;
 
-typedef string Color;
 // Arrays/Vector
 typedef std::vector<int>    ArrayInt;
 typedef std::vector<float>  ArrayFloat;
@@ -114,8 +113,8 @@ struct PenHandles {
         // TODO:make skewPos a function.. or change the way skew pos syntax wise
         // uses camel case for users, snake case for api implementation
         // TODO: replace position with PenHeandles struct, as in the future a warp feature
-will be added Vec2  position; Color color; float stroke; float rotate; float opacity; bool
-fill; bool  skew;
+will be added Vec2  position; const char* color; float stroke; float rotate; float
+opacity; bool fill; bool  skew;
         // TODO:update this to becomprehendable to write and read
         ArrayT<SkewPos, 8> skewPos;
         // TODO:v0, v1, v2 should not be available for other shapes but for triangles
@@ -207,13 +206,13 @@ namespace Art {
         Quad& skew(bool skew = false);
         Quad& skewPos(int index, Vec2 position);
         Quad& stroke(float stroke = 10.0f);
-        Quad& color(Color color = "#000000", float opacity = 1.0f);
+        Quad& color(const char* color, float opacity = 1.0f);
 
       private:
-        void      center();
-        void      mesh();
-        void      shape_type();
-        ArrayVec2 generate_vertices() const;
+        struct Intrls;
+        Intrls* intrls;
+
+        void shape_type();
     };
 
     class ARTCODE_API Circle {
@@ -223,14 +222,17 @@ namespace Art {
         Circle& position(float x, float y);
         Circle& shapeData(float radius);
         Circle& fill(bool fill = false);
-        Circle& rotate(float rotate);
+        Circle& rotate(float rotate = 0.0f);
         Circle& skew(bool skew = false);
         Circle& skewPos(int index, Vec2 position);
-        Circle& color(Color color);
+        Circle& stroke(float stroke = 10.0f);
+        Circle& color(const char* color, float opacity = 1.0f);
 
       private:
-        ArrayVec2 generate_vertices() const;
-        int       shape_type() const;
+        struct Intrls;
+        Intrls* intrls;
+
+        void shape_type();
     };
 
     class ARTCODE_API Triangle {
@@ -243,11 +245,14 @@ namespace Art {
         Triangle& rotate(float rotate);
         Triangle& skew(bool skew = false);
         Triangle& skewPos(int index, Vec2 position);
-        Triangle& color(Color color);
+        Triangle& stroke(float stroke = 10.0f);
+        Triangle& color(const char* color);
 
       private:
-        ArrayVec2 generate_vertices() const;
-        int       shape_type() const;
+        struct Intrls;
+        Intrls* intrls;
+
+        void shape_type();
     };
 
     class ARTCODE_API Pen {
@@ -260,14 +265,19 @@ namespace Art {
         Pen& rotate(float rotate);
         Pen& skew(bool skew = false);
         Pen& skewPos(int index, Vec2 position);
-        Pen& color(Color color);
+        Pen& stroke(float stroke = 10.0f);
+        Pen& color(const char* color);
 
       private:
-        ArrayVec2 generate_vertices() const;
-        int       shape_type() const;
+        struct Intrls;
+        Intrls* intrls;
+
+        void shape_type();
     };
 
     ARTCODE_API void Draw();
+
+    ARTCODE_API const char* BackgroundColor(const char*);
 }; // namespace Art
 
 // TODO:add expresssion templates

@@ -1,7 +1,6 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
 #include <cassert>
-#include <iostream>
 #include <numbers>
 #include <stdexcept>
 
@@ -69,14 +68,14 @@ struct ShapeRegistry {
 
 enum class ShapeType { Quad, Circle, Triangle, Pen };
 
-// centroid vertices
-Vec2 get_center(const ArrayVec2& vertices) {
+// centroid shape_vertices
+Vec2 get_center(const ArrayVec2& shape_vertices) {
     Vec2 center = {0.0f, 0.0f};
 
-    for (const auto& v : vertices) {
+    for (const auto& v : shape_vertices) {
         center += Vec2{v.x, v.y};
     }
-    return center /= static_cast<float>(vertices.size());
+    return center /= static_cast<float>(shape_vertices.size());
 };
 
 Vec4 convert_color(const string& color, float opacity) {
@@ -97,11 +96,11 @@ Vec4 convert_color(const string& color, float opacity) {
 };
 
 // find length and width of any shapes (forms a quad)
-Vec2 mesh_size(const ArrayVec2& vertices) {
+Vec2 mesh_size(const ArrayVec2& shape_vertices) {
     float max_x = -FLT_MAX, min_x = FLT_MAX;
     float max_y = -FLT_MAX, min_y = FLT_MAX;
 
-    for (const auto& vertex : vertices) {
+    for (const auto& vertex : shape_vertices) {
         max_x = glm::max<float>(max_x, vertex.x);
         min_x = glm::min<float>(min_x, vertex.x);
         max_y = glm::max<float>(max_y, vertex.y);
@@ -124,32 +123,85 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
             shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
 };
 
-using Quad = Art::Quad;
+ArrayVec2 shape_vertices(ShapeType type, size_t index) {
+    ArrayVec2 vertices = {};
+    //  quad coordinates and size
+    const auto& shape_inst = ShapeRegistry::instances[index];
+    switch (type) {
+    case ShapeType::Quad: {
+        return vertices = {
+                   shape_inst.position,
+                   shape_inst.position + Vec2{shape_inst.shape_data.x, 0.0f},
+                   shape_inst.position +
+                       Vec2{shape_inst.shape_data.x, shape_inst.shape_data.y},
+                   shape_inst.position + Vec2{0.0f, shape_inst.shape_data.y},
+               };
+        break;
+    }
+    case ShapeType::Circle: {
+        constexpr size_t num_seg = 8;
+        for (size_t i = 0; i < num_seg; i++) {
+            float angle = i * 2.0f * std::numbers::pi / static_cast<float>(num_seg);
 
-Quad::Quad() { ShapeRegistry::size++; };
+            // radius is both shape_data.x and shape_data.y
+            vertices.push_back(
+                Vec2{shape_inst.position.x + glm::cos(angle) * shape_inst.shape_data.x,
+                     shape_inst.position.y + glm::sin(angle) * shape_inst.shape_data.x});
+        }
+        return vertices;
+        break;
+    }
+    case ShapeType::Triangle: {
+        return ArrayVec2{};
+        break;
+    }
+    case ShapeType::Pen: {
+        return ArrayVec2{};
+        break;
+    }
+    };
+};
+
+Vec2 shape_center(int type, size_t index) {
+    return get_center(shape_vertices(static_cast<ShapeType>(type), index));
+};
+
+Vec2 shape_mesh(int type, size_t index) {
+    return mesh_size(shape_vertices(static_cast<ShapeType>(type), index));
+};
+
+using Quad   = Art::Quad;
+using Circle = Art::Circle;
+
+// TODO:implement shapes internals
+Quad::Quad() {
+    ShapeRegistry::size++;
+    shape_type();
+};
 
 Quad& Quad::position(float x, float y) {
-    ShapeRegistry::instances[ShapeRegistry::size].position = Vec2{x, y};
+    // -1 for data to store the index 0
+    ShapeRegistry::instances[ShapeRegistry::size - 1].position = Vec2{x, y};
     return *this;
 };
 
 Quad& Quad::shapeData(float width, float length) {
-    ShapeRegistry::instances[ShapeRegistry::size].shape_data = Vec2{width, length};
+    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_data = Vec2{width, length};
     return *this;
 };
 
 Quad& Quad::fill(bool fill) {
-    ShapeRegistry::instances[ShapeRegistry::size].fill = static_cast<int>(fill);
+    ShapeRegistry::instances[ShapeRegistry::size - 1].fill = static_cast<int>(fill);
     return *this;
 };
 
 Quad& Quad::rotate(float rotate) {
-    ShapeRegistry::instances[ShapeRegistry::size].rotate = rotate;
+    ShapeRegistry::instances[ShapeRegistry::size - 1].rotate = rotate;
     return *this;
 };
 
 Quad& Quad::skew(bool skew) {
-    ShapeRegistry::instances[ShapeRegistry::size].skew = static_cast<int>(skew);
+    ShapeRegistry::instances[ShapeRegistry::size - 1].skew = static_cast<int>(skew);
     return *this;
 };
 
@@ -159,42 +211,71 @@ Quad& Quad::skewPos(int index, Vec2 position) {
 };
 
 Quad& Quad::stroke(float stroke) {
-    ShapeRegistry::instances[ShapeRegistry::size].stroke = stroke;
+    ShapeRegistry::instances[ShapeRegistry::size - 1].stroke = stroke;
     return *this;
 };
 
-Quad& Quad::color(Color color, float opacity) {
-    ShapeRegistry::instances[ShapeRegistry::size].color = convert_color(color, opacity);
+Quad& Quad::color(const char* color, float opacity) {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].color = convert_color(color, opacity);
     return *this;
-};
-
-void Quad::center() {
-    ShapeRegistry::instances[ShapeRegistry::size].center =
-        get_center(this->generate_vertices());
-}
-
-void Quad::mesh() {
-    ShapeRegistry::instances[ShapeRegistry::size].mesh_size =
-        mesh_size(this->generate_vertices());
 };
 
 void Quad::shape_type() {
-    ShapeRegistry::instances[ShapeRegistry::size].shape_type =
+    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_type =
         static_cast<int>(ShapeType::Quad);
 };
 
-ArrayVec2 Quad::generate_vertices() const {
-    //  quad coordinates and size
-    const auto& shape_inst = ShapeRegistry::instances[ShapeRegistry::size];
-    return ArrayVec2{
-        shape_inst.position,
-        shape_inst.position + Vec2{shape_inst.shape_data.x, 0.0f},
-        shape_inst.position + Vec2{shape_inst.shape_data.x, shape_inst.shape_data.y},
-        shape_inst.position + Vec2{0.0f, shape_inst.shape_data.y},
-    };
+Circle::Circle() {
+    ShapeRegistry::size++;
+    shape_type();
 };
 
-// TODO:remove vertices and indices functions
+Circle& Circle::position(float x, float y) {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].position = Vec2{x, y};
+    return *this;
+};
+
+Circle& Circle::shapeData(float radius) {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_data = Vec2{radius, radius};
+    return *this;
+};
+
+Circle& Circle::fill(bool fill) {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].fill = fill;
+    return *this;
+};
+
+Circle& Circle::rotate(float rotate) {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].rotate = rotate;
+    return *this;
+};
+
+Circle& Circle::skew(bool skew) {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].skew = skew;
+    return *this;
+};
+
+Circle& Circle::skewPos(int index, Vec2 position) {
+    // TODO:implment skew pos
+    return *this;
+};
+
+Circle& Circle::stroke(float stroke) {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].stroke = stroke;
+    return *this;
+};
+
+Circle& Circle::color(const char* color, float opacity) {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].color = convert_color(color, opacity);
+    return *this;
+};
+
+void Circle::shape_type() {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_type =
+        static_cast<int>(ShapeType::Circle);
+};
+
+// TODO:remove shape_vertices and indices functions
 // API implementations
 /*using DrawQuad     = Artt::Quad;
 using DrawCircle   = Artt::Circle;
@@ -317,25 +398,30 @@ void Art::Draw() {
         const auto shape_size = ShapeRegistry::get_size();
 
         for (size_t i = 0; i < shape_size; i++) {
-            const auto& shape = ShapeRegistry::instances[shape_size];
+            const auto& shape      = ShapeRegistry::instances[i];
+            const auto  shape_type = shape.shape_type;
 
             PushConstants constants{};
             constants.bg_color   = convert_color("#FFFFFF", 1.0f);
             constants.color      = shape.color;
             constants.pos        = shape.position;
-            constants.center     = shape.center;
+            constants.center     = shape_center(shape_type, i);
             constants.shape_data = shape.shape_data;
-            constants.mesh_size  = shape.mesh_size;
-            constants.p0         = {0.0f, 0.0f};
-            constants.p1         = {0.0f, 0.0f};
-            constants.p2         = {0.0f, 0.0f};
+            constants.mesh_size  = shape_mesh(shape_type, i);
+            // triangle uses these in shaders instead of shape data
+            constants.p0 = {0.0f, 0.0f};
+            constants.p1 = {0.0f, 0.0f};
+            constants.p2 = {0.0f, 0.0f};
+            // for triangle
             constants.stroke     = shape.stroke;
             constants.rotate     = shape.rotate;
             constants.fill       = shape.fill;
             constants.skew       = shape.skew;
-            constants.shape_type = shape.shape_type;
+            constants.shape_type = shape_type;
 
             Shared::Memory::register_constants(constants);
+            // TODO:this passes the entire size of std::array
+            // add size to only pass what the users passed
             // register pen instances
             Shared::Memory::register_pen_data({{{}}});
 
@@ -343,6 +429,7 @@ void Art::Draw() {
             // "position" and not "positions" which pen uses
             const auto& skew_mesh = get_skew_mesh(constants.mesh_size, constants.pos);
 
+            // TODO:add correct skew pos
             SkewData skew_data{};
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = {{{Vec2{20, 20}, 3}}};
@@ -367,7 +454,7 @@ void Art::Draw() {
         for (size_t i = 0; i < reg_size; i++) {
             const auto& inst = InstanceRegistry::get_instance(i);
             // NOTE:execute shape data function first as pen instance heavily depends on
-            // it produce a new position using the its generate vertices function
+            // it produce a new position using the its generate shape_vertices function
             const auto& shape_data = inst->shape_data();
 
             PushConstants constants{};
