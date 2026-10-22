@@ -72,6 +72,7 @@ void main() {
     vec2 p1 = constant.p1;
     vec2 p2 = constant.p2;
 
+    // normalize to ubo coordinates
     p0.y += ubo.reso.y;
     p1.y += ubo.reso.y;
     p2.y += ubo.reso.y;

@@ -30,13 +30,13 @@
 
 struct ShapeAttributes {
     Vec4  color      = Vec4{1.0f};
-    Vec2  position   = Vec2{100.0f, 100.0f};
+    Vec2  position   = Vec2{50.0f, 50.0f};
     Vec2  center     = Vec2{50.0f, 50.0f};
     Vec2  shape_data = Vec2{50.0f, 50.0f};
     Vec2  mesh_size  = Vec2{50.0f, 50.0f};
-    Vec2  p0         = Vec2{50.0f, 50.0f};
-    Vec2  p1         = Vec2{50.0f, 50.0f};
-    Vec2  p2         = Vec2{50.0f, 50.0f};
+    Vec2  p0         = Vec2{100.0f, 100.0f};
+    Vec2  p1         = Vec2{150.0f, 50.0f};
+    Vec2  p2         = Vec2{200.0f, 100.0f};
     float stroke     = 10.0f;
     float rotate     = 0.0f;
     int   fill       = 1;
@@ -126,7 +126,7 @@ ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
 ArrayVec2 shape_vertices(ShapeType type, size_t index) {
     ArrayVec2 vertices = {};
     //  quad coordinates and size
-    const auto& shape_inst = ShapeRegistry::instances[index];
+    auto& shape_inst = ShapeRegistry::instances[index];
     switch (type) {
     case ShapeType::Quad: {
         return vertices = {
@@ -141,7 +141,8 @@ ArrayVec2 shape_vertices(ShapeType type, size_t index) {
     case ShapeType::Circle: {
         constexpr size_t num_seg = 8;
         for (size_t i = 0; i < num_seg; i++) {
-            float angle = i * 2.0f * std::numbers::pi / static_cast<float>(num_seg);
+            float angle = i * 2.0f * static_cast<float>(std::numbers::pi) /
+                          static_cast<float>(num_seg);
 
             // radius is both shape_data.x and shape_data.y
             vertices.push_back(
@@ -152,7 +153,7 @@ ArrayVec2 shape_vertices(ShapeType type, size_t index) {
         break;
     }
     case ShapeType::Triangle: {
-        return ArrayVec2{};
+        return vertices = {shape_inst.p0, shape_inst.p1, shape_inst.p2};
         break;
     }
     case ShapeType::Pen: {
@@ -170,8 +171,9 @@ Vec2 shape_mesh(int type, size_t index) {
     return mesh_size(shape_vertices(static_cast<ShapeType>(type), index));
 };
 
-using Quad   = Art::Quad;
-using Circle = Art::Circle;
+using Quad     = Art::Quad;
+using Circle   = Art::Circle;
+using Triangle = Art::Triangle;
 
 // TODO:implement shapes internals
 Quad::Quad() {
@@ -179,45 +181,41 @@ Quad::Quad() {
     shape_type();
 };
 
-Quad& Quad::position(float x, float y) {
-    // -1 for data to store the index 0
-    ShapeRegistry::instances[ShapeRegistry::size - 1].position = Vec2{x, y};
-    return *this;
+struct Quad::Intrls {
+    int  skew = 0;
+    int  index;
+    Vec2 position;
 };
 
-Quad& Quad::shapeData(float width, float length) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_data = Vec2{width, length};
-    return *this;
+void Quad::geometry(Vec2 position, float width, float length) {
+    const auto index = ShapeRegistry::size - 1;
+
+    ShapeRegistry::instances[index].position   = position;
+    ShapeRegistry::instances[index].shape_data = Vec2{width, length};
 };
 
-Quad& Quad::fill(bool fill) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].fill = static_cast<int>(fill);
-    return *this;
+void Quad::style(bool fill, float stroke, float rotate) {
+    const auto index = ShapeRegistry::size - 1;
+
+    ShapeRegistry::instances[index].fill   = static_cast<int>(fill);
+    ShapeRegistry::instances[index].stroke = stroke;
+    ShapeRegistry::instances[index].rotate = rotate;
 };
 
-Quad& Quad::rotate(float rotate) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].rotate = rotate;
-    return *this;
+Quad::Intrls& Quad::skew(bool skew) {
+    this->intrls->skew = skew;
+
+    ShapeRegistry::instances[ShapeRegistry::size - 1].skew = this->intrls->skew;
+    return *this->intrls;
 };
 
-Quad& Quad::skew(bool skew) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].skew = static_cast<int>(skew);
-    return *this;
+Quad::Intrls& Quad::at(int index, Vec2 position) {
+    // TODO:implement skew positions
+    return *this->intrls;
 };
 
-Quad& Quad::skewPos(int index, Vec2 position) {
-    // TODO:implement skew pos
-    return *this;
-};
-
-Quad& Quad::stroke(float stroke) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].stroke = stroke;
-    return *this;
-};
-
-Quad& Quad::color(const char* color, float opacity) {
+void Quad::color(const char* color, float opacity) {
     ShapeRegistry::instances[ShapeRegistry::size - 1].color = convert_color(color, opacity);
-    return *this;
 };
 
 void Quad::shape_type() {
@@ -230,49 +228,95 @@ Circle::Circle() {
     shape_type();
 };
 
-Circle& Circle::position(float x, float y) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].position = Vec2{x, y};
-    return *this;
+struct Circle::Intrls {
+    int  skew = 0;
+    int  index;
+    Vec2 position;
 };
 
-Circle& Circle::shapeData(float radius) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_data = Vec2{radius, radius};
-    return *this;
+void Circle::geometry(Vec2 position, float radius) {
+    const auto index = ShapeRegistry::size - 1;
+
+    ShapeRegistry::instances[index].position   = position;
+    ShapeRegistry::instances[index].shape_data = Vec2{radius};
 };
 
-Circle& Circle::fill(bool fill) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].fill = fill;
-    return *this;
+void Circle::style(bool fill, float stroke, float rotate) {
+    const auto index = ShapeRegistry::size - 1;
+
+    ShapeRegistry::instances[index].fill   = static_cast<int>(fill);
+    ShapeRegistry::instances[index].stroke = stroke;
+    ShapeRegistry::instances[index].rotate = rotate;
 };
 
-Circle& Circle::rotate(float rotate) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].rotate = rotate;
-    return *this;
-};
-
-Circle& Circle::skew(bool skew) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].skew = skew;
-    return *this;
-};
-
-Circle& Circle::skewPos(int index, Vec2 position) {
-    // TODO:implment skew pos
-    return *this;
-};
-
-Circle& Circle::stroke(float stroke) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].stroke = stroke;
-    return *this;
-};
-
-Circle& Circle::color(const char* color, float opacity) {
+void Circle::color(const char* color, float opacity) {
     ShapeRegistry::instances[ShapeRegistry::size - 1].color = convert_color(color, opacity);
-    return *this;
+};
+
+Circle::Intrls& Circle::skew(bool skew) {
+    this->intrls->skew = skew;
+
+    ShapeRegistry::instances[ShapeRegistry::size - 1].skew = this->intrls->skew;
+    return *this->intrls;
+};
+
+Circle::Intrls& Circle::at(int index, Vec2 position) {
+    // TODO:implement skew position
+    return *this->intrls;
 };
 
 void Circle::shape_type() {
     ShapeRegistry::instances[ShapeRegistry::size - 1].shape_type =
         static_cast<int>(ShapeType::Circle);
+};
+
+Triangle::Triangle() {
+    ShapeRegistry::size++;
+    shape_type();
+};
+
+struct Triangle::Intrls {
+    int  skew = 0;
+    int  index;
+    Vec2 position;
+};
+
+void Triangle::geometry(Vec2 position, Vec2 v0, Vec2 v1, Vec2 v2) {
+    const auto index = ShapeRegistry::size - 1;
+
+    ShapeRegistry::instances[index].position = position;
+    ShapeRegistry::instances[index].p0       = v0 + position;
+    ShapeRegistry::instances[index].p1       = v1 + position;
+    ShapeRegistry::instances[index].p2       = v2 + position;
+};
+
+void Triangle::style(bool fill, float stroke, float rotate) {
+    const auto index = ShapeRegistry::size - 1;
+
+    ShapeRegistry::instances[index].fill   = static_cast<int>(fill);
+    ShapeRegistry::instances[index].stroke = stroke;
+    ShapeRegistry::instances[index].rotate = rotate;
+};
+
+void Triangle::color(const char* color, float opacity) {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].color = convert_color(color, opacity);
+};
+
+Triangle::Intrls& Triangle::skew(bool skew) {
+    this->intrls->skew = skew;
+
+    ShapeRegistry::instances[ShapeRegistry::size - 1].skew = this->intrls->skew;
+    return *this->intrls;
+};
+
+Triangle::Intrls& Triangle::at(int index, Vec2 position) {
+    // TODO:apply skew position
+    return *this->intrls;
+};
+
+void Triangle::shape_type() {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_type =
+        static_cast<int>(ShapeType::Triangle);
 };
 
 // TODO:remove shape_vertices and indices functions
@@ -405,13 +449,13 @@ void Art::Draw() {
             constants.bg_color   = convert_color("#FFFFFF", 1.0f);
             constants.color      = shape.color;
             constants.pos        = shape.position;
-            constants.center     = shape_center(shape_type, i);
+            constants.center     = {0.0f, 0.0f};
             constants.shape_data = shape.shape_data;
             constants.mesh_size  = shape_mesh(shape_type, i);
             // triangle uses these in shaders instead of shape data
-            constants.p0 = {0.0f, 0.0f};
-            constants.p1 = {0.0f, 0.0f};
-            constants.p2 = {0.0f, 0.0f};
+            constants.p0 = shape.p0;
+            constants.p1 = shape.p1;
+            constants.p2 = shape.p2;
             // for triangle
             constants.stroke     = shape.stroke;
             constants.rotate     = shape.rotate;
