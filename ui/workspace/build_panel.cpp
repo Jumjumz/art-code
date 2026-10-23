@@ -193,8 +193,10 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
             exit = execute(cmd);
 #endif
             // stop execution, result will display runtime errors
-            if (exit != 0)
+            if (exit != 0) {
+                ExecuteResult::set_result("Code execution failed! Something went wrong.");
                 break;
+            }
 
             ShadersCompiled::is_compiled = true;
             break;

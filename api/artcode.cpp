@@ -1,32 +1,8 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
-#include <cassert>
+#include <cmath>
 #include <numbers>
 #include <stdexcept>
-
-/*struct InstanceRegistry {
-    static void register_instance(detail::IShape* shape) {
-        if (array_size > 500)
-            throw std::runtime_error("Max instance reach. Shapes instances max is 500!");
-
-        instances[array_size] = shape;
-        array_size++;
-    }
-
-    static size_t get_size() { return array_size; }
-
-    static detail::IShape* get_instance(size_t index) { return instances[index]; }
-
-    static void reset_registry() {
-        array_size = 0;
-        std::fill(instances.begin(), instances.end(), nullptr);
-    }
-
-  private:
-    // init elements to nullptr, max num of instance only allowed
-    static inline ArrayT<detail::IShape*, 500> instances  = {};
-    static inline size_t                       array_size = 0;
-};*/
 
 struct ShapeAttributes {
     Vec4  color      = Vec4{1.0f};
@@ -42,9 +18,17 @@ struct ShapeAttributes {
     int   fill       = 1;
     int   skew       = 0;
     int   shape_type = 0;
+
+    // skew data
+    struct ShapeSkew {
+        size_t                 size      = 0;
+        std::array<SkewPos, 8> skew_data = {{{}}};
+    } shape_skew;
+    // pen data
 };
 
 struct ShapeRegistry {
+  public:
     static inline size_t                       size      = 0;
     static inline ArrayT<ShapeAttributes, 500> instances = {};
 
@@ -55,7 +39,7 @@ struct ShapeRegistry {
     static void check_instance_size() {
         if (size > 500)
             throw std::runtime_error(
-                "Max number of shapes reach! Shapes instances max is 500!");
+                "Max number of shapes reach! Max shape intance is 500!");
     }
 
     static void reset_registry() {
@@ -101,10 +85,10 @@ Vec2 mesh_size(const ArrayVec2& shape_vertices) {
     float max_y = -FLT_MAX, min_y = FLT_MAX;
 
     for (const auto& vertex : shape_vertices) {
-        max_x = glm::max<float>(max_x, vertex.x);
-        min_x = glm::min<float>(min_x, vertex.x);
-        max_y = glm::max<float>(max_y, vertex.y);
-        min_y = glm::min<float>(min_y, vertex.y);
+        max_x = std::max<float>(max_x, vertex.x);
+        min_x = std::min<float>(min_x, vertex.x);
+        max_y = std::max<float>(max_y, vertex.y);
+        min_y = std::min<float>(min_y, vertex.y);
     }
 
     return Vec2{max_x - min_x, max_y - min_y};
@@ -146,8 +130,8 @@ ArrayVec2 shape_vertices(ShapeType type, size_t index) {
 
             // radius is both shape_data.x and shape_data.y
             vertices.push_back(
-                Vec2{shape_inst.position.x + glm::cos(angle) * shape_inst.shape_data.x,
-                     shape_inst.position.y + glm::sin(angle) * shape_inst.shape_data.x});
+                Vec2{shape_inst.position.x + std::cos(angle) * shape_inst.shape_data.x,
+                     shape_inst.position.y + std::sin(angle) * shape_inst.shape_data.x});
         }
         return vertices;
         break;
@@ -157,7 +141,7 @@ ArrayVec2 shape_vertices(ShapeType type, size_t index) {
         break;
     }
     case ShapeType::Pen: {
-        return ArrayVec2{};
+        return vertices = {};
         break;
     }
     };
@@ -171,102 +155,86 @@ Vec2 shape_mesh(int type, size_t index) {
     return mesh_size(shape_vertices(static_cast<ShapeType>(type), index));
 };
 
+Skew& Skew::at(int index, Vec2 position) {
+    auto& shape = ShapeRegistry::instances[ShapeRegistry::size - 1];
+    if (shape.skew == 1) {
+        if (this->size < 8) {
+            shape.shape_skew.skew_data[this->size] = {index, position};
+            // increment sizes
+            shape.shape_skew.size++;
+            this->size++;
+        }
+    }
+    return *this;
+};
+
 using Quad     = Art::Quad;
 using Circle   = Art::Circle;
 using Triangle = Art::Triangle;
+using Pen      = Art::Pen;
 
 // TODO:implement shapes internals
-Quad::Quad() {
+Quad::Quad()
+    : s_index(ShapeRegistry::size),
+      _skew(std::make_unique<Skew>()) {
+    // increase size
     ShapeRegistry::size++;
     shape_type();
-};
-
-struct Quad::Intrls {
-    int  skew = 0;
-    int  index;
-    Vec2 position;
 };
 
 void Quad::geometry(Vec2 position, float width, float length) {
-    const auto index = ShapeRegistry::size - 1;
-
-    ShapeRegistry::instances[index].position   = position;
-    ShapeRegistry::instances[index].shape_data = Vec2{width, length};
+    ShapeRegistry::instances[this->s_index].position   = position;
+    ShapeRegistry::instances[this->s_index].shape_data = Vec2{width, length};
 };
 
 void Quad::style(bool fill, float stroke, float rotate) {
-    const auto index = ShapeRegistry::size - 1;
-
-    ShapeRegistry::instances[index].fill   = static_cast<int>(fill);
-    ShapeRegistry::instances[index].stroke = stroke;
-    ShapeRegistry::instances[index].rotate = rotate;
-};
-
-Quad::Intrls& Quad::skew(bool skew) {
-    this->intrls->skew = skew;
-
-    ShapeRegistry::instances[ShapeRegistry::size - 1].skew = this->intrls->skew;
-    return *this->intrls;
-};
-
-Quad::Intrls& Quad::at(int index, Vec2 position) {
-    // TODO:implement skew positions
-    return *this->intrls;
+    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(fill);
+    ShapeRegistry::instances[this->s_index].stroke = stroke;
+    ShapeRegistry::instances[this->s_index].rotate = rotate;
 };
 
 void Quad::color(const char* color, float opacity) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].color = convert_color(color, opacity);
+    ShapeRegistry::instances[this->s_index].color = convert_color(color, opacity);
+};
+
+Skew& Quad::skew(bool skew) {
+    ShapeRegistry::instances[this->s_index].skew = static_cast<int>(skew);
+    return *this->_skew;
 };
 
 void Quad::shape_type() {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_type =
-        static_cast<int>(ShapeType::Quad);
+    ShapeRegistry::instances[this->s_index].shape_type = static_cast<int>(ShapeType::Quad);
 };
 
-Circle::Circle() {
+Circle::Circle()
+    : s_index(ShapeRegistry::size),
+      _skew(std::make_unique<Skew>()) {
     ShapeRegistry::size++;
     shape_type();
 };
 
-struct Circle::Intrls {
-    int  skew = 0;
-    int  index;
-    Vec2 position;
-};
-
 void Circle::geometry(Vec2 position, float radius) {
-    const auto index = ShapeRegistry::size - 1;
-
-    ShapeRegistry::instances[index].position   = position;
-    ShapeRegistry::instances[index].shape_data = Vec2{radius};
+    ShapeRegistry::instances[this->s_index].position   = position;
+    ShapeRegistry::instances[this->s_index].shape_data = Vec2{radius};
 };
 
 void Circle::style(bool fill, float stroke, float rotate) {
-    const auto index = ShapeRegistry::size - 1;
-
-    ShapeRegistry::instances[index].fill   = static_cast<int>(fill);
-    ShapeRegistry::instances[index].stroke = stroke;
-    ShapeRegistry::instances[index].rotate = rotate;
+    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(fill);
+    ShapeRegistry::instances[this->s_index].stroke = stroke;
+    ShapeRegistry::instances[this->s_index].rotate = rotate;
 };
 
 void Circle::color(const char* color, float opacity) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].color = convert_color(color, opacity);
+    ShapeRegistry::instances[this->s_index].color = convert_color(color, opacity);
 };
 
-Circle::Intrls& Circle::skew(bool skew) {
-    this->intrls->skew = skew;
-
-    ShapeRegistry::instances[ShapeRegistry::size - 1].skew = this->intrls->skew;
-    return *this->intrls;
-};
-
-Circle::Intrls& Circle::at(int index, Vec2 position) {
-    // TODO:implement skew position
-    return *this->intrls;
+Skew& Circle::skew(bool skew) {
+    ShapeRegistry::instances[this->s_index].skew = skew;
+    return *this->_skew;
 };
 
 void Circle::shape_type() {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_type =
+    ShapeRegistry::instances[this->s_index].shape_type =
         static_cast<int>(ShapeType::Circle);
 };
 
@@ -281,13 +249,16 @@ struct Triangle::Intrls {
     Vec2 position;
 };
 
-void Triangle::geometry(Vec2 position, Vec2 v0, Vec2 v1, Vec2 v2) {
+void Triangle::geometry(Vec2 v0, Vec2 v1, Vec2 v2) {
     const auto index = ShapeRegistry::size - 1;
+    // mesh starts at min vector
+    const Vec2 position = {std::min<float>({v0.x, v1.x, v2.x}),
+                           std::min<float>({v0.y, v1.y, v2.y})};
 
     ShapeRegistry::instances[index].position = position;
-    ShapeRegistry::instances[index].p0       = v0 + position;
-    ShapeRegistry::instances[index].p1       = v1 + position;
-    ShapeRegistry::instances[index].p2       = v2 + position;
+    ShapeRegistry::instances[index].p0       = v0;
+    ShapeRegistry::instances[index].p1       = v1;
+    ShapeRegistry::instances[index].p2       = v2;
 };
 
 void Triangle::style(bool fill, float stroke, float rotate) {
@@ -317,6 +288,39 @@ Triangle::Intrls& Triangle::at(int index, Vec2 position) {
 void Triangle::shape_type() {
     ShapeRegistry::instances[ShapeRegistry::size - 1].shape_type =
         static_cast<int>(ShapeType::Triangle);
+};
+
+Pen::Pen() {
+    ShapeRegistry::size++;
+    shape_type();
+};
+
+struct Pen::Intrls {
+    int  skew;
+    int  index;
+    Vec2 position;
+};
+
+// TODO:implement pen implementations
+void Pen::point(Vec2 position) {
+
+};
+
+void Pen::curve(Vec2 handle) {
+
+};
+
+void Pen::style(bool fill, float stroke, float rotate) {
+
+};
+
+Pen::Intrls& Pen::skew(bool skew) { return *this->intrls; };
+
+Pen::Intrls& Pen::at(int index, Vec2 position) { return *this->intrls; };
+
+void Pen::shape_type() {
+    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_type =
+        static_cast<int>(ShapeType::Pen);
 };
 
 // TODO:remove shape_vertices and indices functions
@@ -362,8 +366,8 @@ ArrayVec2 DrawCircle::generate_vertices() const {
     for (size_t i = 0; i < num_seg; i++) {
         float angle = i * 2.0f * std::numbers::pi / num_seg;
 
-        vertex.push_back(Vec4{this->position.x + glm::cos(angle) * this->radius,
-                              this->position.y + glm::sin(angle) * this->radius, 2.0f,
+        vertex.push_back(Vec4{this->position.x + std::cos(angle) * this->radius,
+                              this->position.y + std::sin(angle) * this->radius, 2.0f,
                               2.0f});
     }
     return vertex;
@@ -422,8 +426,8 @@ Vec2 DrawPen::shape_data() {
     // decide if a pen render is correct in sdf or not
     Vec2 position = Vec2(FLT_MAX, FLT_MAX);
     for (const auto& verts : generate_vertices()) {
-        position.x = glm::min<float>(position.x, verts.x);
-        position.y = glm::min<float>(position.y, verts.y);
+        position.x = std::min<float>(position.x, verts.x);
+        position.y = std::min<float>(position.y, verts.y);
     }
     this->position = position;
 
@@ -449,7 +453,7 @@ void Art::Draw() {
             constants.bg_color   = convert_color("#FFFFFF", 1.0f);
             constants.color      = shape.color;
             constants.pos        = shape.position;
-            constants.center     = {0.0f, 0.0f};
+            constants.center     = shape.center;
             constants.shape_data = shape.shape_data;
             constants.mesh_size  = shape_mesh(shape_type, i);
             // triangle uses these in shaders instead of shape data
@@ -476,7 +480,7 @@ void Art::Draw() {
             // TODO:add correct skew pos
             SkewData skew_data{};
             skew_data.skew_mesh = skew_mesh;
-            skew_data.skew_pos  = {{{Vec2{20, 20}, 3}}};
+            skew_data.skew_pos  = shape.shape_skew.skew_data;
 
             Shared::Memory::register_skew_data(skew_data);
 

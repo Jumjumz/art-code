@@ -15,7 +15,24 @@
 
 // NOTE:this header uses the artcode typedef such as Vec2, ArrayT and such,
 // to avoid confusion and for the sake of consistency, only this header file uses the
-// artcode typedef and nothing else
+// artcode typedef and nothing else// hides padding as this is for gpu alignmnet
+struct SkewPos {
+    Vec2 pos;
+    int  index;
+
+    SkewPos()
+        : pos{},
+          index(0),
+          _padding(0) {}
+    SkewPos(int i, Vec2 p)
+        : pos{p},
+          index{i},
+          _padding{0} {}
+
+  private:
+    int _padding;
+};
+
 struct PHandle {
     Vec2 position;
     int  id;
@@ -33,8 +50,8 @@ struct PenInstance {
 };
 
 struct SkewData {
-    ArrayT<Vec2, 8>    skew_mesh;
-    ArrayT<SkewPos, 8> skew_pos;
+    std::array<Vec2, 8>    skew_mesh;
+    std::array<SkewPos, 8> skew_pos;
 };
 
 struct PushConstants {

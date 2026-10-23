@@ -88,6 +88,8 @@ vec2 skew(vec2 pos) {
 void main() {
   vec2 position        = constant.pos;
   const vec2 mesh_size = constant.mesh_size;
+  // test skew ssbo
+  const vec2 ssb_skew  = skew_ssbo.data.skew_pos[0].pos;
   // set position to ubo coord
   position.y = ubo.reso.y + position.y;
 

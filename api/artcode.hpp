@@ -3,6 +3,7 @@
 #include <array>
 #include <glm/glm.hpp>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -53,25 +54,6 @@ template <typename T> T squared(T sq) { return sq * sq; };
 template <typename T> T cubic(T cb) { return cb * cb * cb; };
 
 // TODO:add predefined positions such as center, corner etc.
-
-// hides padding as this is for gpu alignmnet
-struct SkewPos {
-    Vec2 pos;
-    int  index;
-
-    SkewPos()
-        : pos{},
-          index(0),
-          _padding(0) {}
-    SkewPos(Vec2 p, int i)
-        : pos{p},
-          index{i},
-          _padding{0} {}
-
-  private:
-    int _padding;
-};
-
 struct Handles {
     bool handle;
     Vec2 handlePosition;
@@ -90,143 +72,45 @@ struct PenHandles {
     Handles handles;
 };
 
-// TODO:remove vertices and indices generation funcions
-/*namespace detail {
-    class ARTCODE_API IShape {
-      public:
-        virtual ~IShape() = default;
+struct ARTCODE_API Skew {
+  public:
+    Skew& at(int index, Vec2 position);
 
-        IShape()
-            : position(200, 200),
-              color("#000000"),
-              stroke(10.0f),
-              rotate(0.0f),
-              opacity(1.0f),
-              fill(true),
-              skew(false),
-              skewPos({}),
-              v0(100, 0),
-              v1(0, 150),
-              v2(200, 150),
-              positions({{{}}}) {}
-
-        // TODO:make skewPos a function.. or change the way skew pos syntax wise
-        // uses camel case for users, snake case for api implementation
-        // TODO: replace position with PenHeandles struct, as in the future a warp feature
-will be added Vec2  position; const char* color; float stroke; float rotate; float
-opacity; bool fill; bool  skew;
-        // TODO:update this to becomprehendable to write and read
-        ArrayT<SkewPos, 8> skewPos;
-        // TODO:v0, v1, v2 should not be available for other shapes but for triangles
-        // only, have a way to hide this
-        Vec2 v0, v1, v2;
-
-        // TODO:should not be available for other shapes, only for pen
-        ArrayT<PenHandles, 500> positions;
-        // must implement
-        virtual ArrayVec2 generate_vertices() const = 0;
-        // NOTE:new functions for sdf to work
-        virtual Vec2 shape_data()       = 0;
-        virtual int  shape_type() const = 0;
-
-        // centroid vertices
-        Vec2 get_center() const {
-            Vec2 center = {0.0f, 0.0f};
-
-            const auto& verts = this->generate_vertices();
-            for (const auto& v : verts) {
-                center += Vec2{v.x, v.y};
-            }
-            return center /= static_cast<float>(verts.size());
-        };
-    };
-} // namespace detail
-
-namespace Artt {
-    class ARTCODE_API Quad : public detail::IShape {
-      public:
-        Quad();
-
-        float l, w;
-
-      private:
-        ArrayVec2 generate_vertices() const override;
-        Vec2      shape_data() override;
-        int       shape_type() const override;
-    };
-
-    class ARTCODE_API Circle : public detail::IShape {
-      public:
-        Circle();
-
-        float radius;
-
-      private:
-        ArrayVec2 generate_vertices() const override;
-        Vec2      shape_data() override;
-        int       shape_type() const override;
-    };
-
-    // TODO:this triangle should be a free form triangle, base and height is not needed
-    class ARTCODE_API Triangle : public detail::IShape {
-      public:
-        Triangle();
-
-      private:
-        ArrayVec2 generate_vertices() const override;
-        Vec2      shape_data() override;
-        int       shape_type() const override;
-    };
-
-    class ARTCODE_API Pen : public detail::IShape {
-      public:
-        Pen();
-
-      private:
-        ArrayVec2 generate_vertices() const override;
-        Vec2      shape_data() override;
-        int       shape_type() const override;
-    };
-
-    // sets background color of the canvas
-    inline string backgroundColor = "#FFFFFF";
-
-    void ARTCODE_API Draw();
-};*/ // namespace Artt
+  private:
+    size_t size;
+};
 
 namespace Art {
     class ARTCODE_API Quad {
       private:
-        struct Intrls;
-        Intrls* intrls;
+        size_t                s_index;
+        std::unique_ptr<Skew> _skew;
 
         void shape_type();
 
       public:
         Quad();
 
-        void    geometry(Vec2 position, float width, float length);
-        void    style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
-        void    color(const char* color = "#000000", float opacity = 1.0f);
-        Intrls& skew(bool skew = false);
-        Intrls& at(int index, Vec2 position);
+        void  geometry(Vec2 position, float width, float length);
+        void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
+        void  color(const char* color = "#000000", float opacity = 1.0f);
+        Skew& skew(bool skew = false);
     };
 
     class ARTCODE_API Circle {
       private:
-        struct Intrls;
-        Intrls* intrls;
+        size_t                s_index;
+        std::unique_ptr<Skew> _skew;
 
         void shape_type();
 
       public:
         Circle();
 
-        void    geometry(Vec2 position, float radius);
-        void    style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
-        void    color(const char* color = "#000000", float opacity = 1.0f);
-        Intrls& skew(bool skew = false);
-        Intrls& at(int index, Vec2 position);
+        void  geometry(Vec2 position, float radius);
+        void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
+        void  color(const char* color = "#000000", float opacity = 1.0f);
+        Skew& skew(bool skew = false);
     };
 
     class ARTCODE_API Triangle {
@@ -239,7 +123,7 @@ namespace Art {
       public:
         Triangle();
 
-        void    geometry(Vec2 position, Vec2 v0, Vec2 v1, Vec2 v2);
+        void    geometry(Vec2 v0, Vec2 v1, Vec2 v2);
         void    style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
         void    color(const char* color = "#000000", float opacity = 1.0f);
         Intrls& skew(bool skew = false);
@@ -247,23 +131,21 @@ namespace Art {
     };
 
     class ARTCODE_API Pen {
-      public:
-        Pen();
-
-        Pen& point(float x, float y);
-        Pen& curve(float p_x, float p_y, float h_x, float h_y);
-        Pen& fill(bool fill = false);
-        Pen& rotate(float rotate);
-        Pen& skew(bool skew = false);
-        Pen& skewPos(int index, Vec2 position);
-        Pen& stroke(float stroke = 10.0f);
-        Pen& color(const char* color, float opacity = 1.0f);
-
       private:
         struct Intrls;
         Intrls* intrls;
 
         void shape_type();
+
+      public:
+        Pen();
+
+        void    point(Vec2 position);
+        void    curve(Vec2 handle);
+        void    style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
+        void    color(const char* color, float opacity = 1.0f);
+        Intrls& skew(bool skew = false);
+        Intrls& at(int index, Vec2 position);
     };
 
     ARTCODE_API void Draw();
