@@ -91,7 +91,7 @@ void main() {
   // test skew ssbo
   const vec2 ssb_skew  = skew_ssbo.data.skew_pos[0].pos;
   // set position to ubo coord
-  position.y = ubo.reso.y + position.y;
+  position.y += ubo.reso.y;
 
   // NOTE:might need to add padding in mesh
   // sets the quad to position and mesh size

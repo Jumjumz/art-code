@@ -21,13 +21,13 @@ struct SkewPos {
     int  index;
 
     SkewPos()
-        : pos{},
+        : pos(),
           index(0),
           _padding(0) {}
-    SkewPos(int i, Vec2 p)
-        : pos{p},
-          index{i},
-          _padding{0} {}
+    SkewPos(Vec2 p, int i)
+        : pos(p),
+          index(i),
+          _padding(0) {}
 
   private:
     int _padding;
@@ -36,12 +36,14 @@ struct SkewPos {
 struct PHandle {
     Vec2 position;
     int  id;
-    int  _padding;
 
     PHandle()
         : position(0.0f, 0.0f),
           id(0),
           _padding(0) {}
+
+  private:
+    int _padding;
 };
 
 struct PenInstance {
@@ -183,39 +185,16 @@ namespace Shared {
             inst.skew_data = skew_data;
         }
 
-        static void register_pen_data(const ArrayT<PenHandles, 500>& pen_handles) {
+        static void register_pen_data(const std::array<PHandle, 500>& pen_handles,
+                                      size_t                          size) {
             check_instance_size();
 
             auto& inst = region->instance[region->size];
+            // set size to not be 0 if it is 0
+            size = size == 0 ? 1 : size;
 
-            size_t i = 0;
-            // flatten the pen_handles array
-            while (i < pen_handles.size()) {
-                if (pen_handles[i].handles.handle) {
-                    // id = 0 indicates that this position starts for a curve
-                    inst.pen_data.items[inst.pen_data.size].position =
-                        pen_handles[i].position;
-                    inst.pen_data.items[inst.pen_data.size].id = 0;
-
-                    // increment to insert to the next item
-                    inst.pen_data.size += 1;
-                    // this is the handle
-                    inst.pen_data.items[inst.pen_data.size].position =
-                        pen_handles[i].handles.handlePosition;
-                    inst.pen_data.items[inst.pen_data.size].id = 2;
-                } else {
-                    inst.pen_data.items[inst.pen_data.size].position =
-                        pen_handles[i].position;
-                    // id = 1 indicates that this position starts and ends in segment
-                    inst.pen_data.items[inst.pen_data.size].id = 1;
-                }
-                i++;
-                // immidiate exit
-                if (i == pen_handles.size())
-                    break;
-
-                inst.pen_data.size++;
-            }
+            inst.pen_data.size  = size;
+            inst.pen_data.items = pen_handles;
         }
 
         static void increment_instance_size() { region->size++; }

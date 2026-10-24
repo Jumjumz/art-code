@@ -53,25 +53,6 @@ template <typename T> using VectorT             = std::vector<T>;
 template <typename T> T squared(T sq) { return sq * sq; };
 template <typename T> T cubic(T cb) { return cb * cb * cb; };
 
-// TODO:add predefined positions such as center, corner etc.
-struct Handles {
-    bool handle;
-    Vec2 handlePosition;
-
-    Handles()
-        : handle(false),
-          handlePosition(0.0f, 0.0f) {}
-    Handles(bool h, Vec2 hp)
-        : handle(h),
-          handlePosition(hp) {}
-};
-
-// TODO:replace struct name, can be more general name as other shapes will use it
-struct PenHandles {
-    Vec2    position;
-    Handles handles;
-};
-
 struct ARTCODE_API Skew {
   public:
     Skew& at(int index, Vec2 position);
@@ -115,42 +96,46 @@ namespace Art {
 
     class ARTCODE_API Triangle {
       private:
-        struct Intrls;
-        Intrls* intrls;
+        size_t                s_index;
+        std::unique_ptr<Skew> _skew;
 
         void shape_type();
 
       public:
         Triangle();
 
-        void    geometry(Vec2 v0, Vec2 v1, Vec2 v2);
-        void    style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
-        void    color(const char* color = "#000000", float opacity = 1.0f);
-        Intrls& skew(bool skew = false);
-        Intrls& at(int index, Vec2 position);
+        void  geometry(Vec2 v0, Vec2 v1, Vec2 v2);
+        void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
+        void  color(const char* color = "#000000", float opacity = 1.0f);
+        Skew& skew(bool skew = false);
     };
 
     class ARTCODE_API Pen {
       private:
-        struct Intrls;
-        Intrls* intrls;
+        size_t                s_index;
+        std::unique_ptr<Skew> _skew;
+        // pen data
+        /*struct ARTCODE_API PenData {
+            Vec2 position;
+            int  id;
+        };
+        std::unique_ptr<PenData> _pen;*/
 
         void shape_type();
 
       public:
         Pen();
 
-        void    point(Vec2 position);
-        void    curve(Vec2 handle);
-        void    style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
-        void    color(const char* color, float opacity = 1.0f);
-        Intrls& skew(bool skew = false);
-        Intrls& at(int index, Vec2 position);
+        void  point(Vec2 position);
+        void  curve(Vec2 handle);
+        void  style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
+        void  color(const char* color, float opacity = 1.0f);
+        Skew& skew(bool skew = false);
     };
 
     ARTCODE_API void Draw();
 
-    ARTCODE_API const char* BackgroundColor(const char*);
+    ARTCODE_API void BackgroundColor(const char*);
 }; // namespace Art
 
 // TODO:add expresssion templates

@@ -47,7 +47,7 @@ void main() {
   vec2 center     = vec2(0.0f, 0.0f);
   vec2 p          = vec2(0.0f, 0.0f);
   // set pos to ubo coord
-  pos.y = ubo.reso.y + pos.y;
+  pos.y += ubo.reso.y;
 
   const float stroke = constant.fill == 0 ? constant.stroke : 0.0f;
   // NOTE:pen has a different stroke because along the path d

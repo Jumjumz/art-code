@@ -1,6 +1,5 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
-#include <cmath>
 #include <numbers>
 #include <stdexcept>
 
@@ -25,6 +24,10 @@ struct ShapeAttributes {
         std::array<SkewPos, 8> skew_data = {{{}}};
     } shape_skew;
     // pen data
+    struct PenInstance {
+        size_t                   size     = 0;
+        std::array<PHandle, 500> pen_data = {{{}}};
+    } shape_pen;
 };
 
 struct ShapeRegistry {
@@ -130,8 +133,8 @@ ArrayVec2 shape_vertices(ShapeType type, size_t index) {
 
             // radius is both shape_data.x and shape_data.y
             vertices.push_back(
-                Vec2{shape_inst.position.x + std::cos(angle) * shape_inst.shape_data.x,
-                     shape_inst.position.y + std::sin(angle) * shape_inst.shape_data.x});
+                Vec2{shape_inst.position.x + glm::cos(angle) * shape_inst.shape_data.x,
+                     shape_inst.position.y + glm::sin(angle) * shape_inst.shape_data.x});
         }
         return vertices;
         break;
@@ -141,7 +144,18 @@ ArrayVec2 shape_vertices(ShapeType type, size_t index) {
         break;
     }
     case ShapeType::Pen: {
-        return vertices = {};
+        Vec2 position = Vec2(FLT_MAX, FLT_MAX);
+        for (size_t i = 0; i < shape_inst.shape_pen.size; i++) {
+            Vec2 pos = shape_inst.shape_pen.pen_data[i].position;
+            // gets the min of all vertices
+            position.x = std::min<float>(position.x, pos.x);
+            position.y = std::min<float>(position.y, pos.y);
+            // push pos
+            vertices.push_back(pos);
+        }
+        // assign position to shape registry
+        shape_inst.position = position;
+        return vertices;
         break;
     }
     };
@@ -159,7 +173,7 @@ Skew& Skew::at(int index, Vec2 position) {
     auto& shape = ShapeRegistry::instances[ShapeRegistry::size - 1];
     if (shape.skew == 1) {
         if (this->size < 8) {
-            shape.shape_skew.skew_data[this->size] = {index, position};
+            shape.shape_skew.skew_data[this->size] = {position, index};
             // increment sizes
             shape.shape_skew.size++;
             this->size++;
@@ -238,89 +252,102 @@ void Circle::shape_type() {
         static_cast<int>(ShapeType::Circle);
 };
 
-Triangle::Triangle() {
+Triangle::Triangle()
+    : s_index(ShapeRegistry::size),
+      _skew(std::make_unique<Skew>()) {
     ShapeRegistry::size++;
     shape_type();
-};
-
-struct Triangle::Intrls {
-    int  skew = 0;
-    int  index;
-    Vec2 position;
 };
 
 void Triangle::geometry(Vec2 v0, Vec2 v1, Vec2 v2) {
-    const auto index = ShapeRegistry::size - 1;
     // mesh starts at min vector
-    const Vec2 position = {std::min<float>({v0.x, v1.x, v2.x}),
-                           std::min<float>({v0.y, v1.y, v2.y})};
+    const Vec2 position = {glm::min<float>(glm::min<float>(v0.x, v1.x), v2.x),
+                           glm::min<float>(glm::min<float>(v0.y, v1.y), v2.y)};
 
-    ShapeRegistry::instances[index].position = position;
-    ShapeRegistry::instances[index].p0       = v0;
-    ShapeRegistry::instances[index].p1       = v1;
-    ShapeRegistry::instances[index].p2       = v2;
+    ShapeRegistry::instances[this->s_index].position = position;
+    ShapeRegistry::instances[this->s_index].p0       = v0;
+    ShapeRegistry::instances[this->s_index].p1       = v1;
+    ShapeRegistry::instances[this->s_index].p2       = v2;
 };
 
 void Triangle::style(bool fill, float stroke, float rotate) {
-    const auto index = ShapeRegistry::size - 1;
-
-    ShapeRegistry::instances[index].fill   = static_cast<int>(fill);
-    ShapeRegistry::instances[index].stroke = stroke;
-    ShapeRegistry::instances[index].rotate = rotate;
+    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(fill);
+    ShapeRegistry::instances[this->s_index].stroke = stroke;
+    ShapeRegistry::instances[this->s_index].rotate = rotate;
 };
 
 void Triangle::color(const char* color, float opacity) {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].color = convert_color(color, opacity);
+    ShapeRegistry::instances[this->s_index].color = convert_color(color, opacity);
 };
 
-Triangle::Intrls& Triangle::skew(bool skew) {
-    this->intrls->skew = skew;
-
-    ShapeRegistry::instances[ShapeRegistry::size - 1].skew = this->intrls->skew;
-    return *this->intrls;
-};
-
-Triangle::Intrls& Triangle::at(int index, Vec2 position) {
-    // TODO:apply skew position
-    return *this->intrls;
+Skew& Triangle::skew(bool skew) {
+    ShapeRegistry::instances[this->s_index].skew = skew;
+    return *this->_skew;
 };
 
 void Triangle::shape_type() {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_type =
+    ShapeRegistry::instances[this->s_index].shape_type =
         static_cast<int>(ShapeType::Triangle);
 };
 
-Pen::Pen() {
+Pen::Pen()
+    : s_index(ShapeRegistry::size),
+      _skew(std::make_unique<Skew>()) {
     ShapeRegistry::size++;
     shape_type();
-};
-
-struct Pen::Intrls {
-    int  skew;
-    int  index;
-    Vec2 position;
 };
 
 // TODO:implement pen implementations
 void Pen::point(Vec2 position) {
-
+    auto& pen = ShapeRegistry::instances[this->s_index].shape_pen;
+    if (pen.size < 500) {
+        pen.pen_data[pen.size].position = position;
+        pen.pen_data[pen.size].id       = 1;
+        pen.size++;
+    }
 };
 
 void Pen::curve(Vec2 handle) {
-
+    constexpr int ID  = 2;
+    auto&         pen = ShapeRegistry::instances[this->s_index].shape_pen;
+    if (pen.size < 500) {
+        // NOTE:this is added so that we dont add array in index -1
+        // this is for situations where curve is called first
+        // check if we are at the beginning of the array
+        if (pen.size == 0) {
+            pen.pen_data[pen.size].position = handle;
+            // id = 2 is the curve indicator
+            pen.pen_data[pen.size].id = ID;
+        } else {
+            // updated the prev index .id to 0
+            // 0 is the indicator that the next point is the handle
+            pen.pen_data[pen.size - 1].id = 0;
+            // add handle to current index
+            pen.pen_data[pen.size].position = handle;
+            // id = 2 is the curve indicator
+            pen.pen_data[pen.size].id = ID;
+        }
+        pen.size++;
+    }
 };
 
 void Pen::style(bool fill, float stroke, float rotate) {
-
+    ShapeRegistry::instances[this->s_index].fill   = fill;
+    ShapeRegistry::instances[this->s_index].stroke = stroke;
+    ShapeRegistry::instances[this->s_index].rotate = rotate;
 };
 
-Pen::Intrls& Pen::skew(bool skew) { return *this->intrls; };
+void Pen::color(const char* color, float opacity) {
+    ShapeRegistry::instances[this->s_index].color = convert_color(color, opacity);
+};
 
-Pen::Intrls& Pen::at(int index, Vec2 position) { return *this->intrls; };
+Skew& Pen::skew(bool skew) {
+    ShapeRegistry::instances[this->s_index].skew = skew;
+    return *this->_skew;
+};
 
 void Pen::shape_type() {
-    ShapeRegistry::instances[ShapeRegistry::size - 1].shape_type =
-        static_cast<int>(ShapeType::Pen);
+    ShapeRegistry::instances[this->s_index].shape_type = static_cast<int>(ShapeType::Pen);
 };
 
 // TODO:remove shape_vertices and indices functions
@@ -448,6 +475,7 @@ void Art::Draw() {
         for (size_t i = 0; i < shape_size; i++) {
             const auto& shape      = ShapeRegistry::instances[i];
             const auto  shape_type = shape.shape_type;
+            const auto& mesh_size  = shape_mesh(shape_type, i);
 
             PushConstants constants{};
             constants.bg_color   = convert_color("#FFFFFF", 1.0f);
@@ -455,12 +483,12 @@ void Art::Draw() {
             constants.pos        = shape.position;
             constants.center     = shape.center;
             constants.shape_data = shape.shape_data;
-            constants.mesh_size  = shape_mesh(shape_type, i);
+            constants.mesh_size  = mesh_size;
             // triangle uses these in shaders instead of shape data
             constants.p0 = shape.p0;
             constants.p1 = shape.p1;
             constants.p2 = shape.p2;
-            // for triangle
+
             constants.stroke     = shape.stroke;
             constants.rotate     = shape.rotate;
             constants.fill       = shape.fill;
@@ -468,16 +496,12 @@ void Art::Draw() {
             constants.shape_type = shape_type;
 
             Shared::Memory::register_constants(constants);
-            // TODO:this passes the entire size of std::array
-            // add size to only pass what the users passed
-            // register pen instances
-            Shared::Memory::register_pen_data({{{}}});
 
-            // TODO:skew should also work for pen, curently skew mesh is using member
-            // "position" and not "positions" which pen uses
+            Shared::Memory::register_pen_data(shape.shape_pen.pen_data,
+                                              shape.shape_pen.size);
+
             const auto& skew_mesh = get_skew_mesh(constants.mesh_size, constants.pos);
 
-            // TODO:add correct skew pos
             SkewData skew_data{};
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = shape.shape_skew.skew_data;
