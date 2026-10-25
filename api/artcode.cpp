@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 struct ShapeAttributes {
+    Vec4  bg_color   = Vec4{1.0f};
     Vec4  color      = Vec4{1.0f};
     Vec2  position   = Vec2{50.0f, 50.0f};
     Vec2  center     = Vec2{50.0f, 50.0f};
@@ -88,10 +89,10 @@ Vec2 mesh_size(const ArrayVec2& shape_vertices) {
     float max_y = -FLT_MAX, min_y = FLT_MAX;
 
     for (const auto& vertex : shape_vertices) {
-        max_x = std::max<float>(max_x, vertex.x);
-        min_x = std::min<float>(min_x, vertex.x);
-        max_y = std::max<float>(max_y, vertex.y);
-        min_y = std::min<float>(min_y, vertex.y);
+        max_x = glm::max<float>(max_x, vertex.x);
+        min_x = glm::min<float>(min_x, vertex.x);
+        max_y = glm::max<float>(max_y, vertex.y);
+        min_y = glm::min<float>(min_y, vertex.y);
     }
 
     return Vec2{max_x - min_x, max_y - min_y};
@@ -148,8 +149,8 @@ ArrayVec2 shape_vertices(ShapeType type, size_t index) {
         for (size_t i = 0; i < shape_inst.shape_pen.size; i++) {
             Vec2 pos = shape_inst.shape_pen.pen_data[i].position;
             // gets the min of all vertices
-            position.x = std::min<float>(position.x, pos.x);
-            position.y = std::min<float>(position.y, pos.y);
+            position.x = glm::min<float>(position.x, pos.x);
+            position.y = glm::min<float>(position.y, pos.y);
             // push pos
             vertices.push_back(pos);
         }
@@ -182,10 +183,7 @@ Skew& Skew::at(int index, Vec2 position) {
     return *this;
 };
 
-using Quad     = Art::Quad;
-using Circle   = Art::Circle;
-using Triangle = Art::Triangle;
-using Pen      = Art::Pen;
+using Quad = Art::Quad;
 
 // TODO:implement shapes internals
 Quad::Quad()
@@ -220,6 +218,8 @@ void Quad::shape_type() {
     ShapeRegistry::instances[this->s_index].shape_type = static_cast<int>(ShapeType::Quad);
 };
 
+using Circle = Art::Circle;
+
 Circle::Circle()
     : s_index(ShapeRegistry::size),
       _skew(std::make_unique<Skew>()) {
@@ -251,6 +251,8 @@ void Circle::shape_type() {
     ShapeRegistry::instances[this->s_index].shape_type =
         static_cast<int>(ShapeType::Circle);
 };
+
+using Triangle = Art::Triangle;
 
 Triangle::Triangle()
     : s_index(ShapeRegistry::size),
@@ -290,6 +292,8 @@ void Triangle::shape_type() {
         static_cast<int>(ShapeType::Triangle);
 };
 
+using Pen = Art::Pen;
+
 Pen::Pen()
     : s_index(ShapeRegistry::size),
       _skew(std::make_unique<Skew>()) {
@@ -298,18 +302,21 @@ Pen::Pen()
 };
 
 // TODO:implement pen implementations
-void Pen::point(Vec2 position) {
+void Pen::point(float x, float y) {
     auto& pen = ShapeRegistry::instances[this->s_index].shape_pen;
     if (pen.size < 500) {
-        pen.pen_data[pen.size].position = position;
+        // id = 1 indicates begin/end points is a segment
+        pen.pen_data[pen.size].position = Vec2{x, y};
         pen.pen_data[pen.size].id       = 1;
         pen.size++;
     }
 };
 
-void Pen::curve(Vec2 handle) {
-    constexpr int ID  = 2;
-    auto&         pen = ShapeRegistry::instances[this->s_index].shape_pen;
+void Pen::curve(float h_x, float h_y) {
+    constexpr int ID     = 2;
+    const Vec2    handle = {h_x, h_y};
+
+    auto& pen = ShapeRegistry::instances[this->s_index].shape_pen;
     if (pen.size < 500) {
         // NOTE:this is added so that we dont add array in index -1
         // this is for situations where curve is called first
@@ -350,80 +357,12 @@ void Pen::shape_type() {
     ShapeRegistry::instances[this->s_index].shape_type = static_cast<int>(ShapeType::Pen);
 };
 
-// TODO:remove shape_vertices and indices functions
-// API implementations
-/*using DrawQuad     = Artt::Quad;
-using DrawCircle   = Artt::Circle;
-using DrawTriangle = Artt::Triangle;
-using DrawPen      = Artt::Pen;
-
-// Quad
-DrawQuad::Quad()
-    : l(100),
-      w(100) {
-    InstanceRegistry::register_instance(this);
+// background color
+void Art::BackgroundColor(const char* color, float opacity) {
+    ShapeRegistry::instances[ShapeRegistry::size].bg_color = convert_color(color, opacity);
 };
 
-ArrayVec2 DrawQuad::generate_vertices() const {
-    //  quad coordinates and size
-    return ArrayVec2{
-        this->position,
-        this->position + Vec2{this->w, 0.0f},
-        this->position + Vec2{this->w, this->l},
-        this->position + Vec2{0.0f, this->l},
-    };
-};
-
-Vec2 DrawQuad::shape_data() { return Vec2{this->w, this->l}; };
-
-int DrawQuad::shape_type() const { return static_cast<int>(ShapeType::Quad); };
-
-// Circle
-DrawCircle::Circle()
-    : radius(100.0f) {
-    InstanceRegistry::register_instance(this);
-};
-
-ArrayVec2 DrawCircle::generate_vertices() const {
-    ArrayVec2 vertex;
-    // center of the circle
-    vertex.push_back(this->position);
-
-    const size_t num_seg = 8;
-    for (size_t i = 0; i < num_seg; i++) {
-        float angle = i * 2.0f * std::numbers::pi / num_seg;
-
-        vertex.push_back(Vec4{this->position.x + std::cos(angle) * this->radius,
-                              this->position.y + std::sin(angle) * this->radius, 2.0f,
-                              2.0f});
-    }
-    return vertex;
-};
-
-Vec2 DrawCircle::shape_data() { return Vec2{this->radius, this->radius}; };
-
-int DrawCircle::shape_type() const { return static_cast<int>(ShapeType::Circle); };
-
-// Triangle
-DrawTriangle::Triangle() { InstanceRegistry::register_instance(this); };
-
-ArrayVec2 DrawTriangle::generate_vertices() const {
-    return ArrayVec2{this->v0, this->v1, this->v2};
-};
-
-// NOTE:triangle doesnt need to return shape data
-// just needs to assign p0, p1 and p2
-Vec2 DrawTriangle::shape_data() {
-    this->v0 += this->position;
-    this->v1 += this->position;
-    this->v2 += this->position;
-
-    return this->v0;
-};
-
-int DrawTriangle::shape_type() const { return static_cast<int>(ShapeType::Triangle); };
-
-DrawPen::Pen() {
+/*DrawPen::Pen() {
     // pen is false by default
     this->fill = false;
 
@@ -461,7 +400,7 @@ Vec2 DrawPen::shape_data() {
     return this->position;
 };
 
-int DrawPen::shape_type() const { return static_cast<int>(ShapeType::Pen); };
+int     DrawPen::shape_type() const { return static_cast<int>(ShapeType::Pen); };
 */
 void Art::Draw() {
     // load shared memory
@@ -478,7 +417,7 @@ void Art::Draw() {
             const auto& mesh_size  = shape_mesh(shape_type, i);
 
             PushConstants constants{};
-            constants.bg_color   = convert_color("#FFFFFF", 1.0f);
+            constants.bg_color   = shape.bg_color;
             constants.color      = shape.color;
             constants.pos        = shape.position;
             constants.center     = shape.center;
@@ -506,7 +445,7 @@ void Art::Draw() {
             skew_data.skew_mesh = skew_mesh;
             skew_data.skew_pos  = shape.shape_skew.skew_data;
 
-            Shared::Memory::register_skew_data(skew_data);
+            Shared::Memory::register_skew_data(skew_data, shape.shape_skew.size);
 
             // increment instance size, mutates instance size per loop execution
             Shared::Memory::increment_instance_size();

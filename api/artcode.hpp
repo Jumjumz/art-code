@@ -2,7 +2,6 @@
 
 #include <array>
 #include <glm/glm.hpp>
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -126,8 +125,10 @@ namespace Art {
       public:
         Pen();
 
-        void  point(Vec2 position);
-        void  curve(Vec2 handle);
+        // point position
+        void point(float x, float y);
+        // pen handle
+        void  curve(float h_x, float h_y);
         void  style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
         void  color(const char* color, float opacity = 1.0f);
         Skew& skew(bool skew = false);
@@ -135,7 +136,7 @@ namespace Art {
 
     ARTCODE_API void Draw();
 
-    ARTCODE_API void BackgroundColor(const char*);
+    ARTCODE_API void BackgroundColor(const char* color, float opacity = 1.0f);
 }; // namespace Art
 
 // TODO:add expresssion templates

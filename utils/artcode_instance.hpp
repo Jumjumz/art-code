@@ -54,6 +54,7 @@ struct PenInstance {
 struct SkewData {
     std::array<Vec2, 8>    skew_mesh;
     std::array<SkewPos, 8> skew_pos;
+    size_t                 skew_pos_size = 0;
 };
 
 struct PushConstants {
@@ -178,11 +179,14 @@ namespace Shared {
             inst.constants = push_const;
         }
 
-        static void register_skew_data(const SkewData& skew_data) {
+        static void register_skew_data(const SkewData& skew_data, size_t size) {
             check_instance_size();
 
             auto& inst     = region->instance[region->size];
             inst.skew_data = skew_data;
+            size           = size == 0 ? 1 : size;
+
+            inst.skew_data.skew_pos_size = size;
         }
 
         static void register_pen_data(const std::array<PHandle, 500>& pen_handles,

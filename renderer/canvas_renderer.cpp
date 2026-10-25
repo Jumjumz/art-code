@@ -93,6 +93,7 @@ void CanvasRenderer::update_artcode_buffers() {
     for (size_t i = 0; i < inst_size; i++) {
         const auto& instance = Shared::Memory::get_instance(i);
 
+        // TODO:skew pos should not send the full 8 items, shoud depend on user input
         this->artcode_buffer->skew_data.push_back(instance.skew_data);
         {
             std::vector<PHandle> pen_data(instance.pen_data.items.begin(),

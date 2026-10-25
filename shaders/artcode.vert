@@ -86,6 +86,10 @@ vec2 skew(vec2 pos) {
 }*/
 
 void main() {
+  // NOTE:add stroke in padding for pen instances
+  // this fixes render issues for stroke and mesh size
+  // making the mesh size dynamic depending on stroke value
+  const float padding  = (constant.fill == 0 && constant.shape_type == 3) ? constant.stroke + 20.0f : 20.0f;
   vec2 position        = constant.pos;
   const vec2 mesh_size = constant.mesh_size;
   // test skew ssbo
@@ -96,12 +100,12 @@ void main() {
   // NOTE:might need to add padding in mesh
   // sets the quad to position and mesh size
   const vec2 positions[6] = vec2[](
-    position,
-    vec2( position.x + mesh_size.x, position.y  ),
-    vec2( position.x,  position.y + mesh_size.y ),
-    vec2( position.x + mesh_size.x, position.y  ),
-    vec2( position.x,  position.y + mesh_size.y ),
-    position + mesh_size
+    vec2( position.x - padding, position.y - padding),
+    vec2( ( position.x + mesh_size.x ) + padding, position.y - padding  ),
+    vec2( position.x - padding,  ( position.y + mesh_size.y ) + padding ),
+    vec2( ( position.x + mesh_size.x ) + padding, position.y - padding  ),
+    vec2( position.x - padding,  ( position.y + mesh_size.y ) + padding ),
+    ( position + mesh_size ) + padding
   );
 
   vec2 art_pos = positions[gl_VertexIndex];

@@ -36,6 +36,7 @@ int ray_cross      (vec2 p, vec2 a, vec2 b);
 void main() {
   vec3 color  = constant.color.rgb;
   float alpha = constant.color.a;
+  int fill    = constant.fill;
   // convert color to linear space using gamma correction 2.2
   color = pow(color, vec3(2.2f));
  
@@ -49,11 +50,11 @@ void main() {
   // set pos to ubo coord
   pos.y += ubo.reso.y;
 
-  const float stroke = constant.fill == 0 ? constant.stroke : 0.0f;
+  const float stroke = fill == 0 ? constant.stroke : 0.0f;
   // NOTE:pen has a different stroke because along the path d
   // stroke is being rendered on both ends, meaning it doubles the stroke render
   // deviding it in half makes it accurate, should only apply works for fill == 0
-  const float pen_stroke = constant.fill == 1 ? 0.0f : stroke / 2.0f;
+  const float pen_stroke = fill == 1 ? 0.0f : stroke / 2.0f;
   float d                = 1e10; // large number for pen to work
   int winding            = 0;    // for pen fill instances
   if (shape == 0) {
@@ -84,9 +85,10 @@ void main() {
     while (i < pen_ssbo.data.length() - 1) {
       int id = pen_ssbo.data[i].id;
       if (id == 0) {
-        vec2 p0 = pen_ssbo.data[i].position;
-        vec2 p1 = pen_ssbo.data[i + 1].position; // handle
-        vec2 p2 = pen_ssbo.data[i + 2].position;
+        // add stroke to the positions as mesh added a padding + stroke
+        vec2 p0 = pen_ssbo.data[i].position + stroke;
+        vec2 p1 = pen_ssbo.data[i + 1].position + stroke; // handle
+        vec2 p2 = pen_ssbo.data[i + 2].position + stroke;
 
         // normalize to ubo coordinates
         p0.y += ubo.reso.y;
@@ -102,8 +104,9 @@ void main() {
         winding += sdf_winding( vert_pos, p0, p1, p2 );
         i += 2; // i+2, jumps to the 3rd index
       } else {
-        vec2 a = pen_ssbo.data[i].position;
-        vec2 b = pen_ssbo.data[i + 1].position;
+        // add stroke to the positions as mesh added a padding + stroke
+        vec2 a = pen_ssbo.data[i].position + stroke;
+        vec2 b = pen_ssbo.data[i + 1].position + stroke;
 
         // normalize to ubo coordinates
         a.y += ubo.reso.y;
@@ -124,7 +127,7 @@ void main() {
   // pen has different rendering
   if (shape != 3 && d > 0.0f) alpha = 0.0f;
 
-  const float AA_SPREAD = fwidth(d) * 1.8f;
+  const float AA_SPREAD = fwidth(d) * 1.1f;
 
   // NOTE:excempt quad and curve lines
   // as it has its own smoothing method
@@ -132,7 +135,7 @@ void main() {
     alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
 
   // smoothing fill pens
-  if (constant.fill == 1 && shape == 3) {
+  if (fill == 1 && shape == 3) {
     // winding ==  0 is the outside of the shape
     // winding == -1 is the inside of the shape
     // this removes the outside aka the mesh
@@ -148,7 +151,7 @@ void main() {
   }
  
   // render annular shapes
-  if (constant.fill == 0) {
+  if (fill == 0) {
     // quads dont need to check alpha values
     // set to 0 to have a flat inner edge
     if (shape == 0)
