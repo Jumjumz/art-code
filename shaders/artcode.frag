@@ -1,6 +1,6 @@
 #version 450
 
-layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;float ppi;} ubo;
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;float ppi;float zoom;} ubo;
 layout(push_constant) uniform PushConstants {
   vec4 bg_color;
   vec4 color;
@@ -33,6 +33,8 @@ int sdf_winding    (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 int ray_cross      (vec2 p, vec2 a, vec2 b);
 
 // TODO:implement rotate and skew to sdf shapes
+// FIXME:fix render issue when zooming, it looks like it misaligns
+// or the AA is jagged in certain zoom values
 void main() {
   vec3 color  = constant.color.rgb;
   float alpha = constant.color.a;
@@ -127,7 +129,7 @@ void main() {
   // pen has different rendering
   if (shape != 3 && d > 0.0f) alpha = 0.0f;
 
-  const float AA_SPREAD = fwidth(d) * 1.1f;
+  float AA_SPREAD = fwidth(d) * 1.1f;
 
   // NOTE:excempt quad and curve lines
   // as it has its own smoothing method

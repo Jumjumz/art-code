@@ -224,6 +224,7 @@ void CanvasRenderer::canvas_events(GLFWwindow* app_window) {
 void CanvasRenderer::artboard_setup(const glm::vec3& artboard_size, bool show_main_ui) {
     // transfer data
     this->show_main_ui = show_main_ui;
+    const auto& zoom   = CanvasControls::zoom;
 
     // set ubo
     ArtboardBuffer ab_ubo{
@@ -231,8 +232,8 @@ void CanvasRenderer::artboard_setup(const glm::vec3& artboard_size, bool show_ma
         .view  = glm::mat4(1.0f),
         .model = glm::mat4(1.0f),
         .reso  = glm::vec2{artboard_size.x, -artboard_size.y},
-        // third value in artboard is ppi
-        .ppi = artboard_size.z};
+        .ppi   = artboard_size.z,
+        .zoom  = zoom};
 
     // y-flip
     ab_ubo.proj[1][1] *= -1;

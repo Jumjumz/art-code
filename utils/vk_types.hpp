@@ -10,8 +10,7 @@ struct ArtboardBuffer {
     glm::mat4 model;
     glm::vec2 reso;
     float     ppi;
-    // added 4 bytes for alignment
-    float _padding;
+    float     zoom;
 };
 
 // used in canvas renderer and canvas class

@@ -1,6 +1,6 @@
 #version 450
 
-layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;float ppi;} ubo;
+layout(binding = 0) uniform ArtboardBuffer {mat4 proj;mat4 view;mat4 model;vec2 reso;float ppi;float zoom;} ubo;
 layout(push_constant) uniform PushConstants {
   vec4 bg_color;
   vec4 color;
@@ -90,8 +90,8 @@ void main() {
   // this fixes render issues for stroke and mesh size
   // making the mesh size dynamic depending on stroke value
   const float padding  = (constant.fill == 0 && constant.shape_type == 3) ? constant.stroke + 20.0f : 20.0f;
+  const vec2 mesh_size = constant.mesh_size; 
   vec2 position        = constant.pos;
-  const vec2 mesh_size = constant.mesh_size;
   // test skew ssbo
   const vec2 ssb_skew  = skew_ssbo.data.skew_pos[0].pos;
   // set position to ubo coord
@@ -109,8 +109,7 @@ void main() {
   );
 
   vec2 art_pos = positions[gl_VertexIndex];
-
-  vert_pos = art_pos;
+  vert_pos     = art_pos;
 
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);
 }

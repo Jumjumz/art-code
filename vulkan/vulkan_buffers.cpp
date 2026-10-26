@@ -15,16 +15,16 @@ void VulkanBuffers::artboard_create_image(const uint32_t& width, const uint32_t&
     this->extent = vk::Extent3D{width, height, 1};
 
     vk::ImageCreateInfo image_info{};
-    image_info.imageType   = vk::ImageType::e2D;
-    image_info.format      = vk::Format::eR8G8B8A8Srgb;
-    image_info.extent      = this->extent;
-    image_info.mipLevels   = 1;
-    image_info.arrayLayers = 1;
-    image_info.samples     = vk::SampleCountFlagBits::e1;
-    image_info.tiling      = vk::ImageTiling::eOptimal;
-    image_info.usage       = vk::ImageUsageFlagBits::eColorAttachment |
-                       vk::ImageUsageFlagBits::eSampled |
-                       vk::ImageUsageFlagBits::eTransferSrc;
+    image_info.imageType     = vk::ImageType::e2D;
+    image_info.format        = vk::Format::eR8G8B8A8Srgb;
+    image_info.extent        = this->extent;
+    image_info.mipLevels     = 1;
+    image_info.arrayLayers   = 1;
+    image_info.samples       = vk::SampleCountFlagBits::e1;
+    image_info.tiling        = vk::ImageTiling::eOptimal;
+    image_info.usage         = vk::ImageUsageFlagBits::eColorAttachment |
+                               vk::ImageUsageFlagBits::eSampled |
+                               vk::ImageUsageFlagBits::eTransferSrc;
     image_info.initialLayout = vk::ImageLayout::eUndefined;
 
     this->images = vk::raii::Image{this->device, image_info, nullptr};
@@ -90,7 +90,7 @@ void VulkanBuffers::artboard_create_buffer() {
 void VulkanBuffers::artboard_create_sampler() {
     vk::SamplerCreateInfo sampler_info{};
     sampler_info.magFilter    = vk::Filter::eNearest;
-    sampler_info.minFilter    = vk::Filter::eLinear;
+    sampler_info.minFilter    = vk::Filter::eNearest;
     sampler_info.addressModeU = vk::SamplerAddressMode::eClampToEdge;
     sampler_info.addressModeV = vk::SamplerAddressMode::eClampToEdge;
 

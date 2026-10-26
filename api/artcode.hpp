@@ -60,6 +60,12 @@ struct ARTCODE_API Skew {
     size_t size;
 };
 
+struct Style {
+    bool  fill   = false;
+    float stroke = 10.0f;
+    float rotate = 0.0f;
+};
+
 namespace Art {
     class ARTCODE_API Quad {
       private:
@@ -71,8 +77,10 @@ namespace Art {
       public:
         Quad();
 
+        void  geometry(float x, float y, float width, float length);
         void  geometry(Vec2 position, float width, float length);
         void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
+        void  style(Style style);
         void  color(const char* color = "#000000", float opacity = 1.0f);
         Skew& skew(bool skew = false);
     };
@@ -87,8 +95,10 @@ namespace Art {
       public:
         Circle();
 
+        void  geometry(float x, float y, float radius);
         void  geometry(Vec2 position, float radius);
         void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
+        void  style(Style style);
         void  color(const char* color = "#000000", float opacity = 1.0f);
         Skew& skew(bool skew = false);
     };
@@ -105,6 +115,7 @@ namespace Art {
 
         void  geometry(Vec2 v0, Vec2 v1, Vec2 v2);
         void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
+        void  style(Style style);
         void  color(const char* color = "#000000", float opacity = 1.0f);
         Skew& skew(bool skew = false);
     };
@@ -113,23 +124,18 @@ namespace Art {
       private:
         size_t                s_index;
         std::unique_ptr<Skew> _skew;
-        // pen data
-        /*struct ARTCODE_API PenData {
-            Vec2 position;
-            int  id;
-        };
-        std::unique_ptr<PenData> _pen;*/
 
         void shape_type();
 
       public:
         Pen();
 
-        // point position
+        // position and handle
         void point(float x, float y);
-        // pen handle
-        void  curve(float h_x, float h_y);
+        void curve(float h_x, float h_y);
+
         void  style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
+        void  style(Style style);
         void  color(const char* color, float opacity = 1.0f);
         Skew& skew(bool skew = false);
     };
