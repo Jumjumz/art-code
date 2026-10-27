@@ -6,6 +6,7 @@ layout(binding = 0) uniform ArtboardBuffer {
   mat4 model;
   vec2 reso;
   float ppi;
+  float zoom;
 } ubo;
 
 layout(location = 0) out vec2 artboard_pos;
@@ -21,5 +22,5 @@ void main() {
 
   artboard_pos = positions[gl_VertexIndex];
 
-  gl_Position = ubo.proj * ubo.view * (ubo.model * vec4(artboard_pos, 0.0f, 1.0f));
+  gl_Position = ubo.proj * ubo.view * vec4(artboard_pos, 0.0f, 1.0f);
 }

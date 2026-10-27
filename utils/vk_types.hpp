@@ -40,8 +40,15 @@ struct Artboard {
         Artboard::artboard_size = artboard;
     }
 
+    static inline void set_artboard_zoom(const glm::vec2 artboard_zoom) {
+        Artboard::artboard_zoom = artboard_zoom;
+    }
+
     static inline glm::vec2 get_artboard_size() { return Artboard::artboard_size; }
 
+    static inline glm::vec2 get_artboard_zoom() { return Artboard::artboard_zoom; }
+
   private:
-    static inline glm::vec2 artboard_size = {};
+    static inline glm::vec2 artboard_size = {0.0f, 0.0f};
+    static inline glm::vec2 artboard_zoom = {0.0f, 0.0f};
 };

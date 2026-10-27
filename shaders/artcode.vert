@@ -90,7 +90,7 @@ void main() {
   // this fixes render issues for stroke and mesh size
   // making the mesh size dynamic depending on stroke value
   const float padding  = (constant.fill == 0 && constant.shape_type == 3) ? constant.stroke + 20.0f : 20.0f;
-  const vec2 mesh_size = constant.mesh_size; 
+  const vec2 mesh_size = constant.mesh_size;
   vec2 position        = constant.pos;
   // test skew ssbo
   const vec2 ssb_skew  = skew_ssbo.data.skew_pos[0].pos;

@@ -6,6 +6,7 @@ layout(binding = 0) uniform ArtboardBuffer {
   mat4 model;
   vec2 reso;
   float ppi;
+  float zoom;
 } ubo;
 
 layout(push_constant) uniform PushConstants {

@@ -24,10 +24,16 @@ void Application::loop() {
             if (!this->running)
                 break;
 
+            // TODO:fix scaling issues when zooming, artboard setup should
+            // be update the artboard everytime zoom updates
             // ensure canvas functions are only executed if canvas commands is not nullptr
             if (this->ui_manager.show_main_ui && this->canvas.artboard_commands) {
-                this->canvas.artboard_setup(this->ui_manager.artboard_size,
-                                            this->ui_manager.show_main_ui);
+                if (this->canvas.vulkan_init) {
+                    this->canvas.artboard_setup(this->ui_manager.artboard_size,
+                                                this->ui_manager.show_main_ui);
+                    // set to false to not run this if block after init
+                    this->canvas.vulkan_init = false;
+                }
                 this->canvas.record_artboard_command(this->current_frame);
                 if (this->canvas.buffer_exist())
                     // artcode command
@@ -51,8 +57,6 @@ void Application::loop() {
             // init pipeline and commands
             this->canvas.set_canvas_pipeline();
             this->canvas.set_canvas_commands();
-            // set to false to not run this if block after init
-            this->canvas.vulkan_init = false;
         }
 
         // compile shaders
@@ -65,6 +69,9 @@ void Application::loop() {
 
             ShadersCompiled::is_compiled = false;
         }
+
+        if (CanvasControls::zoom != 1.0f)
+            this->canvas.update_artboard();
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
