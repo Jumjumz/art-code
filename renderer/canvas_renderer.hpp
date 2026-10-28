@@ -52,6 +52,10 @@ class CanvasRenderer {
 
     void update_artboard();
 
+    // NOTE:for future use, this will be used
+    // for scaling artboard when zooming
+    void update_artboard_at_zoom();
+
   private:
     const vk::raii::PhysicalDevice& physical_device;
     const vk::raii::Device&         device;

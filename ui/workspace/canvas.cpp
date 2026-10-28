@@ -16,6 +16,8 @@ void Canvas::render() {
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar |
                      ImGuiWindowFlags_NoScrollWithMouse);
 
+    // TODO:change the texture that is being passed, passed the
+    // entire canvas workspace instead of just the artboard
     ImDrawList*  draw_list = ImGui::GetWindowDrawList();
     const ImVec2 panel_pos = ImGui::GetCursorScreenPos();
     const ImVec2 size      = ImGui::GetContentRegionAvail();
@@ -42,8 +44,6 @@ void Canvas::render() {
 
     // texture passed, update draw list to match what shaders has
     if (ArtboardUtils::artboard_texture != VK_NULL_HANDLE) {
-        // pass updated ab width and height with zoom
-        Artboard::set_artboard_zoom({ab_w, ab_h});
         // draw the rect again but this time in transparent, this fixes white jagged issues for curve shapes
         draw_list->AddRectFilled(ImVec2(ab_x, ab_y), ImVec2(ab_x + ab_w, ab_y + ab_h),
                                  IM_COL32(0, 0, 0, 0));

@@ -1,3 +1,4 @@
+#include "glm/ext/matrix_transform.hpp"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
@@ -198,7 +199,7 @@ void CanvasRenderer::canvas_events(GLFWwindow* app_window) {
             return;
 
         if (canvas->ctrl_pressed) {
-            CanvasControls::zoom += static_cast<float>(y) * 0.1f;
+            CanvasControls::zoom += static_cast<float>(y) * 0.2f;
             CanvasControls::zoom  = glm::clamp(CanvasControls::zoom, 0.5f, 10.0f);
         }
     });
@@ -423,44 +424,17 @@ void CanvasRenderer::update_artboard() {
 
     auto width  = static_cast<uint32_t>(artboard.x);
     auto height = static_cast<uint32_t>(artboard.y);
-
     if (this->vk_buffers.extent.width != width && this->vk_buffers.extent.height != height) {
         // create image views and msaa image view
         this->vk_buffers.artboard_create_image(width, height);
         this->vk_buffers.artboard_create_image_views();
+
+        // remove old texture
+        ImGui_ImplVulkan_RemoveTexture(ArtboardUtils::artboard_texture);
+
+        // run again after texture removal
+        ArtboardUtils::artboard_texture = ImGui_ImplVulkan_AddTexture(
+            *this->vk_buffers.artboard_sampler, *this->vk_buffers.image_views,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
-
-    // artboard zoom will update if artboard is zoomed
-    const auto& artboard_zoom = Artboard::get_artboard_zoom();
-    if (artboard_zoom != glm::vec2{0.0f, 0.0f}) {
-        width  = static_cast<uint32_t>(artboard_zoom.x);
-        height = static_cast<uint32_t>(artboard_zoom.y);
-        // update the ubo again
-        const auto& zoom = CanvasControls::zoom;
-
-        // set ubo
-        ArtboardBuffer ab_ubo{
-            .proj = glm::ortho(0.0f, artboard_zoom.x, artboard_zoom.y, 0.0f, -1.0f, 1.0f),
-            .view = glm::mat4(1.0f),
-            .model = glm::mat4(1.0f),
-            .reso  = glm::vec2{artboard_zoom.x, -artboard_zoom.y},
-            .ppi   = 72.0f,
-            .zoom  = zoom};
-
-        // y-flip
-        ab_ubo.proj[1][1] *= -1;
-
-        memcpy(this->vk_buffers.artboard_uniform_buffer_mapped, &ab_ubo, sizeof(ab_ubo));
-
-        // then update the images
-        this->vk_buffers.artboard_create_image(width, height);
-        this->vk_buffers.artboard_create_image_views();
-    }
-    // remove old texture
-    ImGui_ImplVulkan_RemoveTexture(ArtboardUtils::artboard_texture);
-
-    // run again after texture removal
-    ArtboardUtils::artboard_texture = ImGui_ImplVulkan_AddTexture(
-        *this->vk_buffers.artboard_sampler, *this->vk_buffers.image_views,
-        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 };

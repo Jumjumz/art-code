@@ -70,9 +70,6 @@ void Application::loop() {
             ShadersCompiled::is_compiled = false;
         }
 
-        if (CanvasControls::zoom != 1.0f)
-            this->canvas.update_artboard();
-
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
