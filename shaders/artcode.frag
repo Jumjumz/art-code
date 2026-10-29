@@ -32,6 +32,9 @@ float sdf_bezier   (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 int sdf_winding    (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 int ray_cross      (vec2 p, vec2 a, vec2 b);
 
+// transform functions
+vec2 sdf_rotate    (vec2 p, float angle);
+
 // TODO:implement rotate and skew to sdf shapes
 // FIXME:fix render issue when zooming, it looks like it misaligns
 // or the AA is jagged in certain zoom values
@@ -45,6 +48,7 @@ void main() {
   // init variables
   const int shape       = constant.shape_type;
   const vec2 shape_data = constant.shape_data;
+  const float rotate    = constant.rotate;
 
   vec2 pos        = constant.pos;
   vec2 center     = vec2(0.0f, 0.0f);
@@ -63,6 +67,8 @@ void main() {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
     p            = vert_pos - center;
+    if (rotate != 0.0f)
+      p = sdf_rotate(p, rotate);
 
     d = sdf_quad(p, b);
   } else if (shape == 1) {
@@ -129,7 +135,9 @@ void main() {
   // pen has different rendering
   if (shape != 3 && d > 0.0f) alpha = 0.0f;
 
-  float AA_SPREAD = fwidth(d) * 1.1f;
+  float AA_SPREAD = fwidth(d);
+  // testing this method for producing consistent AA between zoom levels
+  AA_SPREAD = clamp(AA_SPREAD, 0.1f, 2.0f);
 
   // NOTE:excempt quad and curve lines
   // as it has its own smoothing method
@@ -296,4 +304,12 @@ int ray_cross(in vec2 p, in vec2 a, in vec2 b) {
       return (a.y < b.y) ? 1 : -1;
   }
   return 0;
+}
+
+// transform functions
+vec2 sdf_rotate(vec2 p, float angle) {
+  float c = cos(angle);
+  float s = sin(angle);
+
+  return vec2(p.x * c - p.y * s, p.x * s - p.y - c);
 }

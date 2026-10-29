@@ -69,21 +69,9 @@ vec2 skew(vec2 pos) {
   return bilinear(uv, def_c0, def_c1, def_c2, def_c3);
 }*/
 
-//FIXME:this doesnt work! might need to be in frag shader
-/*vec2 rotate(vec2 pos) {
-  const float PI = 3.14159265359;
-  float radian   = constant.rotate * (PI / 180.0f);
-  float s        = sin(radian);
-  float c        = cos(radian);
-
-  vec2 center = constant.center;
-  center.y    = ubo.reso.y - center.y;
-  pos -= center;
-
-  vec2 rotated = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c);
-
-  return rotated + center;
-}*/
+// forward declarations
+vec2 get_center (vec2 positions[6]);
+vec2 rotate     (vec2 pos, vec2 center);
 
 void main() {
   // NOTE:add stroke in padding for pen instances
@@ -109,7 +97,30 @@ void main() {
   );
 
   vec2 art_pos = positions[gl_VertexIndex];
-  vert_pos     = art_pos;
+  if (constant.rotate != 0.0f) {
+    vec2 center = get_center(positions); // get center
+    art_pos = rotate(art_pos, center);
+  }
+  vert_pos = art_pos;
 
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);
+}
+
+// implementations
+vec2 get_center(vec2 positions[6]) {
+  vec2 center = vec2(0.0f, 0.0f);
+  for (int i = 0; i < positions.length(); i++) {
+    center += vec2(positions[i].x, positions[i].y);
+  }
+  return center /= float(positions.length());
+}
+
+vec2 rotate(vec2 pos, vec2 center) {
+  const float PI       = 3.14159265359;
+  const float radian   = constant.rotate * (PI / 180.0f);
+  const float s        = sin(radian);
+  const float c        = cos(radian);
+
+  pos -= center;
+  return vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c) + center;
 }
