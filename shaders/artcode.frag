@@ -34,7 +34,8 @@ int sdf_winding    (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 int ray_cross      (vec2 p, vec2 a, vec2 b);
 
 // transform functions
-vec2 sdf_rotate    (vec2 p, float angle);
+vec2 sdf_rotate          (vec2 p, float angle);
+vec2 absolute_pos_rotate (vec2 pos, vec2 center);
 
 // TODO:implement rotate and skew to sdf shapes
 // FIXME:fix render issue when zooming, it looks like it misaligns
@@ -89,12 +90,13 @@ void main() {
     p1.y += ubo.reso.y;
     p2.y += ubo.reso.y;
 
-    // FIXME:this doesnt work!
-    vec2 v_pos = vert_pos;
-    if (rotate != 0.0f)
-      v_pos = sdf_rotate(v_pos, rotate);
+    if (rotate != 0.0f) {
+      p0 = absolute_pos_rotate(p0, mesh_center);
+      p1 = absolute_pos_rotate(p1, mesh_center);
+      p2 = absolute_pos_rotate(p2, mesh_center);
+    }
     // free form triangle
-    d = sdf_triangle( v_pos, p0, p1, p2 );
+    d = sdf_triangle( vert_pos, p0, p1, p2 );
   } else if (shape == 3) {
     int i = 0;
     while (i < pen_ssbo.data.length() - 1) {
@@ -115,6 +117,12 @@ void main() {
         p1 -= pen_stroke;
         p2 -= pen_stroke;
 
+        if (rotate != 0.0f) {
+          p0 = absolute_pos_rotate(p0, mesh_center);
+          p1 = absolute_pos_rotate(p1, mesh_center);
+          p2 = absolute_pos_rotate(p2, mesh_center);
+        }
+
         d = min(d, sdf_bezier ( vert_pos, p0, p1, p2 ));
         winding += sdf_winding( vert_pos, p0, p1, p2 );
         i += 2; // i+2, jumps to the 3rd index
@@ -130,6 +138,11 @@ void main() {
         // offset to pen strokes
         a -= pen_stroke;
         b -= pen_stroke;
+
+        if (rotate != 0.0f) {
+          a = absolute_pos_rotate(a, mesh_center);
+          b = absolute_pos_rotate(b, mesh_center);
+        }
 
         d = min(d, sdf_segment( vert_pos, a, b ));
         winding += ray_cross  ( vert_pos, a, b );
@@ -332,4 +345,17 @@ vec2 sdf_rotate(vec2 p, float angle) {
   const float s        = sin(radian);
 
   return vec2(p.x * c - p.y * s, p.x * s + p.y * c);
+}
+
+// NOTE:uses the same as the vert for triangles
+// as triangles uses absolute vertices and should
+// match the mesh positions to render a correct rotated triangle
+vec2 absolute_pos_rotate(vec2 pos, vec2 center) {
+  const float PI       = 3.14159265359;
+  const float radian   = constant.rotate * (PI / 180.0f);
+  const float s        = sin(radian);
+  const float c        = cos(radian);
+
+  pos -= center;
+  return vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c) + center;
 }

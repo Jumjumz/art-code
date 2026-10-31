@@ -199,7 +199,7 @@ void Quad::style(bool fill, float stroke, float rotate) {
     ShapeRegistry::instances[this->s_index].rotate = rotate;
 };
 
-void Quad::style(Style style) {
+void Quad::style(const Style& style) {
     ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(style.fill);
     ShapeRegistry::instances[this->s_index].stroke = style.stroke;
     ShapeRegistry::instances[this->s_index].rotate = style.rotate;

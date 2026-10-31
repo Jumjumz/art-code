@@ -61,7 +61,7 @@ struct ARTCODE_API Skew {
 };
 
 struct Style {
-    bool  fill   = false;
+    bool  fill   = true;
     float stroke = 10.0f;
     float rotate = 0.0f;
 };
@@ -80,7 +80,7 @@ namespace Art {
         void  geometry(float x, float y, float width, float length);
         void  geometry(Vec2 position, float width, float length);
         void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
-        void  style(Style style);
+        void  style(const Style& style);
         void  color(const char* color = "#000000", float opacity = 1.0f);
         Skew& skew(bool skew = false);
     };
@@ -134,7 +134,8 @@ namespace Art {
         void point(float x, float y);
         void curve(float h_x, float h_y);
 
-        void  style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
+        void style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
+        // TODO:have different init values compared to others
         void  style(Style style);
         void  color(const char* color, float opacity = 1.0f);
         Skew& skew(bool skew = false);
