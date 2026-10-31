@@ -21,6 +21,7 @@ struct PenData {vec2 position;int id;};
 layout(std430, set = 0, binding = 2) readonly buffer PenBuffer {PenData data[];} pen_ssbo;
 layout(location = 0) in vec2 vert_pos;
 layout(location = 0) out vec4 frag_color;
+layout(location = 1) in vec2 mesh_center;
 
 // forward declarations
 float sdf_quad     (vec2 p, vec2 b);
@@ -74,6 +75,8 @@ void main() {
   } else if (shape == 1) {
     center = pos + shape_data;
     p      = vert_pos - center;
+    if (rotate != 0.0f)
+      p = sdf_rotate(p, rotate);
 
     d = sdf_circle(p, shape_data.x);
   } else if (shape == 2) {
@@ -86,8 +89,12 @@ void main() {
     p1.y += ubo.reso.y;
     p2.y += ubo.reso.y;
 
+    // FIXME:this doesnt work!
+    vec2 v_pos = vert_pos;
+    if (rotate != 0.0f)
+      v_pos = sdf_rotate(v_pos, rotate);
     // free form triangle
-    d = sdf_triangle( vert_pos, p0, p1, p2 );
+    d = sdf_triangle( v_pos, p0, p1, p2 );
   } else if (shape == 3) {
     int i = 0;
     while (i < pen_ssbo.data.length() - 1) {
@@ -137,11 +144,18 @@ void main() {
 
   float AA_SPREAD = fwidth(d);
   // testing this method for producing consistent AA between zoom levels
-  AA_SPREAD = clamp(AA_SPREAD, 0.1f, 2.0f);
+  AA_SPREAD = clamp(AA_SPREAD, 0.0f, 1.1f);
 
   // NOTE:excempt quad and curve lines
   // as it has its own smoothing method
   if (shape != 0 && shape != 3)
+    alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
+
+  // TODO:AA should not be applied for quad orientation that
+  // is either horizontal or vertical, AA is only needed
+  // when a quad is in a diagonal orientation
+  // NOTE:only apply AA to quad if it is rotated
+  if (shape == 0 && rotate != 0.0f)
     alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
 
   // smoothing fill pens
@@ -169,6 +183,10 @@ void main() {
 
     // excempt quads and pen instances
     if (shape != 0 && shape != 3)
+      alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
+
+    // NOTE:only apply inner edge AA if quad is rotated
+    if (shape == 0 && rotate != 0.0f)
       alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
 
     // NOTE:smoothnes not that good yet
@@ -308,8 +326,10 @@ int ray_cross(in vec2 p, in vec2 a, in vec2 b) {
 
 // transform functions
 vec2 sdf_rotate(vec2 p, float angle) {
-  float c = cos(angle);
-  float s = sin(angle);
+  const float PI       = 3.14159265359;
+  const float radian   = -angle * (PI / 180.0f);
+  const float c        = cos(radian);
+  const float s        = sin(radian);
 
-  return vec2(p.x * c - p.y * s, p.x * s - p.y - c);
+  return vec2(p.x * c - p.y * s, p.x * s + p.y * c);
 }

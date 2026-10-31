@@ -21,6 +21,7 @@ struct SkewPos{vec2 pos;int index;};
 struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} skew_ssbo;
 layout(location = 0) out vec2 vert_pos;
+layout(location = 1) out vec2 mesh_center;
 
 //TODO:remove and transfer these functions to frag shader,
 // SDF be the main core of rendering shapes from now on, that also means
@@ -99,6 +100,7 @@ void main() {
   vec2 art_pos = positions[gl_VertexIndex];
   if (constant.rotate != 0.0f) {
     vec2 center = get_center(positions); // get center
+    mesh_center = center;
     art_pos = rotate(art_pos, center);
   }
   vert_pos = art_pos;

@@ -59,16 +59,6 @@ Vec4 bg_color = Vec4{0.0f};
 
 enum class ShapeType { Quad, Circle, Triangle, Pen };
 
-// centroid shape_vertices
-Vec2 get_center(const ArrayVec2& shape_vertices) {
-    Vec2 center = {0.0f, 0.0f};
-
-    for (const auto& v : shape_vertices) {
-        center += Vec2{v.x, v.y};
-    }
-    return center /= static_cast<float>(shape_vertices.size());
-};
-
 Vec4 convert_color(const string& color, float opacity) {
     string hex   = color[0] == '#' ? color.substr(1) : color;
     u32    value = std::stoul(hex, nullptr, 16);
@@ -163,10 +153,6 @@ ArrayVec2 shape_vertices(ShapeType type, size_t index) {
         break;
     }
     };
-};
-
-Vec2 shape_center(int type, size_t index) {
-    return get_center(shape_vertices(static_cast<ShapeType>(type), index));
 };
 
 Vec2 shape_mesh(int type, size_t index) {
@@ -418,7 +404,7 @@ void Art::Draw() {
             constants.bg_color   = bg_color;
             constants.color      = shape.color;
             constants.pos        = shape.position;
-            constants.center     = shape.center; // not used
+            constants.center     = shape.center; // TODO:remove this
             constants.shape_data = shape.shape_data;
             constants.mesh_size  = mesh_size;
             // triangle uses these in shaders instead of shape data
