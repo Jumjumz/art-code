@@ -19,8 +19,6 @@ class CanvasRenderer {
                    const int& graphics_family, const int& MAX_FRAMES_IN_FLIGHT,
                    const uint32_t* app_width);
 
-    VulkanBuffers vk_buffers;
-
     std::unique_ptr<VulkanGraphics>  graphics_pipeline;
     std::unique_ptr<ArtcodeGraphics> artcode_pipeline;
     std::unique_ptr<ArtcodeBuffer>   artcode_buffer;
@@ -64,6 +62,8 @@ class CanvasRenderer {
     const int &graphics_family, &MAX_FRAMES_IN_FLIGHT;
 
     const uint32_t* app_width;
+
+    VulkanBuffers vk_buffers;
 
     bool show_main_ui = false;
     // key inputs

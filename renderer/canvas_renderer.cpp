@@ -1,4 +1,3 @@
-#include "glm/ext/matrix_transform.hpp"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
@@ -47,7 +46,7 @@ void CanvasRenderer::set_canvas_commands() {
         this->device, this->vk_buffers.artboard_uniform_buffer,
         this->artcode_pipeline->artcode_set_layout, this->graphics_family,
         this->MAX_FRAMES_IN_FLIGHT);
-    // vert, index buffer, ssbo and export image
+    // skew and pen ssbo
     this->artcode_buffer = std::make_unique<ArtcodeBuffer>(
         this->physical_device, this->device, this->graphics_queue,
         this->artcode_commands->artcode_command_pool, this->vk_buffers.images,
@@ -74,7 +73,7 @@ void CanvasRenderer::reload_pipeline() {
 };
 
 void CanvasRenderer::update_artcode_buffers() {
-    // wait gpu to finish using old buffers
+    // wait gpu to finish using the old buffers
     this->device.waitIdle();
 
     // clear ssbo and skew data
@@ -114,6 +113,7 @@ void CanvasRenderer::update_artcode_buffers() {
 
 // NOTE: checks if skew_data member is valid or not..
 // this pushes the artcode command buffers in render loop
+// FIXME:this is fragile, creae a better way to check if buffers exists
 bool CanvasRenderer::buffer_exist() const {
     if (!this->artcode_buffer->skew_data.empty())
         return true;
@@ -199,7 +199,7 @@ void CanvasRenderer::canvas_events(GLFWwindow* app_window) {
             return;
 
         if (canvas->ctrl_pressed) {
-            CanvasControls::zoom += static_cast<float>(y) * 0.2f;
+            CanvasControls::zoom += static_cast<float>(y) * 0.1f;
             CanvasControls::zoom  = glm::clamp(CanvasControls::zoom, 0.5f, 10.0f);
         }
     });
@@ -242,6 +242,7 @@ void CanvasRenderer::artboard_setup(const glm::vec3& artboard_size, bool show_ma
     memcpy(this->vk_buffers.artboard_uniform_buffer_mapped, &ab_ubo, sizeof(ab_ubo));
 };
 
+// FIXME:doesnt work correctly in Windows!
 void CanvasRenderer::save_art() {
     if (SaveFile::has_path) {
         const auto width      = static_cast<int>(vk_buffers.extent.width);

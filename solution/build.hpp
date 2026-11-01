@@ -12,12 +12,15 @@ class Build {
     bool set_project_directory(const fs::path& dir, const glm::vec3& artboard);
 
   private:
-    // TODO:might have a better implementation
-    #ifdef _WIN32
-        fs::path config_dir = fs::path(getenv("USERPROFILE")) / ".config" / "artcode" / "projects.json";
-    #else
-        fs::path config_dir = fs::path(getenv("HOME")) / ".config" / "artcode" / "projects.json";
-    #endif
+// TODO:might have a better implementation
+// FIXME:getenv in Windows is depecrated
+#ifdef _WIN32
+    fs::path config_dir =
+        fs::path(getenv("USERPROFILE")) / ".config" / "artcode" / "projects.json";
+#else
+    fs::path config_dir =
+        fs::path(getenv("HOME")) / ".config" / "artcode" / "projects.json";
+#endif
 
     fs::path project_directory;
 

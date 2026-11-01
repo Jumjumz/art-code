@@ -3,6 +3,7 @@
 #include <array>
 #include <glm/glm.hpp>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -61,37 +62,33 @@ struct ARTCODE_API Skew {
 };
 
 struct Style {
-    bool  fill   = true;
+    std::optional<bool> fill;
+
     float stroke = 10.0f;
     float rotate = 0.0f;
 };
 
+// TODO:focus on DSL like features!
 namespace Art {
     class ARTCODE_API Quad {
-      private:
-        size_t                s_index;
-        std::unique_ptr<Skew> _skew;
-
-        void shape_type();
-
       public:
         Quad();
 
         void  geometry(float x, float y, float width, float length);
         void  geometry(Vec2 position, float width, float length);
         void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
-        void  style(const Style& style);
+        void  style(Style style);
         void  color(const char* color = "#000000", float opacity = 1.0f);
         Skew& skew(bool skew = false);
-    };
 
-    class ARTCODE_API Circle {
       private:
         size_t                s_index;
         std::unique_ptr<Skew> _skew;
 
         void shape_type();
+    };
 
+    class ARTCODE_API Circle {
       public:
         Circle();
 
@@ -101,15 +98,15 @@ namespace Art {
         void  style(Style style);
         void  color(const char* color = "#000000", float opacity = 1.0f);
         Skew& skew(bool skew = false);
-    };
 
-    class ARTCODE_API Triangle {
       private:
         size_t                s_index;
         std::unique_ptr<Skew> _skew;
 
         void shape_type();
+    };
 
+    class ARTCODE_API Triangle {
       public:
         Triangle();
 
@@ -118,15 +115,15 @@ namespace Art {
         void  style(Style style);
         void  color(const char* color = "#000000", float opacity = 1.0f);
         Skew& skew(bool skew = false);
-    };
 
-    class ARTCODE_API Pen {
       private:
         size_t                s_index;
         std::unique_ptr<Skew> _skew;
 
         void shape_type();
+    };
 
+    class ARTCODE_API Pen {
       public:
         Pen();
 
@@ -135,15 +132,21 @@ namespace Art {
         void curve(float h_x, float h_y);
 
         void style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
-        // TODO:have different init values compared to others
+        // TODO:have different init values for different shapes
         void  style(Style style);
         void  color(const char* color, float opacity = 1.0f);
         Skew& skew(bool skew = false);
+
+      private:
+        size_t                s_index;
+        std::unique_ptr<Skew> _skew;
+
+        void shape_type();
     };
 
-    ARTCODE_API void Draw();
-
     ARTCODE_API void BackgroundColor(const char* color, float opacity = 1.0f);
+
+    ARTCODE_API void Draw();
 }; // namespace Art
 
 // TODO:add expresssion templates

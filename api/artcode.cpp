@@ -19,7 +19,8 @@ struct ShapeAttributes {
     int   skew       = 0;
     int   shape_type = 0;
 
-    // skew data
+    // FIXME:redo skew pos and data structure
+    //  skew data
     struct ShapeSkew {
         size_t                 size      = 0;
         std::array<SkewPos, 8> skew_data = {{{}}};
@@ -199,8 +200,11 @@ void Quad::style(bool fill, float stroke, float rotate) {
     ShapeRegistry::instances[this->s_index].rotate = rotate;
 };
 
-void Quad::style(const Style& style) {
-    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(style.fill);
+void Quad::style(Style style) {
+    if (!style.fill.has_value())
+        style.fill.emplace(true);
+
+    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(style.fill.value());
     ShapeRegistry::instances[this->s_index].stroke = style.stroke;
     ShapeRegistry::instances[this->s_index].rotate = style.rotate;
 };
@@ -244,7 +248,10 @@ void Circle::style(bool fill, float stroke, float rotate) {
 };
 
 void Circle::style(Style style) {
-    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(style.fill);
+    if (!style.fill.has_value())
+        style.fill.emplace(true);
+
+    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(style.fill.value());
     ShapeRegistry::instances[this->s_index].stroke = style.stroke;
     ShapeRegistry::instances[this->s_index].rotate = style.rotate;
 };
@@ -290,7 +297,10 @@ void Triangle::style(bool fill, float stroke, float rotate) {
 };
 
 void Triangle::style(Style style) {
-    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(style.fill);
+    if (!style.fill.has_value())
+        style.fill.emplace(true);
+
+    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(style.fill.value());
     ShapeRegistry::instances[this->s_index].stroke = style.stroke;
     ShapeRegistry::instances[this->s_index].rotate = style.rotate;
 };
@@ -362,7 +372,11 @@ void Pen::style(bool fill, float stroke, float rotate) {
 };
 
 void Pen::style(Style style) {
-    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(style.fill);
+    // Pen defaults to stroke render
+    if (!style.fill.has_value())
+        style.fill.emplace(false);
+
+    ShapeRegistry::instances[this->s_index].fill   = static_cast<int>(style.fill.value());
     ShapeRegistry::instances[this->s_index].stroke = style.stroke;
     ShapeRegistry::instances[this->s_index].rotate = style.rotate;
 };
