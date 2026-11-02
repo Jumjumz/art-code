@@ -92,14 +92,16 @@ void CanvasRenderer::update_artcode_buffers() {
 
     for (size_t i = 0; i < inst_size; i++) {
         const auto& instance = Shared::Memory::get_instance(i);
-
-        // TODO:skew pos should not send the full 8 items, shoud depend on user input
-        this->artcode_buffer->skew_data.push_back(instance.skew_data);
+        // pass ssbo data from shared memory to application
         {
+            std::vector<SkewPos> skew_data(instance.skew_data.items.begin(),
+                                           instance.skew_data.items.begin() +
+                                               instance.skew_data.size);
+            this->artcode_buffer->skew_data.push_back(skew_data);
+
             std::vector<PHandle> pen_data(instance.pen_data.items.begin(),
                                           instance.pen_data.items.begin() +
                                               instance.pen_data.size);
-
             this->artcode_buffer->pen_data.push_back(pen_data);
         }
         this->push_constants.push_back(instance.constants);
@@ -111,11 +113,12 @@ void CanvasRenderer::update_artcode_buffers() {
     this->artcode_buffer->create_pen_ssbo_buffer();
 };
 
-// NOTE: checks if skew_data member is valid or not..
+// NOTE:skew_data and pen_data should not be empty at this point as
+// shared memory has always 1 item in the array
+// this function only works if artcode_buffer is initialized first
 // this pushes the artcode command buffers in render loop
-// FIXME:this is fragile, creae a better way to check if buffers exists
 bool CanvasRenderer::buffer_exist() const {
-    if (!this->artcode_buffer->skew_data.empty())
+    if (!this->artcode_buffer->skew_data.empty() && !this->artcode_buffer->pen_data.empty())
         return true;
 
     return false;

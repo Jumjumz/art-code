@@ -1,6 +1,5 @@
 #include "artcode_commands.hpp"
 #include "vk_types.hpp"
-#include <cstdint>
 
 ArtcodeCommands::ArtcodeCommands(const vk::raii::Device& device,
                                  const vk::raii::Buffer& uniform_buffer,

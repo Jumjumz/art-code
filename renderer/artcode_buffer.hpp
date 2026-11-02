@@ -18,7 +18,7 @@ class ArtcodeBuffer {
     std::vector<vk::raii::Buffer>       pen_ssbo_buffers  = {};
     std::vector<vk::raii::DeviceMemory> pen_ssbo_memories = {};
 
-    std::vector<SkewData>             skew_data = {};
+    std::vector<std::vector<SkewPos>> skew_data = {};
     std::vector<std::vector<PHandle>> pen_data  = {};
 
     void create_skew_ssbo_buffer();

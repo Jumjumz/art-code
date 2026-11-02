@@ -18,8 +18,7 @@ layout(push_constant) uniform PushConstants {
   int shape_type;
 } constant;
 struct SkewPos{vec2 pos;int index;};
-struct SkewData{vec2 skew_mesh[8]; SkewPos skew_pos[8];};
-layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewData data;} skew_ssbo;
+layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewPos data[];} skew_ssbo;
 layout(location = 0) out vec2 vert_pos;
 layout(location = 1) out vec2 mesh_center;
 
@@ -82,7 +81,7 @@ void main() {
   const vec2 mesh_size = constant.mesh_size;
   vec2 position        = constant.pos;
   // test skew ssbo
-  const vec2 ssb_skew  = skew_ssbo.data.skew_pos[0].pos;
+  const vec2 ssb_skew  = skew_ssbo.data[0].pos;
   // set position to ubo coord
   position.y += ubo.reso.y;
 
@@ -96,6 +95,7 @@ void main() {
     vec2( position.x - padding,  ( position.y + mesh_size.y ) + padding ),
     ( position + mesh_size ) + padding
   );
+  // TODO:pass the mesh in frag shader to control skew positions in mesh
 
   vec2 art_pos = positions[gl_VertexIndex];
   if (constant.rotate != 0.0f) {

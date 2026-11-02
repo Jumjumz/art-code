@@ -19,8 +19,7 @@ struct ShapeAttributes {
     int   skew       = 0;
     int   shape_type = 0;
 
-    // FIXME:redo skew pos and data structure
-    //  skew data
+    // skew data
     struct ShapeSkew {
         size_t                 size      = 0;
         std::array<SkewPos, 8> skew_data = {{{}}};
@@ -434,16 +433,11 @@ void Art::Draw() {
 
             Shared::Memory::register_constants(constants);
 
+            Shared::Memory::register_skew_data(shape.shape_skew.skew_data,
+                                               shape.shape_skew.size);
+
             Shared::Memory::register_pen_data(shape.shape_pen.pen_data,
                                               shape.shape_pen.size);
-
-            const auto& skew_mesh = get_skew_mesh(constants.mesh_size, constants.pos);
-
-            SkewData skew_data{};
-            skew_data.skew_mesh = skew_mesh;
-            skew_data.skew_pos  = shape.shape_skew.skew_data;
-
-            Shared::Memory::register_skew_data(skew_data, shape.shape_skew.size);
 
             // increment instance size, mutates instance size per loop execution
             Shared::Memory::increment_instance_size();

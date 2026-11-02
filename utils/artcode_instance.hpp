@@ -13,20 +13,17 @@
 #include <unistd.h>
 #endif
 
-// NOTE:this header uses the artcode typedef such as Vec2, ArrayT and such,
-// to avoid confusion and for the sake of consistency, only this header file uses the
-// artcode typedef and nothing else// hides padding as this is for gpu alignmnet
 struct SkewPos {
     Vec2 pos;
     int  index;
 
     SkewPos()
-        : pos(),
+        : pos(0.0f),
           index(0),
           _padding(0) {}
-    SkewPos(Vec2 p, int i)
-        : pos(p),
-          index(i),
+    SkewPos(Vec2 _pos, int _index)
+        : pos(_pos),
+          index(_index),
           _padding(0) {}
 
   private:
@@ -38,7 +35,7 @@ struct PHandle {
     int  id;
 
     PHandle()
-        : position(0.0f, 0.0f),
+        : position(0.0f),
           id(0),
           _padding(0) {}
 
@@ -47,14 +44,13 @@ struct PHandle {
 };
 
 struct PenInstance {
-    size_t               size;
-    ArrayT<PHandle, 500> items;
+    size_t                   size;
+    std::array<PHandle, 500> items;
 };
 
 struct SkewData {
-    std::array<Vec2, 8>    skew_mesh;
-    std::array<SkewPos, 8> skew_pos;
-    size_t                 skew_pos_size = 0;
+    size_t                 size = 0;
+    std::array<SkewPos, 8> items;
 };
 
 struct PushConstants {
@@ -77,8 +73,8 @@ struct PushConstants {
 namespace Shared {
     struct Instance {
         PushConstants constants;
-        PenInstance   pen_data;
         SkewData      skew_data;
+        PenInstance   pen_data;
     };
 
     struct Region {
@@ -179,14 +175,15 @@ namespace Shared {
             inst.constants = push_const;
         }
 
-        static void register_skew_data(const SkewData& skew_data, size_t size) {
+        static void register_skew_data(const std::array<SkewPos, 8> skew_data, size_t size) {
             check_instance_size();
 
-            auto& inst     = region->instance[region->size];
-            inst.skew_data = skew_data;
-            size           = size == 0 ? 1 : size;
+            auto& inst = region->instance[region->size];
+            // set size to not be 0
+            size = size == 0 ? 1 : size;
 
-            inst.skew_data.skew_pos_size = size;
+            inst.skew_data.size  = size;
+            inst.skew_data.items = skew_data;
         }
 
         static void register_pen_data(const std::array<PHandle, 500>& pen_handles,
@@ -194,7 +191,7 @@ namespace Shared {
             check_instance_size();
 
             auto& inst = region->instance[region->size];
-            // set size to not be 0 if it is 0
+            // set size to not be 0
             size = size == 0 ? 1 : size;
 
             inst.pen_data.size  = size;

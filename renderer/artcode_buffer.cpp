@@ -14,6 +14,7 @@ ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice&             phys_de
       artboard_image(artboard_image),
       descriptor_sets(descriptor_sets) {};
 
+// TODO:redo skew ssbo
 void ArtcodeBuffer::create_skew_ssbo_buffer() {
     // create buffer per instance
     std::vector<vk::DescriptorBufferInfo> ssbo_infos = {};
@@ -27,8 +28,8 @@ void ArtcodeBuffer::create_skew_ssbo_buffer() {
     // creates ssbo buffer per shape instance, meaning every shape has an attached ssbo buffer
     for (size_t i = 0; i < skew_size; i++) {
         vk::BufferCreateInfo buffer_info{};
-        buffer_info.size        = sizeof(this->skew_data[0]);
-        buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
+        buffer_info.size  = sizeof(this->skew_data[i][0]) * this->skew_data[i].size();
+        buffer_info.usage = vk::BufferUsageFlagBits::eStorageBuffer;
         buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
         this->skew_ssbo_buffers.push_back(
@@ -49,7 +50,7 @@ void ArtcodeBuffer::create_skew_ssbo_buffer() {
 
         // map memory
         void* map_memory = this->skew_ssbo_memories[i].mapMemory(0, buffer_info.size);
-        memcpy(map_memory, &this->skew_data[i], buffer_info.size);
+        memcpy(map_memory, this->skew_data[i].data(), buffer_info.size);
         this->skew_ssbo_memories[i].unmapMemory();
 
         // write to the buffer per instance
