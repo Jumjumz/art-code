@@ -19,7 +19,7 @@ struct SkewPos {
 
     SkewPos()
         : pos(0.0f),
-          index(0),
+          index(-1),
           _padding(0) {}
     SkewPos(Vec2 _pos, int _index)
         : pos(_pos),

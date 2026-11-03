@@ -39,63 +39,16 @@ vec2 bilinear(vec2 uv, vec2 c0, vec2 c1, vec2 c2, vec2 c3) {
 
   return mix(top, bot, uv.y);
 }
-
-vec2 skew(vec2 pos) {
-  vec2 c0 = ssbo.data.skew_mesh[0];
-  vec2 c1 = ssbo.data.skew_mesh[2];
-  vec2 c2 = ssbo.data.skew_mesh[4];
-  vec2 c3 = ssbo.data.skew_mesh[6];
-
-  vec2 def_c0 = c0;
-  vec2 def_c1 = c1;
-  vec2 def_c2 = c2;
-  vec2 def_c3 = c3;
-
-  for (int i = 0; i < 8; i++) {
-    int idx = ssbo.data.skew_pos[i].index;
-    vec2 offset = ssbo.data.skew_pos[i].pos;
-
-    if (idx == 0) def_c0 += offset;
-    if (idx == 1) { def_c0 += vec2(offset.x, 0.0); def_c1 += vec2(offset.x, 0.0);}
-    if (idx == 2) def_c1 += offset;
-    if (idx == 3) { def_c1 += vec2(0.0, offset.y); def_c2 += vec2(0.0, offset.y);}
-    if (idx == 4) def_c2 += offset;
-    if (idx == 5) { def_c2 += vec2(offset.x, 0.0); def_c3 += vec2(offset.x, 0.0);}
-    if (idx == 6) def_c3 += offset;
-    if (idx == 7) { def_c3 += vec2(0.0, offset.y); def_c0 += vec2(0.0, offset.y);}
-  }
-  vec2 uv = calc_uv(pos, c0, c1, c2, c3);
-
-  return bilinear(uv, def_c0, def_c1, def_c2, def_c3);
-}*/
-
+*/
 // forward declarations
-vec2 get_center (vec2 positions[6]);
-vec2 rotate     (vec2 pos, vec2 center);
+vec2 get_center          (vec2 positions[6]);
+vec2 rotate              (vec2 pos, vec2 center);
+vec2[6] skewed_positions ();
 
 void main() {
-  // NOTE:add stroke in padding for pen instances
-  // this fixes render issues for stroke and mesh size
-  // making the mesh size dynamic depending on stroke value
-  const float padding  = (constant.fill == 0 && constant.shape_type == 3) ? constant.stroke + 20.0f : 20.0f;
-  const vec2 mesh_size = constant.mesh_size;
-  vec2 position        = constant.pos;
-  // test skew ssbo
-  const vec2 ssb_skew  = skew_ssbo.data[0].pos;
-  // set position to ubo coord
-  position.y += ubo.reso.y;
-
-  // NOTE:might need to add padding in mesh
-  // sets the quad to position and mesh size
-  const vec2 positions[6] = vec2[](
-    vec2( position.x - padding, position.y - padding),
-    vec2( ( position.x + mesh_size.x ) + padding, position.y - padding  ),
-    vec2( position.x - padding,  ( position.y + mesh_size.y ) + padding ),
-    vec2( ( position.x + mesh_size.x ) + padding, position.y - padding  ),
-    vec2( position.x - padding,  ( position.y + mesh_size.y ) + padding ),
-    ( position + mesh_size ) + padding
-  );
-  // TODO:pass the mesh in frag shader to control skew positions in mesh
+  // NOTE:skew transforms the entire mesh if user provided skew positions
+  // it will return to default mesh (a rectangle/square) if skew ssbo is in default values
+  const vec2 positions[6] = skewed_positions();
 
   vec2 art_pos = positions[gl_VertexIndex];
   if (constant.rotate != 0.0f) {
@@ -126,3 +79,105 @@ vec2 rotate(vec2 pos, vec2 center) {
   pos -= center;
   return vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c) + center;
 }
+
+vec2[6] skewed_positions() {
+  // NOTE:add stroke in padding for pen instances
+  // this fixes render issues for stroke and mesh size
+  // making the mesh size dynamic depending on stroke value
+  const float padding  = (constant.fill == 0 && constant.shape_type == 3) ? constant.stroke + 20.0f : 20.0f;
+  const vec2 mesh_size = constant.mesh_size;
+  vec2 position        = constant.pos;
+  // set position to ubo coord
+  position.y += ubo.reso.y;
+  vec2 positions[6] = vec2[](
+    vec2( position.x - padding, position.y - padding),
+    vec2( ( position.x + mesh_size.x ) + padding, position.y - padding  ),
+    vec2( position.x - padding,  ( position.y + mesh_size.y ) + padding ),
+    vec2( ( position.x + mesh_size.x ) + padding, position.y - padding  ),
+    vec2( position.x - padding,  ( position.y + mesh_size.y ) + padding ),
+    ( position + mesh_size ) + padding
+  );
+
+  for (int i = 0; i < skew_ssbo.data.length(); i++) {
+    vec2 pos  = skew_ssbo.data[i].pos;
+    int idx   = skew_ssbo.data[i].index;
+    // idx default value
+    if (idx == -1)
+      break;
+
+    if (pos.y != 0.0f)
+      pos.y += ubo.reso.y;
+
+    // FIXME:vert offset is wrong
+    // skew mesh pos base on index provided
+    switch(idx) {
+      case 0:
+        positions[2] += pos;
+        positions[4] += pos;
+        break;
+      case 1:
+        positions[0].x += pos.x;
+        positions[2].x += pos.x;
+        positions[4].x += pos.x;
+        break;
+      case 2:
+        positions[0] += pos;
+        break;
+      case 3:
+        positions[0].y += pos.y;
+        positions[1].y += pos.y;
+        positions[3].y += pos.y;
+        break;
+      case 4:
+        positions[1] += pos;
+        positions[3] += pos;
+        break;
+      case 5:
+        positions[5].x += pos.x;
+        positions[1].x += pos.x;
+        positions[3].x += pos.x;
+        break;
+      case 6:
+        positions[5] += pos;
+        break;
+      case 7:
+        positions[2].y += pos.y;
+        positions[4].y += pos.y;
+        positions[5].y += pos.y;
+        break;
+    }
+  }
+
+  return positions;
+}
+
+/*vec2 skew(vec2 pos) {
+  vec2 c0 = ssbo.data.skew_mesh[0];
+  vec2 c1 = ssbo.data.skew_mesh[2];
+  vec2 c2 = ssbo.data.skew_mesh[4];
+  vec2 c3 = ssbo.data.skew_mesh[6];
+
+  vec2 def_c0 = c0;
+  vec2 def_c1 = c1;
+  vec2 def_c2 = c2;
+  vec2 def_c3 = c3;
+
+  for (int i = 0; i < 8; i++) {
+    int idx = ssbo.data.skew_pos[i].index;
+    vec2 offset = ssbo.data.skew_pos[i].pos;
+
+    if (idx == 0) def_c0 += offset;
+    if (idx == 1) { def_c0 += vec2(offset.x, 0.0); def_c1 += vec2(offset.x, 0.0);}
+    if (idx == 2) def_c1 += offset;
+    if (idx == 3) { def_c1 += vec2(0.0, offset.y); def_c2 += vec2(0.0, offset.y);}
+    if (idx == 4) def_c2 += offset;
+    if (idx == 5) { def_c2 += vec2(offset.x, 0.0); def_c3 += vec2(offset.x, 0.0);}
+    if (idx == 6) def_c3 += offset;
+    if (idx == 7) { def_c3 += vec2(0.0, offset.y); def_c0 += vec2(0.0, offset.y);}
+  }
+  vec2 uv = calc_uv(pos, c0, c1, c2, c3);
+
+  return bilinear(uv, def_c0, def_c1, def_c2, def_c3);
+}*/
+
+
