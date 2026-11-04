@@ -37,7 +37,7 @@ int ray_cross      (vec2 p, vec2 a, vec2 b);
 vec2 sdf_rotate          (vec2 p, float angle);
 vec2 absolute_pos_rotate (vec2 pos, vec2 center);
 
-// TODO:implement rotate and skew to sdf shapes
+// TODO:implement skew sdf shapes
 // FIXME:fix render issue when zooming, it looks like it misaligns
 // or the AA is jagged in certain zoom values
 void main() {

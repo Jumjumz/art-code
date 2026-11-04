@@ -62,7 +62,6 @@ enum class ShapeType { Quad, Circle, Triangle, Pen };
 Vec4 convert_color(const string& color, float opacity) {
     string hex   = color[0] == '#' ? color.substr(1) : color;
     u32    value = std::stoul(hex, nullptr, 16);
-
     // 0xFF (255) is a bit mask
     // string size of 8 means alpha value is provided
     if (hex.size() == 8) {
@@ -89,19 +88,6 @@ Vec2 mesh_size(const ArrayVec2& shape_vertices) {
     }
 
     return Vec2{max_x - min_x, max_y - min_y};
-};
-
-// TODO:might need to reduce this to size 4 as 0-4 indices are only needed.. though this is still in consideration
-ArrayT<Vec2, 8> get_skew_mesh(const Vec2& mesh_size, const Vec2& shape_pos) {
-    // return skew mesh quad
-    return {shape_pos,
-            shape_pos + Vec2{mesh_size.x * 0.5f, 0.0f},
-            shape_pos + Vec2{mesh_size.x, 0.0f},
-            shape_pos + Vec2{mesh_size.x, mesh_size.y * 0.5f},
-            shape_pos + mesh_size,
-            shape_pos + Vec2{mesh_size.x * 0.5f, mesh_size.y},
-            shape_pos + Vec2{0.0f, mesh_size.y},
-            shape_pos + Vec2{0.0f, mesh_size.y * 0.5f}};
 };
 
 ArrayVec2 shape_vertices(ShapeType type, size_t index) {

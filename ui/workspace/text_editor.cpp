@@ -5,6 +5,9 @@
 #include <fstream>
 #include <iostream>
 
+// NOTE:thinking of a pivot where instead of having a text editor in the program
+// instead have the program interact with external text editors i.e vs code, nvim etc.
+// so this might be removed in the future
 TextEditorWrapper::TextEditorWrapper() {
     this->file_explorer.SetTitle("Explorer");
     this->file_explorer.SetDirectory(ProjectPath::get_project_path());
