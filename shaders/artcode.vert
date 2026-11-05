@@ -21,6 +21,8 @@ struct SkewPos{vec2 pos;int index;};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewPos data[];} skew_ssbo;
 layout(location = 0) out vec2 vert_pos;
 layout(location = 1) out vec2 mesh_center;
+layout(location = 2) out vec2 skew_pos;
+layout(location = 3) out int h_skew;
 
 // forward declarations
 vec2[6] skewed_positions ();
@@ -39,6 +41,16 @@ void main() {
     art_pos           = rotate(art_pos, mesh_center);
   }
   vert_pos = art_pos;
+
+  int has_skew = 0;
+  for (int i = 0; i < skew_ssbo.data.length(); i++) {
+    if (skew_ssbo.data[i].index != -1) {
+      has_skew = 1;
+      break;
+    }
+  }
+  h_skew   = has_skew;
+  skew_pos = art_pos;
 
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);
 }

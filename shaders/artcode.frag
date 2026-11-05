@@ -19,9 +19,11 @@ layout(push_constant) uniform PushConstants {
 } constant;
 struct PenData {vec2 position;int id;};
 layout(std430, set = 0, binding = 2) readonly buffer PenBuffer {PenData data[];} pen_ssbo;
-layout(location = 0) in vec2 vert_pos;
 layout(location = 0) out vec4 frag_color;
+layout(location = 0) in vec2 vert_pos;
 layout(location = 1) in vec2 mesh_center;
+layout(location = 2) in vec2 skew_pos;
+layout(location = 3) flat in int h_skew;
 
 // forward declarations
 float sdf_quad     (vec2 p, vec2 b);
@@ -36,6 +38,7 @@ int ray_cross      (vec2 p, vec2 a, vec2 b);
 // transform functions
 vec2 sdf_rotate          (vec2 p, float angle);
 vec2 absolute_pos_rotate (vec2 pos, vec2 center);
+vec2 skew                (vec2 p, vec2 k);
 
 // TODO:implement skew sdf shapes
 // FIXME:fix render issue when zooming, it looks like it misaligns
@@ -43,7 +46,6 @@ vec2 absolute_pos_rotate (vec2 pos, vec2 center);
 void main() {
   vec3 color  = constant.color.rgb;
   float alpha = constant.color.a;
-  int fill    = constant.fill;
   // convert color to linear space using gamma correction 2.2
   color = pow(color, vec3(2.2f));
  
@@ -51,6 +53,7 @@ void main() {
   const int shape       = constant.shape_type;
   const vec2 shape_data = constant.shape_data;
   const float rotate    = constant.rotate;
+  const int fill        = constant.fill;
 
   vec2 pos        = constant.pos;
   vec2 center     = vec2(0.0f, 0.0f);
@@ -65,10 +68,14 @@ void main() {
   const float pen_stroke = fill == 1 ? 0.0f : stroke / 2.0f;
   float d                = 1e10; // large number for pen to work
   int winding            = 0;    // for pen fill instances
+  // FIXME:skew application is wrong!
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
     p            = vert_pos - center;
+    if (h_skew == 1)
+      p = skew(p, skew_pos);
+
     if (rotate != 0.0f)
       p = sdf_rotate(p, rotate);
 
@@ -76,6 +83,9 @@ void main() {
   } else if (shape == 1) {
     center = pos + shape_data;
     p      = vert_pos - center;
+    if (h_skew == 1)
+      p = skew(p, skew_pos);
+
     if (rotate != 0.0f)
       p = sdf_rotate(p, rotate);
 
@@ -358,4 +368,9 @@ vec2 absolute_pos_rotate(vec2 pos, vec2 center) {
 
   pos -= center;
   return vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c) + center;
+}
+
+vec2 skew(vec2 p, vec2 k) {
+  float det = 1.0f - k.x * k.y;
+  return vec2(p.x - k.x * p.y, p.y - k.y * p.y) / det;
 }
