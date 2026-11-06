@@ -20,27 +20,21 @@ layout(push_constant) uniform PushConstants {
 struct PenData {vec2 position;int id;};
 layout(std430, set = 0, binding = 2) readonly buffer PenBuffer {PenData data[];} pen_ssbo;
 layout(location = 0) out vec4 frag_color;
-layout(location = 0) in vec2 vert_pos;
-layout(location = 1) in vec2 mesh_center;
-layout(location = 2) in vec2 skew_pos;
+layout(location = 0) in vec2 shape_pos;
+layout(location = 1) in vec2 skew_pos;
+layout(location = 2) in vec2 mesh_center;
 layout(location = 3) flat in int h_skew;
 
 // forward declarations
 float sdf_quad     (vec2 p, vec2 b);
 float sdf_circle   (vec2 p, float r);
 float sdf_triangle (vec2 p, vec2 p0, vec2 p1, vec2 p2);
-float sdf_segment  (vec2 p, vec2 a, vec2 b);
+float sdf_segment  (vec2 p, vec2 a,  vec2 b);
 float sdf_bezier   (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 
 int sdf_winding    (vec2 p, vec2 p0, vec2 p1, vec2 p2);
-int ray_cross      (vec2 p, vec2 a, vec2 b);
+int ray_cross      (vec2 p, vec2 a,  vec2 b);
 
-// transform functions
-vec2 sdf_rotate          (vec2 p, float angle);
-vec2 absolute_pos_rotate (vec2 pos, vec2 center);
-vec2 skew                (vec2 p, vec2 k);
-
-// TODO:implement skew sdf shapes
 // FIXME:fix render issue when zooming, it looks like it misaligns
 // or the AA is jagged in certain zoom values
 void main() {
@@ -68,26 +62,15 @@ void main() {
   const float pen_stroke = fill == 1 ? 0.0f : stroke / 2.0f;
   float d                = 1e10; // large number for pen to work
   int winding            = 0;    // for pen fill instances
-  // FIXME:skew application is wrong!
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
-    p            = vert_pos - center;
-    if (h_skew == 1)
-      p = skew(p, skew_pos);
-
-    if (rotate != 0.0f)
-      p = sdf_rotate(p, rotate);
+    p            = shape_pos - center;
 
     d = sdf_quad(p, b);
   } else if (shape == 1) {
     center = pos + shape_data;
-    p      = vert_pos - center;
-    if (h_skew == 1)
-      p = skew(p, skew_pos);
-
-    if (rotate != 0.0f)
-      p = sdf_rotate(p, rotate);
+    p      = shape_pos - center;
 
     d = sdf_circle(p, shape_data.x);
   } else if (shape == 2) {
@@ -100,13 +83,8 @@ void main() {
     p1.y += ubo.reso.y;
     p2.y += ubo.reso.y;
 
-    if (rotate != 0.0f) {
-      p0 = absolute_pos_rotate(p0, mesh_center);
-      p1 = absolute_pos_rotate(p1, mesh_center);
-      p2 = absolute_pos_rotate(p2, mesh_center);
-    }
     // free form triangle
-    d = sdf_triangle( vert_pos, p0, p1, p2 );
+    d = sdf_triangle( shape_pos, p0, p1, p2 );
   } else if (shape == 3) {
     int i = 0;
     while (i < pen_ssbo.data.length() - 1) {
@@ -127,14 +105,8 @@ void main() {
         p1 -= pen_stroke;
         p2 -= pen_stroke;
 
-        if (rotate != 0.0f) {
-          p0 = absolute_pos_rotate(p0, mesh_center);
-          p1 = absolute_pos_rotate(p1, mesh_center);
-          p2 = absolute_pos_rotate(p2, mesh_center);
-        }
-
-        d = min(d, sdf_bezier ( vert_pos, p0, p1, p2 ));
-        winding += sdf_winding( vert_pos, p0, p1, p2 );
+        d = min(d, sdf_bezier ( shape_pos, p0, p1, p2 ));
+        winding += sdf_winding( shape_pos, p0, p1, p2 );
         i += 2; // i+2, jumps to the 3rd index
       } else {
         // add stroke to the positions as mesh added a padding + stroke
@@ -149,13 +121,8 @@ void main() {
         a -= pen_stroke;
         b -= pen_stroke;
 
-        if (rotate != 0.0f) {
-          a = absolute_pos_rotate(a, mesh_center);
-          b = absolute_pos_rotate(b, mesh_center);
-        }
-
-        d = min(d, sdf_segment( vert_pos, a, b ));
-        winding += ray_cross  ( vert_pos, a, b );
+        d = min(d, sdf_segment( shape_pos, a, b ));
+        winding += ray_cross  ( shape_pos, a, b );
         i++; // move to the next index
       }
     }
@@ -178,7 +145,7 @@ void main() {
   // is either horizontal or vertical, AA is only needed
   // when a quad is in a diagonal orientation
   // NOTE:only apply AA to quad if it is rotated
-  if (shape == 0 && rotate != 0.0f)
+  if (shape == 0 && (rotate != 0.0f || h_skew == 1))
     alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
 
   // smoothing fill pens
@@ -209,7 +176,7 @@ void main() {
       alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
 
     // NOTE:only apply inner edge AA if quad is rotated
-    if (shape == 0 && rotate != 0.0f)
+    if (shape == 0 && (rotate != 0.0f || h_skew == 1))
       alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
 
     // NOTE:smoothnes not that good yet
@@ -345,32 +312,4 @@ int ray_cross(in vec2 p, in vec2 a, in vec2 b) {
       return (a.y < b.y) ? 1 : -1;
   }
   return 0;
-}
-
-// transform functions
-vec2 sdf_rotate(vec2 p, float angle) {
-  const float PI       = 3.14159265359;
-  const float radian   = -angle * (PI / 180.0f);
-  const float c        = cos(radian);
-  const float s        = sin(radian);
-
-  return vec2(p.x * c - p.y * s, p.x * s + p.y * c);
-}
-
-// NOTE:uses the same as the vert for triangles
-// as triangles uses absolute vertices and should
-// match the mesh positions to render a correct rotated triangle
-vec2 absolute_pos_rotate(vec2 pos, vec2 center) {
-  const float PI       = 3.14159265359;
-  const float radian   = constant.rotate * (PI / 180.0f);
-  const float s        = sin(radian);
-  const float c        = cos(radian);
-
-  pos -= center;
-  return vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c) + center;
-}
-
-vec2 skew(vec2 p, vec2 k) {
-  float det = 1.0f - k.x * k.y;
-  return vec2(p.x - k.x * p.y, p.y - k.y * p.y) / det;
 }

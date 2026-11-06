@@ -19,45 +19,50 @@ layout(push_constant) uniform PushConstants {
 } constant;
 struct SkewPos{vec2 pos;int index;};
 layout(std430, set = 0, binding = 1) readonly buffer SkewBuffer {SkewPos data[];} skew_ssbo;
-layout(location = 0) out vec2 vert_pos;
-layout(location = 1) out vec2 mesh_center;
-layout(location = 2) out vec2 skew_pos;
+layout(location = 0) out vec2 shape_pos;
+layout(location = 1) out vec2 skew_pos;
+layout(location = 2) out vec2 mesh_center;
 layout(location = 3) out int h_skew;
 
 // forward declarations
-vec2[6] skewed_positions ();
+vec2[6] m_positions ();
+vec2[6] s_positions ();
+// helper functions
 vec2 get_center          (vec2 positions[6]);
 vec2 rotate              (vec2 pos, vec2 center);
 
 void main() {
-  // NOTE:skew transforms the entire mesh if user provided skew positions
-  // it will return to default mesh (a rectangle/square) if skew ssbo is in default values
-  const vec2 positions[6] = skewed_positions();
+  // NOTE:separated the mesh positions and the skewed positions
+  const vec2 mesh_positions[6] = m_positions();
+  const vec2 skew_positions[6] = s_positions();
 
-  vec2 art_pos = positions[gl_VertexIndex];
-  if (constant.rotate != 0.0f) {
-    const vec2 center = get_center(positions); // get center
-    mesh_center       = center;
-    art_pos           = rotate(art_pos, mesh_center);
-  }
-  vert_pos = art_pos;
+  vec2 skw_pos = skew_positions[gl_VertexIndex];
 
   int has_skew = 0;
-  for (int i = 0; i < skew_ssbo.data.length(); i++) {
-    if (skew_ssbo.data[i].index != -1) {
-      has_skew = 1;
-      break;
-    }
+  vec2 center  = vec2(0.0f);
+  // index = -1 is default value for non skew
+  if (skew_ssbo.data[0].index != -1)
+    has_skew = 1;
+
+  if (constant.rotate != 0.0f) {
+    // get center
+    center  = get_center(skew_positions);
+    skw_pos = rotate(skw_pos, center);
   }
   h_skew   = has_skew;
-  skew_pos = art_pos;
+  // pass respective positions
+  mesh_center = center;
+  skew_pos    = skw_pos;
+  shape_pos   = mesh_positions[gl_VertexIndex];
 
-  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vert_pos, 0.0f, 1.0f);
+  // pixels will adjust depending on the skew values
+  // no skew means rect/square mesh
+  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(skew_pos, 0.0f, 1.0f);
 }
 
 // implementations
-vec2[6] skewed_positions() {
-  // NOTE:add stroke in padding for pen instances
+vec2[6] m_positions() {
+// NOTE:add stroke in padding for pen instances
   // this fixes render issues for stroke and mesh size
   // making the mesh size dynamic depending on stroke value
   const float padding  = (constant.fill == 0 && constant.shape_type == 3) ? constant.stroke + 20.0f : 20.0f;
@@ -74,10 +79,15 @@ vec2[6] skewed_positions() {
     ( position + mesh_size ) + padding
   );
 
+  return positions;
+}
+
+vec2[6] s_positions() {
+  vec2[6] positions = m_positions();
   for (int i = 0; i < skew_ssbo.data.length(); i++) {
     vec2 pos  = skew_ssbo.data[i].pos;
     int idx   = skew_ssbo.data[i].index;
-    // idx default value
+    // index default value -1
     if (idx == -1)
       break;
 
