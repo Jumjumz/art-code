@@ -55,6 +55,8 @@ template <typename T> T cubic(T cb) { return cb * cb * cb; };
 
 struct ARTCODE_API Skew {
   public:
+    // TODO:add something that auto detects index if it is odd or even
+    // odd indices only needs one value as it is a per axis basis
     Skew& at(int index, Vec2 position);
 
   private:

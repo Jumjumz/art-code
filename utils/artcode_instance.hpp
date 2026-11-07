@@ -57,7 +57,6 @@ struct PushConstants {
     Vec4  bg_color;
     Vec4  color;
     Vec2  pos;
-    Vec2  center;
     Vec2  shape_data;
     Vec2  mesh_size;
     Vec2  p0;

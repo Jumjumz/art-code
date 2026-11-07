@@ -7,7 +7,6 @@
 struct ShapeAttributes {
     Vec4  color      = Vec4{1.0f};
     Vec2  position   = Vec2{50.0f, 50.0f};
-    Vec2  center     = Vec2{50.0f, 50.0f};
     Vec2  shape_data = Vec2{50.0f, 50.0f};
     Vec2  mesh_size  = Vec2{50.0f, 50.0f};
     Vec2  p0         = Vec2{100.0f, 100.0f};
@@ -313,7 +312,6 @@ Pen::Pen()
     shape_type();
 };
 
-// TODO:implement pen implementations
 void Pen::point(float x, float y) {
     auto& pen = ShapeRegistry::instances[this->s_index].shape_pen;
     if (pen.size < 500) {
@@ -403,7 +401,6 @@ void Art::Draw() {
             constants.bg_color   = bg_color;
             constants.color      = shape.color;
             constants.pos        = shape.position;
-            constants.center     = shape.center; // TODO:remove this
             constants.shape_data = shape.shape_data;
             constants.mesh_size  = mesh_size;
             // triangle uses these in shaders instead of shape data

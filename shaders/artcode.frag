@@ -5,7 +5,6 @@ layout(push_constant) uniform PushConstants {
   vec4 bg_color;
   vec4 color;
   vec2 pos;
-  vec2 center;
   vec2 shape_data;
   vec2 mesh_size;
   vec2 p0;
@@ -74,6 +73,7 @@ void main() {
 
     d = sdf_circle(p, shape_data.x);
   } else if (shape == 2) {
+    // FIXME:skewing even indices for triangle doesnt match the render
     vec2 p0 = constant.p0;
     vec2 p1 = constant.p1;
     vec2 p2 = constant.p2;

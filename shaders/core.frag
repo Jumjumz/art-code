@@ -13,7 +13,6 @@ layout(push_constant) uniform PushConstants {
   vec4 bg_color;
   vec4 color;
   vec2 pos;
-  vec2 center;
   vec2 shape_data;
   vec2 mesh_size;
   vec2 p0;
