@@ -73,7 +73,6 @@ void main() {
 
     d = sdf_circle(p, shape_data.x);
   } else if (shape == 2) {
-    // FIXME:skewing even indices for triangle doesnt match the render
     vec2 p0 = constant.p0;
     vec2 p1 = constant.p1;
     vec2 p2 = constant.p2;

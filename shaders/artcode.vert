@@ -24,18 +24,21 @@ layout(location = 2) out vec2 mesh_center;
 layout(location = 3) out int h_skew;
 
 // forward declarations
+vec2 grid_uv        ();
 vec2[6] m_positions ();
 vec2[6] s_positions ();
 // helper functions
 vec2 get_center          (vec2 positions[6]);
 vec2 rotate              (vec2 pos, vec2 center);
+vec2 bilinear            (vec2 uv, vec2 tl, vec2 tr, vec2 bl, vec2 br);
 
 void main() {
+  vec2 uv = grid_uv();
   // NOTE:separated the mesh positions and the skewed positions
   const vec2 mesh_positions[6] = m_positions();
   const vec2 skew_positions[6] = s_positions();
 
-  vec2 skw_pos = skew_positions[gl_VertexIndex];
+  vec2 skw_pos = bilinear(uv, skew_positions[0], skew_positions[1], skew_positions[2], skew_positions[5]);
 
   int has_skew = 0;
   vec2 center  = vec2(0.0f);
@@ -52,11 +55,25 @@ void main() {
   // pass respective positions
   mesh_center = center;
   skew_pos    = skw_pos;
-  shape_pos   = mesh_positions[gl_VertexIndex];
+  shape_pos   = bilinear(uv, mesh_positions[0], mesh_positions[1], mesh_positions[2], mesh_positions[5]);
 
   // pixels will adjust depending on the skew values
   // no skew means rect/square mesh
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(skew_pos, 0.0f, 1.0f);
+}
+
+vec2 grid_uv() {
+  const int GRID = 12;
+
+  const vec2 offsets[6] = vec2[](
+      vec2(0.0f, 0.0f), vec2(1.0f, 0.0f), vec2(0.0f, 1.0f),
+      vec2(1.0f, 0.0f), vec2(0.0f, 1.0f), vec2(1.0f, 1.0f)
+  );
+  int cell   = gl_VertexIndex / 6;
+  int corner = gl_VertexIndex % 6;
+  // cell column, row
+  vec2 c = vec2(cell % GRID, cell / GRID);
+  return (c + offsets[corner]) / float(GRID);
 }
 
 // implementations
@@ -150,5 +167,6 @@ vec2 rotate(vec2 pos, vec2 center) {
   return vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c) + center;
 }
 
-
-
+vec2 bilinear(vec2 uv, vec2 tl, vec2 tr, vec2 bl, vec2 br) {
+  return mix(mix(tl, tr, uv.x), mix(bl, br, uv.x), uv.y);
+}

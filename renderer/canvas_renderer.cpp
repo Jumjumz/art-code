@@ -405,7 +405,8 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
                                              vk::ShaderStageFlagBits::eFragment,
                                          0, this->push_constants[idx]);
 
-        cmd.draw(6, 1, 0, 0);
+        // 864 vertices and will have 576 triangles per shapes
+        cmd.draw(12 * 12 * 6, 1, 0, 0);
     }
 
     cmd.endRendering();
