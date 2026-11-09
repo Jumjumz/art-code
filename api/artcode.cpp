@@ -1,5 +1,6 @@
 #include "artcode.hpp"
 #include "artcode_instance.hpp"
+#include <array>
 #include <numbers>
 #include <stdexcept>
 
@@ -15,13 +16,13 @@ struct ShapeAttributes {
     float stroke     = 10.0f;
     float rotate     = 0.0f;
     int   fill       = 1;
-    int   skew       = 0;
+    int   distort    = 0;
     int   shape_type = 0;
 
-    // skew data
-    struct ShapeSkew {
-        size_t                 size      = 0;
-        std::array<SkewPos, 8> skew_data = {{{}}};
+    // distort data
+    struct ShapeDistort {
+        size_t                    size      = 0;
+        std::array<DistortPos, 8> skew_data = {{{}}};
     } shape_skew;
     // pen data
     struct PenInstance {
@@ -32,8 +33,8 @@ struct ShapeAttributes {
 
 struct ShapeRegistry {
   public:
-    static inline size_t                       size      = 0;
-    static inline ArrayT<ShapeAttributes, 500> instances = {};
+    static inline size_t                           size      = 0;
+    static inline std::array<ShapeAttributes, 500> instances = {};
 
     static size_t get_size() { return size; }
 
@@ -59,6 +60,7 @@ Vec4 bg_color = Vec4{0.0f};
 enum class ShapeType { Quad, Circle, Triangle, Pen };
 
 Vec4 convert_color(const string& color, float opacity) {
+    // remove # if provided
     string hex   = color[0] == '#' ? color.substr(1) : color;
     u32    value = std::stoul(hex, nullptr, 16);
     // 0xFF (255) is a bit mask
@@ -144,9 +146,9 @@ Vec2 shape_mesh(int type, size_t index) {
     return mesh_size(shape_vertices(static_cast<ShapeType>(type), index));
 };
 
-Skew& Skew::at(int index, Vec2 position) {
+Distort& Distort::at(int index, Vec2 position) {
     auto& shape = ShapeRegistry::instances[ShapeRegistry::size - 1];
-    if (shape.skew == 1) {
+    if (shape.distort == 1) {
         if (this->size < 8) {
             shape.shape_skew.skew_data[this->size] = {position, index};
             // increment sizes
@@ -162,7 +164,7 @@ using Quad = Art::Quad;
 // TODO:implement shapes internals
 Quad::Quad()
     : s_index(ShapeRegistry::size),
-      _skew(std::make_unique<Skew>()) {
+      _skew(std::make_unique<Distort>()) {
     // increase size
     ShapeRegistry::size++;
     shape_type();
@@ -197,8 +199,8 @@ void Quad::color(const char* color, float opacity) {
     ShapeRegistry::instances[this->s_index].color = convert_color(color, opacity);
 };
 
-Skew& Quad::skew(bool skew) {
-    ShapeRegistry::instances[this->s_index].skew = static_cast<int>(skew);
+Distort& Quad::distort(bool distort) {
+    ShapeRegistry::instances[this->s_index].distort = static_cast<int>(distort);
     return *this->_skew;
 };
 
@@ -210,7 +212,7 @@ using Circle = Art::Circle;
 
 Circle::Circle()
     : s_index(ShapeRegistry::size),
-      _skew(std::make_unique<Skew>()) {
+      _skew(std::make_unique<Distort>()) {
     ShapeRegistry::size++;
     shape_type();
 };
@@ -244,8 +246,8 @@ void Circle::color(const char* color, float opacity) {
     ShapeRegistry::instances[this->s_index].color = convert_color(color, opacity);
 };
 
-Skew& Circle::skew(bool skew) {
-    ShapeRegistry::instances[this->s_index].skew = static_cast<int>(skew);
+Distort& Circle::distort(bool distort) {
+    ShapeRegistry::instances[this->s_index].distort = static_cast<int>(distort);
     return *this->_skew;
 };
 
@@ -258,7 +260,7 @@ using Triangle = Art::Triangle;
 
 Triangle::Triangle()
     : s_index(ShapeRegistry::size),
-      _skew(std::make_unique<Skew>()) {
+      _skew(std::make_unique<Distort>()) {
     ShapeRegistry::size++;
     shape_type();
 };
@@ -293,8 +295,8 @@ void Triangle::color(const char* color, float opacity) {
     ShapeRegistry::instances[this->s_index].color = convert_color(color, opacity);
 };
 
-Skew& Triangle::skew(bool skew) {
-    ShapeRegistry::instances[this->s_index].skew = static_cast<int>(skew);
+Distort& Triangle::distort(bool distort) {
+    ShapeRegistry::instances[this->s_index].distort = static_cast<int>(distort);
     return *this->_skew;
 };
 
@@ -307,7 +309,7 @@ using Pen = Art::Pen;
 
 Pen::Pen()
     : s_index(ShapeRegistry::size),
-      _skew(std::make_unique<Skew>()) {
+      _skew(std::make_unique<Distort>()) {
     ShapeRegistry::size++;
     shape_type();
 };
@@ -368,8 +370,8 @@ void Pen::color(const char* color, float opacity) {
     ShapeRegistry::instances[this->s_index].color = convert_color(color, opacity);
 };
 
-Skew& Pen::skew(bool skew) {
-    ShapeRegistry::instances[this->s_index].skew = static_cast<int>(skew);
+Distort& Pen::distort(bool distort) {
+    ShapeRegistry::instances[this->s_index].distort = static_cast<int>(distort);
     return *this->_skew;
 };
 
@@ -411,7 +413,7 @@ void Art::Draw() {
             constants.stroke     = shape.stroke;
             constants.rotate     = shape.rotate;
             constants.fill       = shape.fill;
-            constants.skew       = shape.skew;
+            constants.distort    = shape.distort;
             constants.shape_type = shape_type;
 
             Shared::Memory::register_constants(constants);

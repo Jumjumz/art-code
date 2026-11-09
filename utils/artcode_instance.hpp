@@ -1,27 +1,28 @@
 #pragma once
 
 #include "artcode.hpp"
+#include <array>
 #include <cstdio>
-#include <fcntl.h>
 #include <glm/glm.hpp>
 #include <stdexcept>
 // NOTE:for now this projects only works for windows and linux
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #endif
 
-struct SkewPos {
+struct DistortPos {
     Vec2 pos;
     int  index;
 
-    SkewPos()
+    DistortPos()
         : pos(0.0f),
           index(-1),
           _padding(0) {}
-    SkewPos(Vec2 _pos, int _index)
+    DistortPos(Vec2 _pos, int _index)
         : pos(_pos),
           index(_index),
           _padding(0) {}
@@ -49,8 +50,8 @@ struct PenInstance {
 };
 
 struct SkewData {
-    size_t                 size = 0;
-    std::array<SkewPos, 8> items;
+    size_t                    size = 0;
+    std::array<DistortPos, 8> items;
 };
 
 struct PushConstants {
@@ -65,7 +66,7 @@ struct PushConstants {
     float stroke;
     float rotate;
     int   fill;
-    int   skew;
+    int   distort;
     int   shape_type;
 };
 
@@ -77,8 +78,8 @@ namespace Shared {
     };
 
     struct Region {
-        size_t                        size = 0;
-        ArrayT<Shared::Instance, 500> instance;
+        size_t                            size = 0;
+        std::array<Shared::Instance, 500> instance;
     };
 
 #ifdef _WIN32
@@ -174,7 +175,8 @@ namespace Shared {
             inst.constants = push_const;
         }
 
-        static void register_skew_data(const std::array<SkewPos, 8> skew_data, size_t size) {
+        static void register_skew_data(const std::array<DistortPos, 8> skew_data,
+                                       size_t                          size) {
             check_instance_size();
 
             auto& inst = region->instance[region->size];

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <glm/glm.hpp>
 #include <memory>
 #include <optional>
@@ -46,18 +45,16 @@ typedef std::vector<u16>    ArrayU16;
 typedef std::vector<u32>    ArrayU32;
 typedef std::vector<u64>    ArrayU64;
 
-template <typename T, size_t size> using ArrayT = std::array<T, size>;
-template <typename T> using VectorT             = std::vector<T>;
 // TODO:currently this can receive chars or strings, update to only receive NUMBERS
 //  squared and cubic
 template <typename T> T squared(T sq) { return sq * sq; };
 template <typename T> T cubic(T cb) { return cb * cb * cb; };
 
-struct ARTCODE_API Skew {
+struct ARTCODE_API Distort {
   public:
     // TODO:add something that auto detects index if it is odd or even
     // odd indices only needs one value as it is a per axis basis
-    Skew& at(int index, Vec2 position);
+    Distort& at(int index, Vec2 position);
 
   private:
     size_t size;
@@ -76,16 +73,16 @@ namespace Art {
       public:
         Quad();
 
-        void  geometry(float x, float y, float width, float length);
-        void  geometry(Vec2 position, float width, float length);
-        void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
-        void  style(Style style);
-        void  color(const char* color = "#000000", float opacity = 1.0f);
-        Skew& skew(bool skew = false);
+        void     geometry(float x, float y, float width, float length);
+        void     geometry(Vec2 position, float width, float length);
+        void     style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
+        void     style(Style style);
+        void     color(const char* color = "#000000", float opacity = 1.0f);
+        Distort& distort(bool distort = false);
 
       private:
-        size_t                s_index;
-        std::unique_ptr<Skew> _skew;
+        size_t                   s_index;
+        std::unique_ptr<Distort> _skew;
 
         void shape_type();
     };
@@ -94,16 +91,16 @@ namespace Art {
       public:
         Circle();
 
-        void  geometry(float x, float y, float radius);
-        void  geometry(Vec2 position, float radius);
-        void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
-        void  style(Style style);
-        void  color(const char* color = "#000000", float opacity = 1.0f);
-        Skew& skew(bool skew = false);
+        void     geometry(float x, float y, float radius);
+        void     geometry(Vec2 position, float radius);
+        void     style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
+        void     style(Style style);
+        void     color(const char* color = "#000000", float opacity = 1.0f);
+        Distort& distort(bool distort = false);
 
       private:
-        size_t                s_index;
-        std::unique_ptr<Skew> _skew;
+        size_t                   s_index;
+        std::unique_ptr<Distort> _skew;
 
         void shape_type();
     };
@@ -112,15 +109,15 @@ namespace Art {
       public:
         Triangle();
 
-        void  geometry(Vec2 v0, Vec2 v1, Vec2 v2);
-        void  style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
-        void  style(Style style);
-        void  color(const char* color = "#000000", float opacity = 1.0f);
-        Skew& skew(bool skew = false);
+        void     geometry(Vec2 v0, Vec2 v1, Vec2 v2);
+        void     style(bool fill = true, float stroke = 10.0f, float rotate = 0.0f);
+        void     style(Style style);
+        void     color(const char* color = "#000000", float opacity = 1.0f);
+        Distort& distort(bool distort = false);
 
       private:
-        size_t                s_index;
-        std::unique_ptr<Skew> _skew;
+        size_t                   s_index;
+        std::unique_ptr<Distort> _skew;
 
         void shape_type();
     };
@@ -135,13 +132,13 @@ namespace Art {
 
         void style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
         // TODO:have different init values for different shapes
-        void  style(Style style);
-        void  color(const char* color, float opacity = 1.0f);
-        Skew& skew(bool skew = false);
+        void     style(Style style);
+        void     color(const char* color, float opacity = 1.0f);
+        Distort& distort(bool distort = false);
 
       private:
-        size_t                s_index;
-        std::unique_ptr<Skew> _skew;
+        size_t                   s_index;
+        std::unique_ptr<Distort> _skew;
 
         void shape_type();
     };

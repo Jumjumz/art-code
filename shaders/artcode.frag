@@ -20,9 +20,9 @@ struct PenData {vec2 position;int id;};
 layout(std430, set = 0, binding = 2) readonly buffer PenBuffer {PenData data[];} pen_ssbo;
 layout(location = 0) out vec4 frag_color;
 layout(location = 0) in vec2 shape_pos;
-layout(location = 1) in vec2 skew_pos;
+layout(location = 1) in vec2 distort_pos;
 layout(location = 2) in vec2 mesh_center;
-layout(location = 3) flat in int h_skew;
+layout(location = 3) flat in int is_dostorted;
 
 // forward declarations
 float sdf_quad     (vec2 p, vec2 b);
@@ -37,6 +37,7 @@ int ray_cross      (vec2 p, vec2 a,  vec2 b);
 // FIXME:fix render issue when zooming, it looks like it misaligns
 // or the AA is jagged in certain zoom values
 void main() {
+  // FIXME:transparent color doenst work!
   vec3 color  = constant.color.rgb;
   float alpha = constant.color.a;
   // convert color to linear space using gamma correction 2.2
@@ -48,9 +49,9 @@ void main() {
   const float rotate    = constant.rotate;
   const int fill        = constant.fill;
 
-  vec2 pos        = constant.pos;
-  vec2 center     = vec2(0.0f, 0.0f);
-  vec2 p          = vec2(0.0f, 0.0f);
+  vec2 pos    = constant.pos;
+  vec2 center = vec2(0.0f, 0.0f);
+  vec2 p      = vec2(0.0f, 0.0f);
   // set pos to ubo coord
   pos.y += ubo.reso.y;
 
@@ -144,7 +145,7 @@ void main() {
   // is either horizontal or vertical, AA is only needed
   // when a quad is in a diagonal orientation
   // NOTE:only apply AA to quad if it is rotated
-  if (shape == 0 && (rotate != 0.0f || h_skew == 1))
+  if (shape == 0 && (rotate != 0.0f || is_dostorted == 1))
     alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
 
   // smoothing fill pens
@@ -175,7 +176,7 @@ void main() {
       alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
 
     // NOTE:only apply inner edge AA if quad is rotated
-    if (shape == 0 && (rotate != 0.0f || h_skew == 1))
+    if (shape == 0 && (rotate != 0.0f || is_dostorted == 1))
       alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
 
     // NOTE:smoothnes not that good yet

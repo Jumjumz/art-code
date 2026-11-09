@@ -94,9 +94,9 @@ void CanvasRenderer::update_artcode_buffers() {
         const auto& instance = Shared::Memory::get_instance(i);
         // pass ssbo data from shared memory to application
         {
-            std::vector<SkewPos> skew_data(instance.skew_data.items.begin(),
-                                           instance.skew_data.items.begin() +
-                                               instance.skew_data.size);
+            std::vector<DistortPos> skew_data(instance.skew_data.items.begin(),
+                                              instance.skew_data.items.begin() +
+                                                  instance.skew_data.size);
             this->artcode_buffer->skew_data.push_back(skew_data);
 
             std::vector<PHandle> pen_data(instance.pen_data.items.begin(),
