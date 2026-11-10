@@ -23,6 +23,8 @@ layout(location = 0) in vec2 shape_pos;
 layout(location = 1) in vec2 distort_pos;
 layout(location = 2) in vec2 mesh_center;
 layout(location = 3) flat in int is_dostorted;
+layout(location = 4) flat in mat3 h_inv;
+layout(location = 7) flat in float padding;
 
 // forward declarations
 float sdf_quad     (vec2 p, vec2 b);
@@ -34,10 +36,13 @@ float sdf_bezier   (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 int sdf_winding    (vec2 p, vec2 p0, vec2 p1, vec2 p2);
 int ray_cross      (vec2 p, vec2 a,  vec2 b);
 
+// helper functions
+vec2 original_position();
+
 // FIXME:fix render issue when zooming, it looks like it misaligns
 // or the AA is jagged in certain zoom values
 void main() {
-  // FIXME:transparent color doenst work!
+  // FIXME:transparent color doesnt work!
   vec3 color  = constant.color.rgb;
   float alpha = constant.color.a;
   // convert color to linear space using gamma correction 2.2
@@ -49,9 +54,10 @@ void main() {
   const float rotate    = constant.rotate;
   const int fill        = constant.fill;
 
-  vec2 pos    = constant.pos;
-  vec2 center = vec2(0.0f, 0.0f);
-  vec2 p      = vec2(0.0f, 0.0f);
+  vec2 pos      = constant.pos;
+  vec2 orig_pos = original_position();
+  vec2 center   = vec2(0.0f, 0.0f);
+  vec2 p        = vec2(0.0f, 0.0f);
   // set pos to ubo coord
   pos.y += ubo.reso.y;
 
@@ -65,7 +71,7 @@ void main() {
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
-    p            = shape_pos - center;
+    p            = orig_pos - center;
 
     d = sdf_quad(p, b);
   } else if (shape == 1) {
@@ -84,7 +90,7 @@ void main() {
     p2.y += ubo.reso.y;
 
     // free form triangle
-    d = sdf_triangle( shape_pos, p0, p1, p2 );
+    d = sdf_triangle( orig_pos, p0, p1, p2 );
   } else if (shape == 3) {
     int i = 0;
     while (i < pen_ssbo.data.length() - 1) {
@@ -312,4 +318,12 @@ int ray_cross(in vec2 p, in vec2 a, in vec2 b) {
       return (a.y < b.y) ? 1 : -1;
   }
   return 0;
+}
+
+// FIXME:doesnt fucking work!
+vec2 original_position() {
+  vec3 q    = h_inv * vec3(distort_pos, 1.0f);
+  vec2 uv   = q.xy / q.z;
+
+  return uv + shape_pos;
 }

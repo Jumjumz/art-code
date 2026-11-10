@@ -21,17 +21,22 @@ layout(std430, set = 0, binding = 1) readonly buffer DistortBuffer {Distort data
 layout(location = 0) out vec2 shape_pos;
 layout(location = 1) out vec2 distort_pos;
 layout(location = 2) out vec2 mesh_center;
-layout(location = 3) out int is_distorted;
+layout(location = 3) flat out int is_distorted;
+layout(location = 4) flat out mat3 h_inv;
+layout(location = 7) flat out float padding;
 
 // forward declarations
 vec2 grid_uv         ();
 vec2[6] shape_mesh   ();
 vec2[6] distort_mesh ();
+mat3 square_to_quad  (vec2 q0, vec2 q1, vec2 q2, vec2 q3);
 // helper functions
 vec2 get_center          (vec2 positions[6]);
 vec2 rotate              (vec2 pos, vec2 center);
 vec2 bilinear            (vec2 uv, vec2 tl, vec2 tr, vec2 bl, vec2 br);
 
+// TODO:add a homography and pass to frag shader
+// to fix incorrect distorted shapes
 void main() {
   vec2 uv = grid_uv();
   // NOTE:separated the mesh positions and the skewed positions
@@ -52,11 +57,12 @@ void main() {
     dst_pos = rotate(dst_pos, center);
   }
   is_distorted   = distorted;
-  // pass respective positions
+  // pass to frag shader
   mesh_center = center;
-  distort_pos    = dst_pos;
+  distort_pos = dst_pos;
   shape_pos   = bilinear(uv, mesh_positions[0], mesh_positions[1], mesh_positions[2], mesh_positions[5]);
-
+  mat3 H      = square_to_quad(mesh_positions[0], mesh_positions[1], mesh_positions[2], mesh_positions[5]);
+  h_inv       = inverse(H);
   // pixels will adjust depending on the skew values
   // no skew means rect/square mesh
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(distort_pos, 0.0f, 1.0f);
@@ -81,9 +87,10 @@ vec2[6] shape_mesh() {
 // NOTE:add stroke in padding for pen instances
   // this fixes render issues for stroke and mesh size
   // making the mesh size dynamic depending on stroke value
-  const float padding  = (constant.fill == 0 && constant.shape_type == 3) ? constant.stroke + 20.0f : 20.0f;
   const vec2 mesh_size = constant.mesh_size;
   vec2 position        = constant.pos;
+
+  padding = (constant.fill == 0 && constant.shape_type == 3) ? constant.stroke + 20.0f : 20.0f;
   // set position to ubo coord
   position.y += ubo.reso.y;
   vec2 positions[6] = vec2[](
@@ -152,6 +159,27 @@ vec2[6] distort_mesh() {
   }
 
   return positions;
+}
+
+mat3 square_to_quad(vec2 q0, vec2 q1, vec2 q2, vec2 q3) {
+  vec2 d1 = q1 - q2;
+  vec2 d2 = q3 - q2;
+  vec2 d3 = q0 - q1 + q2 - q3;
+
+  float g = 0.0f, h = 0.0f;
+  if (abs(d3.x) > 1e-6 || abs(d3.y) > 1e-6) {
+    float den = d1.x * d2.y - d2.x + d1.y;
+    g = (d3.x * d2.y - d2.x * d3.y) / den;
+    h = (d1.x * d3.y - d3.x * d1.y) / den;
+  }
+
+  vec2 a = q1 - q0 + g * q1; // u axis
+  vec2 b = q3 - q0 + h * q3; // v axis
+
+  return mat3( a.x,  a.y,  g,
+               b.x,  b.y,  h,
+              q0.x, q0.y, 1.0f
+      );
 }
 
 vec2 get_center(vec2 positions[6]) {
