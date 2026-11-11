@@ -25,6 +25,8 @@ layout(location = 2) in vec2 mesh_center;
 layout(location = 3) flat in int is_dostorted;
 layout(location = 4) flat in mat3 h_inv;
 layout(location = 7) flat in float padding;
+layout(location = 8) in vec2 mesh_tl;
+layout(location = 9) in vec2 final_mesh_size;
 
 // forward declarations
 float sdf_quad     (vec2 p, vec2 b);
@@ -320,10 +322,10 @@ int ray_cross(in vec2 p, in vec2 a, in vec2 b) {
   return 0;
 }
 
-// FIXME:doesnt fucking work!
+// FIXME:this doesnt work!
 vec2 original_position() {
-  vec3 q    = h_inv * vec3(distort_pos, 1.0f);
-  vec2 uv   = q.xy / q.z;
+  vec3 q  = h_inv * vec3(distort_pos, 1.0f);
+  vec2 uv = q.xy / q.z;
 
-  return uv + shape_pos;
+  return mesh_tl + uv * final_mesh_size;
 }

@@ -24,6 +24,8 @@ layout(location = 2) out vec2 mesh_center;
 layout(location = 3) flat out int is_distorted;
 layout(location = 4) flat out mat3 h_inv;
 layout(location = 7) flat out float padding;
+layout(location = 8) out vec2 mesh_tl;
+layout(location = 9) out vec2 final_mesh_size;
 
 // forward declarations
 vec2 grid_uv         ();
@@ -35,8 +37,6 @@ vec2 get_center          (vec2 positions[6]);
 vec2 rotate              (vec2 pos, vec2 center);
 vec2 bilinear            (vec2 uv, vec2 tl, vec2 tr, vec2 bl, vec2 br);
 
-// TODO:add a homography and pass to frag shader
-// to fix incorrect distorted shapes
 void main() {
   vec2 uv = grid_uv();
   // NOTE:separated the mesh positions and the skewed positions
@@ -56,13 +56,15 @@ void main() {
     center  = get_center(dist_positions);
     dst_pos = rotate(dst_pos, center);
   }
-  is_distorted   = distorted;
   // pass to frag shader
-  mesh_center = center;
-  distort_pos = dst_pos;
-  shape_pos   = bilinear(uv, mesh_positions[0], mesh_positions[1], mesh_positions[2], mesh_positions[5]);
-  mat3 H      = square_to_quad(mesh_positions[0], mesh_positions[1], mesh_positions[2], mesh_positions[5]);
-  h_inv       = inverse(H);
+  is_distorted       = distorted;
+  mesh_center        = center;
+  distort_pos        = dst_pos;
+  shape_pos          = bilinear(uv, mesh_positions[0], mesh_positions[1], mesh_positions[2], mesh_positions[5]);
+  mat3 H             = square_to_quad(dist_positions[0], dist_positions[1], dist_positions[5], dist_positions[2]);
+  h_inv              = inverse(H);
+  mesh_tl            = mesh_positions[0];
+  final_mesh_size    = mesh_positions[5] - mesh_positions[0];
   // pixels will adjust depending on the skew values
   // no skew means rect/square mesh
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(distort_pos, 0.0f, 1.0f);
@@ -108,9 +110,9 @@ vec2[6] shape_mesh() {
 vec2[6] distort_mesh() {
   vec2[6] positions = shape_mesh();
   for (int i = 0; i < distort_ssbo.data.length(); i++) {
-    vec2 pos  = distort_ssbo.data[i].pos;
-    int idx   = distort_ssbo.data[i].index;
-    // index default value -1
+    const vec2 pos = distort_ssbo.data[i].pos;
+    const int idx  = distort_ssbo.data[i].index;
+    // exit at index default
     if (idx == -1)
       break;
 
@@ -168,7 +170,7 @@ mat3 square_to_quad(vec2 q0, vec2 q1, vec2 q2, vec2 q3) {
 
   float g = 0.0f, h = 0.0f;
   if (abs(d3.x) > 1e-6 || abs(d3.y) > 1e-6) {
-    float den = d1.x * d2.y - d2.x + d1.y;
+    const float den = d1.x * d2.y - d2.x * d1.y;
     g = (d3.x * d2.y - d2.x * d3.y) / den;
     h = (d1.x * d3.y - d3.x * d1.y) / den;
   }
@@ -178,7 +180,7 @@ mat3 square_to_quad(vec2 q0, vec2 q1, vec2 q2, vec2 q3) {
 
   return mat3( a.x,  a.y,  g,
                b.x,  b.y,  h,
-              q0.x, q0.y, 1.0f
+              q0.x, q0.y,  1.0f
       );
 }
 
