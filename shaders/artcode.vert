@@ -28,22 +28,19 @@ layout(location = 8) out vec2 mesh_tl;
 layout(location = 9) out vec2 final_mesh_size;
 
 // forward declarations
-vec2 grid_uv         ();
 vec2[6] shape_mesh   ();
 vec2[6] distort_mesh ();
+
 mat3 square_to_quad  (vec2 q0, vec2 q1, vec2 q2, vec2 q3);
-// helper functions
-vec2 get_center          (vec2 positions[6]);
-vec2 rotate              (vec2 pos, vec2 center);
-vec2 bilinear            (vec2 uv, vec2 tl, vec2 tr, vec2 bl, vec2 br);
+vec2 get_center      (vec2 positions[6]);
+vec2 rotate          (vec2 pos, vec2 center);
 
 void main() {
-  vec2 uv = grid_uv();
   // NOTE:separated the mesh positions and the skewed positions
   const vec2 mesh_positions[6] = shape_mesh();
   const vec2 dist_positions[6] = distort_mesh();
 
-  vec2 dst_pos = bilinear(uv, dist_positions[0], dist_positions[1], dist_positions[2], dist_positions[5]);
+  vec2 dst_pos = dist_positions[gl_VertexIndex];
 
   int distorted = 0;
   vec2 center  = vec2(0.0f);
@@ -57,31 +54,17 @@ void main() {
     dst_pos = rotate(dst_pos, center);
   }
   // pass to frag shader
-  is_distorted       = distorted;
-  mesh_center        = center;
-  distort_pos        = dst_pos;
-  shape_pos          = bilinear(uv, mesh_positions[0], mesh_positions[1], mesh_positions[2], mesh_positions[5]);
-  mat3 H             = square_to_quad(dist_positions[0], dist_positions[1], dist_positions[5], dist_positions[2]);
-  h_inv              = inverse(H);
-  mesh_tl            = mesh_positions[0];
-  final_mesh_size    = mesh_positions[5] - mesh_positions[0];
+  is_distorted    = distorted;
+  mesh_center     = center;
+  distort_pos     = dst_pos;
+  shape_pos       = mesh_positions[gl_VertexIndex];
+  mat3 H          = square_to_quad(dist_positions[0], dist_positions[1], dist_positions[5], dist_positions[2]);
+  h_inv           = inverse(H);
+  mesh_tl         = mesh_positions[0];
+  final_mesh_size = mesh_positions[5] - mesh_positions[0];
   // pixels will adjust depending on the skew values
   // no skew means rect/square mesh
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(distort_pos, 0.0f, 1.0f);
-}
-
-vec2 grid_uv() {
-  const int GRID = 12;
-
-  const vec2 offsets[6] = vec2[](
-      vec2(0.0f, 0.0f), vec2(1.0f, 0.0f), vec2(0.0f, 1.0f),
-      vec2(1.0f, 0.0f), vec2(0.0f, 1.0f), vec2(1.0f, 1.0f)
-  );
-  int cell   = gl_VertexIndex / 6;
-  int corner = gl_VertexIndex % 6;
-  // cell column, row
-  vec2 c = vec2(cell % GRID, cell / GRID);
-  return (c + offsets[corner]) / float(GRID);
 }
 
 // implementations
@@ -109,6 +92,8 @@ vec2[6] shape_mesh() {
 
 vec2[6] distort_mesh() {
   vec2[6] positions = shape_mesh();
+  const int shape   = constant.shape_type;
+
   for (int i = 0; i < distort_ssbo.data.length(); i++) {
     const vec2 pos = distort_ssbo.data[i].pos;
     const int idx  = distort_ssbo.data[i].index;
@@ -116,10 +101,15 @@ vec2[6] distort_mesh() {
     if (idx == -1)
       break;
 
+    // NOTE:testing circle
     switch(idx) {
       case 0:
         positions[0] += pos;
-        positions[5].y -= pos.x / 2.0f;
+        if (shape == 1) {
+          positions[5] -= pos / 2.0f;
+        } else if (shape == 2) {
+          positions[5].y -= pos.x / 2.0f;
+        }
         break;
       case 1:
         positions[0].x += pos.x;
@@ -130,8 +120,10 @@ vec2[6] distort_mesh() {
       case 2:
         positions[1] += pos;
         positions[3] += pos;
-        positions[2].y += pos.x / 2.0f;
-        positions[4].y += pos.x / 2.0f;
+        if (shape == 2) {
+          positions[2].y += pos.x / 2.0f;
+          positions[4].y += pos.x / 2.0f;
+        }
         break;
       case 3:
         positions[1].y += pos.y;
@@ -149,8 +141,10 @@ vec2[6] distort_mesh() {
       case 6:
         positions[2] += pos;
         positions[4] += pos;
-        positions[1].y += pos.x / 2.0f;
-        positions[3].y += pos.x / 2.0f;
+        if (shape == 2) {
+          positions[1].y += pos.x / 2.0f;
+          positions[3].y += pos.x / 2.0f;
+        }
         break;
       case 7:
         positions[0].y += pos.y;
@@ -200,8 +194,4 @@ vec2 rotate(vec2 pos, vec2 center) {
 
   pos -= center;
   return vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c) + center;
-}
-
-vec2 bilinear(vec2 uv, vec2 tl, vec2 tr, vec2 bl, vec2 br) {
-  return mix(mix(tl, tr, uv.x), mix(bl, br, uv.x), uv.y);
 }

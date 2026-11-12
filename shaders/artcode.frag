@@ -73,12 +73,12 @@ void main() {
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
-    p            = orig_pos - center;
+    p            = shape_pos - center; // doesnt need to use orig_pos
 
     d = sdf_quad(p, b);
   } else if (shape == 1) {
     center = pos + shape_data;
-    p      = shape_pos - center;
+    p      = orig_pos - center;
 
     d = sdf_circle(p, shape_data.x);
   } else if (shape == 2) {
@@ -113,8 +113,8 @@ void main() {
         p1 -= pen_stroke;
         p2 -= pen_stroke;
 
-        d = min(d, sdf_bezier ( shape_pos, p0, p1, p2 ));
-        winding += sdf_winding( shape_pos, p0, p1, p2 );
+        d = min(d, sdf_bezier ( orig_pos, p0, p1, p2 ));
+        winding += sdf_winding( orig_pos, p0, p1, p2 );
         i += 2; // i+2, jumps to the 3rd index
       } else {
         // add stroke to the positions as mesh added a padding + stroke
@@ -129,8 +129,8 @@ void main() {
         a -= pen_stroke;
         b -= pen_stroke;
 
-        d = min(d, sdf_segment( shape_pos, a, b ));
-        winding += ray_cross  ( shape_pos, a, b );
+        d = min(d, sdf_segment( orig_pos, a, b ));
+        winding += ray_cross  ( orig_pos, a, b );
         i++; // move to the next index
       }
     }
