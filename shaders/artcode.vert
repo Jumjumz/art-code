@@ -120,7 +120,10 @@ vec2[6] distort_mesh() {
       case 2:
         positions[1] += pos;
         positions[3] += pos;
-        if (shape == 2) {
+        if (shape == 1) {
+          positions[2] += pos / 2.0f;
+          positions[4] += pos / 2.0f;
+        } else if (shape == 2) {
           positions[2].y += pos.x / 2.0f;
           positions[4].y += pos.x / 2.0f;
         }
@@ -132,6 +135,9 @@ vec2[6] distort_mesh() {
         break;
       case 4:
         positions[5] += pos;
+        if (shape == 1) {
+          positions[0] -= pos / 2.0f;
+        }
         break;
       case 5:
         positions[2].x += pos.x;
@@ -141,7 +147,10 @@ vec2[6] distort_mesh() {
       case 6:
         positions[2] += pos;
         positions[4] += pos;
-        if (shape == 2) {
+        if (shape == 1) {
+          positions[1] -= pos / 2.0f;
+          positions[3] -= pos / 2.0f;
+        } else if (shape == 2) {
           positions[1].y += pos.x / 2.0f;
           positions[3].y += pos.x / 2.0f;
         }
