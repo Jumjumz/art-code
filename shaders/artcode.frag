@@ -136,25 +136,23 @@ void main() {
     }
   }
 
+  // FIXME:current AA implementation where color opacity is being fix is trash!
   // discard outside shape, aka the mesh
   // pen has different rendering
+  float aa_coverage = 1.0f;
   if (shape != 3 && d > 0.0f) alpha = 0.0f;
 
-  float AA_SPREAD = fwidth(d);
-  // testing this method for producing consistent AA between zoom levels
-  AA_SPREAD = clamp(AA_SPREAD, 0.0f, 1.1f);
-
+  float aa_spread = fwidth(d);
+  aa_spread       = clamp(aa_spread, 0.0f, 1.1f);
+ 
   // NOTE:excempt quad and curve lines
   // as it has its own smoothing method
   if (shape != 0 && shape != 3)
-    alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
+    aa_coverage = 1.0f - smoothstep(-aa_spread, aa_spread, d);
 
-  // TODO:AA should not be applied for quad orientation that
-  // is either horizontal or vertical, AA is only needed
-  // when a quad is in a diagonal orientation
   // NOTE:only apply AA to quad if it is rotated
   if (shape == 0 && (rotate != 0.0f || is_dostorted == 1))
-    alpha = 1.0f - smoothstep(-AA_SPREAD, AA_SPREAD, d);
+    aa_coverage = 1.0f - smoothstep(-aa_spread, aa_spread, d);
 
   // smoothing fill pens
   if (fill == 1 && shape == 3) {
@@ -162,36 +160,36 @@ void main() {
     // winding == -1 is the inside of the shape
     // this removes the outside aka the mesh
     if (winding == 0)
-      alpha -= smoothstep(-AA_SPREAD, AA_SPREAD, d);
+      alpha -= smoothstep(-aa_spread, aa_spread, d);
 
     if (d > 0.0f) {
       // NOTE:uses its own stroke, this is the allowed stroke along the path d
       // to be used and applied to create a smoother edges of a pen shape
       float path_stroke = 0.5f;
-      alpha -= smoothstep(path_stroke + AA_SPREAD, path_stroke - AA_SPREAD, d);
+      alpha -= smoothstep(path_stroke + aa_spread, path_stroke - aa_spread, d);
     }
   }
  
   // render annular shapes
   if (fill == 0) {
-    // quads dont need to check alpha values
+    // quads dont need to check aa_coverage values
     // set to 0 to have a flat inner edge
     if (shape == 0)
       if (abs(d) > stroke) alpha = 0.0f;
 
     // excempt quads and pen instances
     if (shape != 0 && shape != 3)
-      alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
+      aa_coverage -= smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
 
     // NOTE:only apply inner edge AA if quad is rotated
     if (shape == 0 && (rotate != 0.0f || is_dostorted == 1))
-      alpha -= smoothstep(stroke - AA_SPREAD, stroke + AA_SPREAD, abs(d));
+      aa_coverage -= smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
 
-    // NOTE:smoothnes not that good yet
     if (shape == 3)
-      alpha -= smoothstep(pen_stroke - AA_SPREAD, pen_stroke + AA_SPREAD, abs(d));
+      aa_coverage -= smoothstep(pen_stroke - aa_spread, pen_stroke + aa_spread, abs(d));
   }
 
+  alpha *= aa_coverage;
   frag_color = vec4(color, alpha);
 }
 
