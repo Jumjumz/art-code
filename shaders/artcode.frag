@@ -22,7 +22,7 @@ layout(location = 0) out vec4 frag_color;
 layout(location = 0) in vec2 shape_pos;
 layout(location = 1) in vec2 distort_pos;
 layout(location = 2) in vec2 mesh_center;
-layout(location = 3) flat in int is_dostorted;
+layout(location = 3) flat in int is_distorted;
 layout(location = 4) flat in mat3 h_inv;
 layout(location = 7) flat in float padding;
 layout(location = 8) in vec2 mesh_tl;
@@ -136,22 +136,54 @@ void main() {
     }
   }
 
-  // FIXME:current AA implementation where color opacity is being fix is trash!
   // discard outside shape, aka the mesh
-  // pen has different rendering
-  float aa_coverage = 1.0f;
   if (shape != 3 && d > 0.0f) alpha = 0.0f;
 
   float aa_spread = fwidth(d);
   aa_spread       = clamp(aa_spread, 0.0f, 1.1f);
  
+  float aa_coverage = 1.0f;
+  if (fill == 1) {
+    if (shape == 3) {
+      // winding ==  0 is the outside of the shape
+      // winding == -1 is the inside of the shape
+      // this removes the outside aka the mesh
+      if (winding == 0)
+        alpha -= smoothstep(-aa_spread, aa_spread, d);
+
+      if (d > 0.0f) {
+        // NOTE:uses its own stroke, this is the allowed stroke along the path d
+        // to be used and applied to create a smoother edges of a pen shape
+        float path_stroke = 0.5f;
+        alpha -= smoothstep(path_stroke + aa_spread, path_stroke - aa_spread, d);
+      }
+    } else if (shape == 0) {
+      if (rotate != 0.0f || is_distorted == 1) {
+        aa_coverage = 1.0f - smoothstep(-aa_spread, aa_spread, d);
+      }
+    } else {
+      aa_coverage = 1.0f - smoothstep(-aa_spread, aa_spread, d);
+    }
+  } else {
+    float outer = 1.0f - smoothstep(-aa_spread, aa_spread, d);
+    if (shape == 3) {
+      aa_coverage -= smoothstep(pen_stroke - aa_spread, pen_stroke + aa_spread, abs(d));
+    } else if (shape == 0) {
+      if (abs(d) > stroke) alpha = 0.0f;
+      if (rotate != 0.0f || is_distorted == 1)
+        aa_coverage -= smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
+    } else {
+      float inner = 1.0f - smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
+      aa_coverage = outer * inner;
+    }
+  }
   // NOTE:excempt quad and curve lines
   // as it has its own smoothing method
-  if (shape != 0 && shape != 3)
+  /*if (shape != 0 && shape != 3)
     aa_coverage = 1.0f - smoothstep(-aa_spread, aa_spread, d);
 
   // NOTE:only apply AA to quad if it is rotated
-  if (shape == 0 && (rotate != 0.0f || is_dostorted == 1))
+  if (shape == 0 && (rotate != 0.0f || is_distorted == 1))
     aa_coverage = 1.0f - smoothstep(-aa_spread, aa_spread, d);
 
   // smoothing fill pens
@@ -182,12 +214,12 @@ void main() {
       aa_coverage -= smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
 
     // NOTE:only apply inner edge AA if quad is rotated
-    if (shape == 0 && (rotate != 0.0f || is_dostorted == 1))
+    if (shape == 0 && (rotate != 0.0f || is_distorted == 1))
       aa_coverage -= smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
 
     if (shape == 3)
       aa_coverage -= smoothstep(pen_stroke - aa_spread, pen_stroke + aa_spread, abs(d));
-  }
+  }*/
 
   alpha *= aa_coverage;
   frag_color = vec4(color, alpha);
