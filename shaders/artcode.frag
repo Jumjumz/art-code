@@ -135,27 +135,22 @@ void main() {
       }
     }
   }
-
-  // discard outside shape, aka the mesh
-  if (shape != 3 && d > 0.0f) alpha = 0.0f;
-
   float aa_spread = fwidth(d);
   aa_spread       = clamp(aa_spread, 0.0f, 1.1f);
- 
+
   float aa_coverage = 1.0f;
   if (fill == 1) {
     if (shape == 3) {
       // winding ==  0 is the outside of the shape
       // winding == -1 is the inside of the shape
       // this removes the outside aka the mesh
-      if (winding == 0)
-        alpha -= smoothstep(-aa_spread, aa_spread, d);
+      if (winding == 0) alpha = 0.0f;
 
       if (d > 0.0f) {
         // NOTE:uses its own stroke, this is the allowed stroke along the path d
         // to be used and applied to create a smoother edges of a pen shape
         float path_stroke = 0.5f;
-        alpha -= smoothstep(path_stroke + aa_spread, path_stroke - aa_spread, d);
+        aa_coverage = 1.0f - smoothstep(path_stroke + aa_spread, path_stroke - aa_spread, d);
       }
     } else if (shape == 0) {
       if (rotate != 0.0f || is_distorted == 1) {
@@ -166,14 +161,16 @@ void main() {
     }
   } else {
     float outer = 1.0f - smoothstep(-aa_spread, aa_spread, d);
+    float inner = 1.0f;
     if (shape == 3) {
-      aa_coverage -= smoothstep(pen_stroke - aa_spread, pen_stroke + aa_spread, abs(d));
+      aa_coverage = 1.0f - smoothstep(pen_stroke - aa_spread, pen_stroke + aa_spread, abs(d));
     } else if (shape == 0) {
-      if (abs(d) > stroke) alpha = 0.0f;
-      if (rotate != 0.0f || is_distorted == 1)
-        aa_coverage -= smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
+      if (rotate != 0.0f || is_distorted == 1) {
+        inner = 1.0f - smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
+        aa_coverage = outer * inner;
+      }
     } else {
-      float inner = 1.0f - smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
+      inner = 1.0f - smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
       aa_coverage = outer * inner;
     }
   }
