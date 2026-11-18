@@ -196,10 +196,10 @@ vec2 get_center(vec2 positions[6]) {
 }
 
 vec2 rotate(vec2 pos, vec2 center) {
-  const float PI       = 3.14159265359;
-  const float radian   = constant.rotate * (PI / 180.0f);
-  const float s        = sin(radian);
-  const float c        = cos(radian);
+  const float PI     = 3.14159265359;
+  const float radian = constant.rotate * (PI / 180.0f);
+  const float s      = sin(radian);
+  const float c      = cos(radian);
 
   pos -= center;
   return vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c) + center;

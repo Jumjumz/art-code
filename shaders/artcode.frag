@@ -67,8 +67,9 @@ void main() {
   // stroke is being rendered on both ends, meaning it doubles the stroke render
   // deviding it in half makes it accurate, should only apply for fill == 0
   const float pen_stroke = fill == 1 ? 0.0f : stroke / 2.0f;
-  float d                = 1e10; // large number for pen to work
-  int winding            = 0;    // for pen fill instances
+
+  float d     = 1e10; // large number for pen to work
+  int winding = 0;    // for pen fill instances
   if (shape == 0) {
     const vec2 b = shape_data * 0.5f;
     center       = pos + b;
@@ -137,7 +138,6 @@ void main() {
   float aa_spread = fwidth(d);
   aa_spread       = clamp(aa_spread, 0.0f, 1.1f);
 
-  // TODO:improve this code!
   float aa_coverage = 1.0f;
   if (fill == 1) {
     if (shape == 3) {
@@ -150,11 +150,7 @@ void main() {
         // NOTE:uses its own stroke, this is the allowed stroke along the path d
         // to be used and applied to create a smoother edges of a pen shape
         float path_stroke = 0.5f;
-        aa_coverage = 1.0f - smoothstep(path_stroke + aa_spread, path_stroke - aa_spread, d);
-      }
-    } else if (shape == 0) {
-      if (rotate != 0.0f || is_distorted == 1) {
-        aa_coverage = 1.0f - smoothstep(-aa_spread, aa_spread, d);
+        aa_coverage       = 1.0f - smoothstep(path_stroke + aa_spread, path_stroke - aa_spread, d);
       }
     } else {
       aa_coverage = 1.0f - smoothstep(-aa_spread, aa_spread, d);
@@ -164,13 +160,8 @@ void main() {
     float inner = 1.0f;
     if (shape == 3) {
       aa_coverage = 1.0f - smoothstep(pen_stroke - aa_spread, pen_stroke + aa_spread, abs(d));
-    } else if (shape == 0) {
-      if (rotate != 0.0f || is_distorted == 1) {
-        inner = 1.0f - smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
-        aa_coverage = outer * inner;
-      }
     } else {
-      inner = 1.0f - smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
+      inner       = 1.0f - smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
       aa_coverage = outer * inner;
     }
   }
@@ -306,7 +297,6 @@ int ray_cross(in vec2 p, in vec2 a, in vec2 b) {
   return 0;
 }
 
-// FIXME:this doesnt work!
 vec2 original_position() {
   vec3 q  = h_inv * vec3(distort_pos, 1.0f);
   vec2 uv = q.xy / q.z;
