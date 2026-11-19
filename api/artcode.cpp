@@ -146,7 +146,31 @@ Vec2 shape_mesh(int type, size_t index) {
     return mesh_size(shape_vertices(static_cast<ShapeType>(type), index));
 };
 
-Distort& Distort::at(int index, Vec2 position) {
+Distort& Distort::odd(int index, float val_axis) {
+    if (index % 2 == 0) {
+        throw std::invalid_argument("This function is for odd index only!");
+        return *this;
+    }
+
+    auto& shape = ShapeRegistry::instances[ShapeRegistry::size - 1];
+    if (shape.distort == 1) {
+        if (this->size < 8) {
+            // assign both val_axis to x and y
+            shape.shape_skew.skew_data[this->size] = {Vec2{val_axis, val_axis}, index};
+            // increment sizes
+            shape.shape_skew.size++;
+            this->size++;
+        }
+    }
+    return *this;
+};
+
+Distort& Distort::even(int index, Vec2 position) {
+    if (index % 2 == 1) {
+        throw std::invalid_argument("This function is for even index only!");
+        return *this;
+    }
+
     auto& shape = ShapeRegistry::instances[ShapeRegistry::size - 1];
     if (shape.distort == 1) {
         if (this->size < 8) {
@@ -164,7 +188,7 @@ using Quad = Art::Quad;
 // TODO:implement shapes internals
 Quad::Quad()
     : s_index(ShapeRegistry::size),
-      _skew(std::make_unique<Distort>()) {
+      _distort(std::make_unique<Distort>()) {
     // increase size
     ShapeRegistry::size++;
     shape_type();
@@ -201,7 +225,7 @@ void Quad::color(const char* color, float opacity) {
 
 Distort& Quad::distort(bool distort) {
     ShapeRegistry::instances[this->s_index].distort = static_cast<int>(distort);
-    return *this->_skew;
+    return *this->_distort;
 };
 
 void Quad::shape_type() {
@@ -212,7 +236,7 @@ using Circle = Art::Circle;
 
 Circle::Circle()
     : s_index(ShapeRegistry::size),
-      _skew(std::make_unique<Distort>()) {
+      _distort(std::make_unique<Distort>()) {
     ShapeRegistry::size++;
     shape_type();
 };
@@ -248,7 +272,7 @@ void Circle::color(const char* color, float opacity) {
 
 Distort& Circle::distort(bool distort) {
     ShapeRegistry::instances[this->s_index].distort = static_cast<int>(distort);
-    return *this->_skew;
+    return *this->_distort;
 };
 
 void Circle::shape_type() {
@@ -260,7 +284,7 @@ using Triangle = Art::Triangle;
 
 Triangle::Triangle()
     : s_index(ShapeRegistry::size),
-      _skew(std::make_unique<Distort>()) {
+      _distort(std::make_unique<Distort>()) {
     ShapeRegistry::size++;
     shape_type();
 };
@@ -297,7 +321,7 @@ void Triangle::color(const char* color, float opacity) {
 
 Distort& Triangle::distort(bool distort) {
     ShapeRegistry::instances[this->s_index].distort = static_cast<int>(distort);
-    return *this->_skew;
+    return *this->_distort;
 };
 
 void Triangle::shape_type() {
@@ -309,7 +333,7 @@ using Pen = Art::Pen;
 
 Pen::Pen()
     : s_index(ShapeRegistry::size),
-      _skew(std::make_unique<Distort>()) {
+      _distort(std::make_unique<Distort>()) {
     ShapeRegistry::size++;
     shape_type();
 };
@@ -372,7 +396,7 @@ void Pen::color(const char* color, float opacity) {
 
 Distort& Pen::distort(bool distort) {
     ShapeRegistry::instances[this->s_index].distort = static_cast<int>(distort);
-    return *this->_skew;
+    return *this->_distort;
 };
 
 void Pen::shape_type() {

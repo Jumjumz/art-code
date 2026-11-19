@@ -157,11 +157,10 @@ void main() {
     }
   } else {
     float outer = 1.0f - smoothstep(-aa_spread, aa_spread, d);
-    float inner = 1.0f;
     if (shape == 3) {
       aa_coverage = 1.0f - smoothstep(pen_stroke - aa_spread, pen_stroke + aa_spread, abs(d));
     } else {
-      inner       = 1.0f - smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
+      float inner = 1.0f - smoothstep(stroke - aa_spread, stroke + aa_spread, abs(d));
       aa_coverage = outer * inner;
     }
   }

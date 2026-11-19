@@ -101,7 +101,8 @@ vec2[6] distort_mesh() {
     if (idx == -1)
       break;
 
-    // NOTE:testing circle
+    // odd indices only controls one axis
+    // 1, 5 is x axis while 3, 7 is y axis
     switch(idx) {
       case 0:
         positions[0] += pos;

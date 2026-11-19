@@ -116,6 +116,8 @@ std::string BuildPanel::executable_files() const {
     return source;
 };
 
+// TODO:have a compile time/runtime error message from the api
+// should be able to catch/capture actual error messages from it
 std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
     std::string cmd;
     // execute and use gcc compiler
@@ -128,7 +130,6 @@ std::string BuildPanel::create_cmd(const BuildPanel::Flags& flag) {
         build = project_dir / "build" / "artcode";
 #endif
 
-        // TODO:might need to move the shader compilation to compile
         switch (flag) {
         case BuildPanel::Flags::C: {
             const auto executables = executable_files();

@@ -52,9 +52,8 @@ template <typename T> T cubic(T cb) { return cb * cb * cb; };
 
 struct ARTCODE_API Distort {
   public:
-    // TODO:add something that auto detects index if it is odd or even
-    // odd indices only needs one value as it is a per axis basis
-    Distort& at(int index, Vec2 position);
+    Distort& odd(int index, float val_axis);
+    Distort& even(int index, Vec2 position);
 
   private:
     size_t size;
@@ -82,7 +81,7 @@ namespace Art {
 
       private:
         size_t                   s_index;
-        std::unique_ptr<Distort> _skew;
+        std::unique_ptr<Distort> _distort;
 
         void shape_type();
     };
@@ -100,7 +99,7 @@ namespace Art {
 
       private:
         size_t                   s_index;
-        std::unique_ptr<Distort> _skew;
+        std::unique_ptr<Distort> _distort;
 
         void shape_type();
     };
@@ -117,7 +116,7 @@ namespace Art {
 
       private:
         size_t                   s_index;
-        std::unique_ptr<Distort> _skew;
+        std::unique_ptr<Distort> _distort;
 
         void shape_type();
     };
@@ -130,15 +129,14 @@ namespace Art {
         void point(float x, float y);
         void curve(float h_x, float h_y);
 
-        void style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
-        // TODO:have different init values for different shapes
+        void     style(bool fill = false, float stroke = 10.0f, float rotate = 0.0f);
         void     style(Style style);
         void     color(const char* color, float opacity = 1.0f);
         Distort& distort(bool distort = false);
 
       private:
         size_t                   s_index;
-        std::unique_ptr<Distort> _skew;
+        std::unique_ptr<Distort> _distort;
 
         void shape_type();
     };
@@ -147,15 +145,3 @@ namespace Art {
 
     ARTCODE_API void Draw();
 }; // namespace Art
-
-// TODO:add expresssion templates
-/* STILL LEARNING THIS SHIT
-template <typename Drawable> struct Draw {
-  private:
-    Drawable drawable;
-    std::string glsl_code;
-
-  public:
-    void draw() { this->drawable.glsl(); };
-};
-*/
