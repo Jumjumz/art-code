@@ -49,7 +49,7 @@ struct PenInstance {
     std::array<PHandle, 500> items;
 };
 
-struct SkewData {
+struct DistortData {
     size_t                    size = 0;
     std::array<DistortPos, 8> items;
 };
@@ -73,7 +73,7 @@ struct PushConstants {
 namespace Shared {
     struct Instance {
         PushConstants constants;
-        SkewData      skew_data;
+        DistortData   distort_data;
         PenInstance   pen_data;
     };
 
@@ -175,16 +175,16 @@ namespace Shared {
             inst.constants = push_const;
         }
 
-        static void register_skew_data(const std::array<DistortPos, 8> skew_data,
-                                       size_t                          size) {
+        static void register_distort_data(const std::array<DistortPos, 8> distort_data,
+                                          size_t                          size) {
             check_instance_size();
 
             auto& inst = region->instance[region->size];
             // set size to not be 0
             size = size == 0 ? 1 : size;
 
-            inst.skew_data.size  = size;
-            inst.skew_data.items = skew_data;
+            inst.distort_data.size  = size;
+            inst.distort_data.items = distort_data;
         }
 
         static void register_pen_data(const std::array<PHandle, 500>& pen_handles,
@@ -218,8 +218,8 @@ namespace Shared {
             return region->instance[idx].constants;
         }
 
-        static SkewData get_skew_data(size_t idx) {
-            return region->instance[idx].skew_data;
+        static DistortData get_distort_data(size_t idx) {
+            return region->instance[idx].distort_data;
         }
 
         static void reset_instance() {

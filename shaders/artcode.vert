@@ -13,7 +13,7 @@ layout(push_constant) uniform PushConstants {
   float stroke;
   float rotate;
   int fill;
-  int skew;
+  int distort;
   int shape_type;
 } constant;
 struct Distort{vec2 pos;int index;};
@@ -44,7 +44,7 @@ void main() {
 
   int distorted = 0;
   vec2 center  = vec2(0.0f);
-  // index = -1 is default value for non skew
+  // index = -1 is default value for non distort
   if (distort_ssbo.data[0].index != -1)
     distorted = 1;
 
@@ -62,8 +62,8 @@ void main() {
   h_inv           = inverse(H);
   mesh_tl         = mesh_positions[0];
   final_mesh_size = mesh_positions[5] - mesh_positions[0];
-  // pixels will adjust depending on the skew values
-  // no skew means rect/square mesh
+  // pixels will adjust depending on the distort values
+  // no distort means rect/square mesh
   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(distort_pos, 0.0f, 1.0f);
 }
 

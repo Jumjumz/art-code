@@ -77,9 +77,9 @@ void CanvasRenderer::update_artcode_buffers() {
     this->device.waitIdle();
 
     // clear ssbo and skew data
-    this->artcode_buffer->skew_ssbo_buffers.clear();
-    this->artcode_buffer->skew_ssbo_memories.clear();
-    this->artcode_buffer->skew_data.clear();
+    this->artcode_buffer->distort_ssbo_buffers.clear();
+    this->artcode_buffer->distort_ssbo_memories.clear();
+    this->artcode_buffer->distort_data.clear();
 
     this->artcode_buffer->pen_ssbo_buffers.clear();
     this->artcode_buffer->pen_ssbo_memories.clear();
@@ -94,10 +94,10 @@ void CanvasRenderer::update_artcode_buffers() {
         const auto& instance = Shared::Memory::get_instance(i);
         // pass ssbo data from shared memory to application
         {
-            std::vector<DistortPos> skew_data(instance.skew_data.items.begin(),
-                                              instance.skew_data.items.begin() +
-                                                  instance.skew_data.size);
-            this->artcode_buffer->skew_data.push_back(skew_data);
+            std::vector<DistortPos> distort_data(instance.distort_data.items.begin(),
+                                                 instance.distort_data.items.begin() +
+                                                     instance.distort_data.size);
+            this->artcode_buffer->distort_data.push_back(distort_data);
 
             std::vector<PHandle> pen_data(instance.pen_data.items.begin(),
                                           instance.pen_data.items.begin() +
@@ -109,16 +109,17 @@ void CanvasRenderer::update_artcode_buffers() {
     // reset all instances
     Shared::Memory::reset_instance();
 
-    this->artcode_buffer->create_skew_ssbo_buffer();
+    this->artcode_buffer->create_distort_ssbo_buffer();
     this->artcode_buffer->create_pen_ssbo_buffer();
 };
 
-// NOTE:skew_data and pen_data should not be empty at this point as
+// NOTE:distort_data and pen_data should not be empty at this point as
 // shared memory has always 1 item in the array
 // this function only works if artcode_buffer is initialized first
 // this pushes the artcode command buffers in render loop
 bool CanvasRenderer::buffer_exist() const {
-    if (!this->artcode_buffer->skew_data.empty() && !this->artcode_buffer->pen_data.empty())
+    if (!this->artcode_buffer->distort_data.empty() &&
+        !this->artcode_buffer->pen_data.empty())
         return true;
 
     return false;
@@ -203,7 +204,7 @@ void CanvasRenderer::canvas_events(GLFWwindow* app_window) {
 
         if (canvas->ctrl_pressed) {
             CanvasControls::zoom += static_cast<float>(y) * 0.1f;
-            CanvasControls::zoom  = glm::clamp(CanvasControls::zoom, 0.5f, 10.0f);
+            CanvasControls::zoom  = glm::clamp(CanvasControls::zoom, 0.5f, 12.0f);
         }
     });
 

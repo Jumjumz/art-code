@@ -14,28 +14,28 @@ ArtcodeBuffer::ArtcodeBuffer(const vk::raii::PhysicalDevice&             phys_de
       artboard_image(artboard_image),
       descriptor_sets(descriptor_sets) {};
 
-// TODO:redo skew ssbo
-void ArtcodeBuffer::create_skew_ssbo_buffer() {
+void ArtcodeBuffer::create_distort_ssbo_buffer() {
     // create buffer per instance
     std::vector<vk::DescriptorBufferInfo> ssbo_infos = {};
     std::vector<vk::WriteDescriptorSet>   writes     = {};
 
     // reserve size to avoid seg faults
-    const auto skew_size = this->skew_data.size();
+    const auto skew_size = this->distort_data.size();
     ssbo_infos.reserve(skew_size);
     writes.reserve(skew_size);
 
     // creates ssbo buffer per shape instance, meaning every shape has an attached ssbo buffer
     for (size_t i = 0; i < skew_size; i++) {
         vk::BufferCreateInfo buffer_info{};
-        buffer_info.size  = sizeof(this->skew_data[i][0]) * this->skew_data[i].size();
-        buffer_info.usage = vk::BufferUsageFlagBits::eStorageBuffer;
+        buffer_info.size = sizeof(this->distort_data[i][0]) * this->distort_data[i].size();
+        buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
         buffer_info.sharingMode = vk::SharingMode::eExclusive;
 
-        this->skew_ssbo_buffers.push_back(
+        this->distort_ssbo_buffers.push_back(
             vk::raii::Buffer{this->device, buffer_info, nullptr});
 
-        vk::MemoryRequirements mem_req = this->skew_ssbo_buffers[i].getMemoryRequirements();
+        vk::MemoryRequirements mem_req =
+            this->distort_ssbo_buffers[i].getMemoryRequirements();
 
         vk::MemoryAllocateInfo mem_alloc_info{};
         mem_alloc_info.allocationSize  = mem_req.size;
@@ -43,19 +43,19 @@ void ArtcodeBuffer::create_skew_ssbo_buffer() {
             mem_req.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
                                         vk::MemoryPropertyFlagBits::eHostCoherent);
 
-        this->skew_ssbo_memories.push_back(
+        this->distort_ssbo_memories.push_back(
             vk::raii::DeviceMemory{this->device, mem_alloc_info, nullptr});
 
-        this->skew_ssbo_buffers[i].bindMemory(this->skew_ssbo_memories[i], 0);
+        this->distort_ssbo_buffers[i].bindMemory(this->distort_ssbo_memories[i], 0);
 
         // map memory
-        void* map_memory = this->skew_ssbo_memories[i].mapMemory(0, buffer_info.size);
-        memcpy(map_memory, this->skew_data[i].data(), buffer_info.size);
-        this->skew_ssbo_memories[i].unmapMemory();
+        void* map_memory = this->distort_ssbo_memories[i].mapMemory(0, buffer_info.size);
+        memcpy(map_memory, this->distort_data[i].data(), buffer_info.size);
+        this->distort_ssbo_memories[i].unmapMemory();
 
         // write to the buffer per instance
         vk::DescriptorBufferInfo ssbo_info{};
-        ssbo_info.buffer = *this->skew_ssbo_buffers[i];
+        ssbo_info.buffer = *this->distort_ssbo_buffers[i];
         ssbo_info.offset = 0;
         ssbo_info.range  = buffer_info.size;
         ssbo_infos.push_back(ssbo_info);

@@ -21,7 +21,7 @@ layout(push_constant) uniform PushConstants {
   float stroke;
   float rotate;
   int fill;
-  int skew;
+  int distort;
   int shape_type;
 } constant;
 

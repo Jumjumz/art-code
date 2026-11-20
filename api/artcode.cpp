@@ -21,9 +21,9 @@ struct ShapeAttributes {
 
     // distort data
     struct ShapeDistort {
-        size_t                    size      = 0;
-        std::array<DistortPos, 8> skew_data = {{{}}};
-    } shape_skew;
+        size_t                    size         = 0;
+        std::array<DistortPos, 8> distort_data = {{{}}};
+    } shape_distort;
     // pen data
     struct PenInstance {
         size_t                   size     = 0;
@@ -42,7 +42,7 @@ struct ShapeRegistry {
 
     static void check_instance_size() {
         if (size > 500)
-            throw std::runtime_error(
+            throw std::invalid_argument(
                 "Max number of shapes reach! Max shape intance is 500!");
     }
 
@@ -156,9 +156,10 @@ Distort& Distort::odd(int index, float val_axis) {
     if (shape.distort == 1) {
         if (this->size < 8) {
             // assign both val_axis to x and y
-            shape.shape_skew.skew_data[this->size] = {Vec2{val_axis, val_axis}, index};
+            shape.shape_distort.distort_data[this->size] = {Vec2{val_axis, val_axis},
+                                                            index};
             // increment sizes
-            shape.shape_skew.size++;
+            shape.shape_distort.size++;
             this->size++;
         }
     }
@@ -174,9 +175,9 @@ Distort& Distort::even(int index, Vec2 position) {
     auto& shape = ShapeRegistry::instances[ShapeRegistry::size - 1];
     if (shape.distort == 1) {
         if (this->size < 8) {
-            shape.shape_skew.skew_data[this->size] = {position, index};
+            shape.shape_distort.distort_data[this->size] = {position, index};
             // increment sizes
-            shape.shape_skew.size++;
+            shape.shape_distort.size++;
             this->size++;
         }
     }
@@ -185,7 +186,6 @@ Distort& Distort::even(int index, Vec2 position) {
 
 using Quad = Art::Quad;
 
-// TODO:implement shapes internals
 Quad::Quad()
     : s_index(ShapeRegistry::size),
       _distort(std::make_unique<Distort>()) {
@@ -442,8 +442,8 @@ void Art::Draw() {
 
             Shared::Memory::register_constants(constants);
 
-            Shared::Memory::register_skew_data(shape.shape_skew.skew_data,
-                                               shape.shape_skew.size);
+            Shared::Memory::register_distort_data(shape.shape_distort.distort_data,
+                                                  shape.shape_distort.size);
 
             Shared::Memory::register_pen_data(shape.shape_pen.pen_data,
                                               shape.shape_pen.size);

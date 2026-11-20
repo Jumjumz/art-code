@@ -12,16 +12,16 @@ class ArtcodeBuffer {
                   const vk::raii::CommandPool&                cmd_pool,
                   const vk::raii::Image&                      artboard_image,
                   const std::vector<vk::raii::DescriptorSet>& descriptor_sets);
-    std::vector<vk::raii::Buffer>       skew_ssbo_buffers  = {};
-    std::vector<vk::raii::DeviceMemory> skew_ssbo_memories = {};
+    std::vector<vk::raii::Buffer>       distort_ssbo_buffers  = {};
+    std::vector<vk::raii::DeviceMemory> distort_ssbo_memories = {};
 
     std::vector<vk::raii::Buffer>       pen_ssbo_buffers  = {};
     std::vector<vk::raii::DeviceMemory> pen_ssbo_memories = {};
 
-    std::vector<std::vector<DistortPos>> skew_data = {};
-    std::vector<std::vector<PHandle>>    pen_data  = {};
+    std::vector<std::vector<DistortPos>> distort_data = {};
+    std::vector<std::vector<PHandle>>    pen_data     = {};
 
-    void create_skew_ssbo_buffer();
+    void create_distort_ssbo_buffer();
 
     void create_pen_ssbo_buffer();
 

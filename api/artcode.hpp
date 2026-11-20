@@ -45,8 +45,8 @@ typedef std::vector<u16>    ArrayU16;
 typedef std::vector<u32>    ArrayU32;
 typedef std::vector<u64>    ArrayU64;
 
-// TODO:currently this can receive chars or strings, update to only receive NUMBERS
-//  squared and cubic
+// TODO:currently this can receive chars or strings, update to only receive numbers
+// squared and cubic
 template <typename T> T squared(T sq) { return sq * sq; };
 template <typename T> T cubic(T cb) { return cb * cb * cb; };
 
@@ -144,4 +144,5 @@ namespace Art {
     ARTCODE_API void BackgroundColor(const char* color, float opacity = 1.0f);
 
     ARTCODE_API void Draw();
+
 }; // namespace Art

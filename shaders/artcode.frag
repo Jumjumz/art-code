@@ -13,7 +13,7 @@ layout(push_constant) uniform PushConstants {
   float stroke;
   float rotate;
   int fill;
-  int skew;
+  int distort;
   int shape_type;
 } constant;
 struct PenData {vec2 position;int id;};
@@ -99,7 +99,7 @@ void main() {
       int id = pen_ssbo.data[i].id;
       if (id == 0) {
         // add stroke to the positions as mesh added a padding + stroke
-        vec2 p0 = pen_ssbo.data[i].position + stroke;
+        vec2 p0 = pen_ssbo.data[i + 0].position + stroke; // + 0 for format
         vec2 p1 = pen_ssbo.data[i + 1].position + stroke; // handle
         vec2 p2 = pen_ssbo.data[i + 2].position + stroke;
 
