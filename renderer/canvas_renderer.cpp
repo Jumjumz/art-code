@@ -246,14 +246,14 @@ void CanvasRenderer::artboard_setup(const glm::vec3& artboard_size, bool show_ma
     memcpy(this->vk_buffers.artboard_uniform_buffer_mapped, &ab_ubo, sizeof(ab_ubo));
 };
 
-// FIXME:doesnt work correctly in Windows!
+// FIXME:saving a png is way too slow!
 void CanvasRenderer::save_art() {
     if (SaveFile::has_path) {
-        const auto width      = static_cast<int>(vk_buffers.extent.width);
-        const auto height     = static_cast<int>(vk_buffers.extent.height);
-        const int  image_size = width * height * 4;
+        const auto width      = static_cast<int>(this->vk_buffers.extent.width);
+        const auto height     = static_cast<int>(this->vk_buffers.extent.height);
+        const auto image_size = width * height * 4;
 
-        const auto& staging_memory = this->artcode_buffer->create_export_image_buffer(
+        auto staging_memory = this->artcode_buffer->create_export_image_buffer(
             this->vk_buffers.extent, image_size);
 
         void* data = staging_memory.mapMemory(0, image_size);
@@ -265,7 +265,7 @@ void CanvasRenderer::save_art() {
 
         stbi_write_png(save_path.string().c_str(), width, height, 4, data, width * 4);
 
-        // unmap after creating
+        // unmap after done using
         staging_memory.unmapMemory();
 
         // return to orig state

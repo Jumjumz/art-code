@@ -106,11 +106,10 @@ void Application::loop() {
             buffers.push_back(*this->canvas.artboard_commands
                                    ->artboard_command_buffers[this->current_frame]);
 
-            // can only save image if buffer has been initialized..
             if (this->canvas.buffer_exist()) {
                 buffers.push_back(*this->canvas.artcode_commands
                                        ->artcode_command_buffers[this->current_frame]);
-
+                // can only save image if buffer has been initialized
                 this->canvas.save_art();
             }
         } else {

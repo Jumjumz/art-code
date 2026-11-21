@@ -20,12 +20,12 @@ void ArtcodeBuffer::create_distort_ssbo_buffer() {
     std::vector<vk::WriteDescriptorSet>   writes     = {};
 
     // reserve size to avoid seg faults
-    const auto skew_size = this->distort_data.size();
-    ssbo_infos.reserve(skew_size);
-    writes.reserve(skew_size);
+    const auto dist_size = this->distort_data.size();
+    ssbo_infos.reserve(dist_size);
+    writes.reserve(dist_size);
 
     // creates ssbo buffer per shape instance, meaning every shape has an attached ssbo buffer
-    for (size_t i = 0; i < skew_size; i++) {
+    for (size_t i = 0; i < dist_size; i++) {
         vk::BufferCreateInfo buffer_info{};
         buffer_info.size = sizeof(this->distort_data[i][0]) * this->distort_data[i].size();
         buffer_info.usage       = vk::BufferUsageFlagBits::eStorageBuffer;
@@ -174,7 +174,7 @@ ArtcodeBuffer::create_export_image_buffer(const vk::Extent3D&  extent,
 
     // transition artboard image
     vk::ImageMemoryBarrier barrier{};
-    barrier.oldLayout                       = vk::ImageLayout::eUndefined;
+    barrier.oldLayout                       = vk::ImageLayout::eShaderReadOnlyOptimal;
     barrier.newLayout                       = vk::ImageLayout::eTransferSrcOptimal;
     barrier.srcQueueFamilyIndex             = vk::QueueFamilyIgnored;
     barrier.dstQueueFamilyIndex             = vk::QueueFamilyIgnored;
@@ -221,6 +221,7 @@ ArtcodeBuffer::create_export_image_buffer(const vk::Extent3D&  extent,
     vk::SubmitInfo submit_info{};
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers    = &*cmd;
+
     this->graphics_queue.submit(submit_info, nullptr);
     this->graphics_queue.waitIdle();
 

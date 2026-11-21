@@ -55,7 +55,7 @@ struct ShapeRegistry {
 };
 
 // init to transparent
-Vec4 bg_color = Vec4{0.0f};
+auto bg_color = Vec4{0.0f};
 
 enum class ShapeType { Quad, Circle, Triangle, Pen };
 
