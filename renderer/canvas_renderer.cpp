@@ -263,6 +263,7 @@ void CanvasRenderer::save_art() {
         // missing, also sets to .png if passed extension is wrong
         save_path.replace_extension(".png");
 
+        // TODO:add other image format
         stbi_write_png(save_path.string().c_str(), width, height, 4, data, width * 4);
 
         // unmap after done using

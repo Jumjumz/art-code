@@ -93,6 +93,7 @@ Vec2 mesh_size(const ArrayVec2& shape_vertices) {
 
 ArrayVec2 shape_vertices(ShapeType type, size_t index) {
     ArrayVec2 vertices = {};
+    vertices.reserve(4);
     //  quad coordinates and size
     auto& shape_inst = ShapeRegistry::instances[index];
     switch (type) {

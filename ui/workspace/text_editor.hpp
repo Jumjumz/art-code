@@ -10,7 +10,7 @@ class TextEditorWrapper {
     void render();
 
   private:
-    static constexpr size_t TAB_ITEMS_NUM = 5;
+    static constexpr size_t MAX_TAB_ITEMS = 5;
 
     TextEditor editor;
 

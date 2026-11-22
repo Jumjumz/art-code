@@ -6,7 +6,7 @@
 #include <iostream>
 
 // NOTE:thinking of a pivot where instead of having a text editor in the program
-// instead have the program interact with external text editors i.e vs code, nvim etc.
+// have the program interact with external text editors i.e vs code, nvim etc.
 // so this might be removed in the future
 TextEditorWrapper::TextEditorWrapper() {
     this->file_explorer.SetTitle("Explorer");
@@ -14,14 +14,14 @@ TextEditorWrapper::TextEditorWrapper() {
 
     // display main.cpp at workspace startup
     this->selected_file = ProjectPath::get_project_path() / "main.cpp";
-    this->tabs.reserve(TAB_ITEMS_NUM);
+    this->tabs.reserve(TextEditorWrapper::MAX_TAB_ITEMS);
     this->tabs.push_back(this->selected_file);
 
     // init text editor pallete
     {
         auto palette = TextEditor::GetDarkPalette();
 
-        palette[(int)TextEditor::PaletteIndex::Background] = 0xFF1D1D1D;
+        palette[static_cast<int>(TextEditor::PaletteIndex::Background)] = 0xFF1D1D1D;
         this->editor.SetPalette(palette);
     }
     // load font once
@@ -44,7 +44,7 @@ void TextEditorWrapper::render() {
         // limit tab items to TAB_ITEMS_NUM
         if (std::find(this->tabs.begin(), this->tabs.end(), this->selected_file) ==
                 this->tabs.end() &&
-            this->tabs.size() < TextEditorWrapper::TAB_ITEMS_NUM) {
+            this->tabs.size() < TextEditorWrapper::MAX_TAB_ITEMS) {
             this->tabs.push_back(this->selected_file);
         }
         // set active tab to the current select file
@@ -79,9 +79,8 @@ void TextEditorWrapper::render() {
             this->tabs.erase(this->tabs.begin() + i);
             // reduce the size of the array
             i--;
-            if (this->tabs.empty()) {
+            if (this->tabs.empty())
                 this->editor.SetText("");
-            }
         }
     }
     ImGui::EndTabBar();
@@ -89,9 +88,8 @@ void TextEditorWrapper::render() {
     ImGui::BeginChild("##file_browser", ImVec2{panel_width, content_size.y}, false);
     for (const auto& [action, shortcut] : this->side_panel_contents) {
         if (ImGui::Button(action.c_str(), ImVec2{panel_width, panel_width})) {
-            if (action == "Exp") {
+            if (action == "Exp")
                 this->file_explorer.Open();
-            }
         }
     }
     ImGui::EndChild();
@@ -111,8 +109,9 @@ void TextEditorWrapper::render() {
         const auto work_size = viewport->WorkSize;
         const auto work_pos  = viewport->WorkPos;
 
-        this->file_explorer.SetWindowSize(80, int(content_size.y + 40.0f));
-        this->file_explorer.SetWindowPos(int(work_size.x * 0.4f), int(work_pos.y));
+        this->file_explorer.SetWindowSize(80, static_cast<int>(content_size.y + 40.0f));
+        this->file_explorer.SetWindowPos(static_cast<int>(work_size.x * 0.4f),
+                                         static_cast<int>(work_pos.y));
     }
 
     // display file browser modal
@@ -162,7 +161,7 @@ void TextEditorWrapper::save_written_code() {
             write << this->editor.GetText();
             write.close();
 
-            std::cerr << "File saved!" << std::endl;
+            std::cout << "File saved!" << std::endl;
         } else {
             std::cerr << "Cannot write on this file" << std::endl;
         }
