@@ -103,17 +103,6 @@ void TextEditorWrapper::render() {
     ImGui::PopFont();
     ImGui::PopStyleVar();
 
-    // FIXME: this doesnt work as intended..
-    if (this->file_explorer.IsOpened()) {
-        const auto viewport  = ImGui::GetMainViewport();
-        const auto work_size = viewport->WorkSize;
-        const auto work_pos  = viewport->WorkPos;
-
-        this->file_explorer.SetWindowSize(80, static_cast<int>(content_size.y + 40.0f));
-        this->file_explorer.SetWindowPos(static_cast<int>(work_size.x * 0.4f),
-                                         static_cast<int>(work_pos.y));
-    }
-
     // display file browser modal
     this->file_explorer.Display();
 
