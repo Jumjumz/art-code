@@ -30,7 +30,7 @@ void Development::render() {
     ImGui::PopStyleVar();
 
     // render text editor wrapper and project browser
-    const float console_height = 200.0f;
+    /*const float console_height = 200.0f;
     const float editor_height  = ImGui::GetContentRegionAvail().y - console_height;
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0, 0});
@@ -43,7 +43,7 @@ void Development::render() {
     ImGui::BeginChild("##console", ImVec2{0, console_height});
     this->console.render();
     ImGui::EndChild();
-
+    */
     ImGui::End();
     ImGui::PopStyleVar();
 };

@@ -5,6 +5,8 @@ ArtboardSettings::ArtboardSettings() {
     this->file_dialog.SetTitle("Create Custom Project");
 };
 
+// TODO:when opening the .rcd sln file it should also open another program which is the
+// text editor, store the default text editor somewhere in the program to load it right away
 void ArtboardSettings::render() {
     this->viewport  = ImGui::GetMainViewport();
     this->work_size = this->viewport->WorkSize;

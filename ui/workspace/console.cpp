@@ -1,6 +1,7 @@
 #include "console.hpp"
 #include "nav_items.hpp"
 
+// TODO:make this a floating panel
 void Console::render() {
     if (this->font == nullptr) {
         ImGuiIO& io = ImGui::GetIO();

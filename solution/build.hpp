@@ -7,7 +7,7 @@ namespace fs = std::filesystem;
 
 class Build {
   public:
-    static constexpr std::string sln_ext = ".rcd";
+    const std::string sln_ext = ".rcd";
 
     bool set_project_directory(const fs::path& dir, const glm::vec3& artboard);
 
