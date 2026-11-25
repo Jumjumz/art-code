@@ -1,6 +1,19 @@
 #include "main_nav.hpp"
 #include "nav_items.hpp"
 
+using NavMenuItems = const std::vector<std::tuple<std::string, std::string>>;
+using NavMenu      = std::tuple<const std::string, NavMenuItems>;
+
+// TODO:update this, decide if to implement the keyboard shortcuts in glfw and win api
+struct NavMainItems {
+    static inline const std::vector<NavMenu> MENUS = {
+        {"File",
+         {{"New", "Ctrl+n"}, {"Open", "Ctrl+o"}, {"Save", "Ctrl+s"}, {"Save as", "Ctrl+x"}}},
+        {"Edit", {{"Artboard", "Ctrl+ar"}}},
+        {"Window", {{"Panel", "Ctrl+p"}}},
+        {"Help", {{"Documentation", "Ctrl+dd"}, {"About", ""}, {"Version", ""}}}};
+};
+
 void MainNavigation::render() {
     if (ImGui::BeginMainMenuBar()) {
         for (const auto& [menus, items] : NavMainItems::MENUS) {
@@ -46,4 +59,4 @@ void MainNavigation::render() {
         this->file_dialog.ClearSelected();
         this->file_dialog.Close();
     }
-}
+};

@@ -5,6 +5,8 @@ TemplateGallery::TemplateGallery() {
     this->file_dialog.SetTitle("Create Template Project");
 };
 
+// TODO:when opening the .rcd sln file it should also open another program which is the
+// text editor, store the default text editor somewhere in the program to load it right away
 void TemplateGallery::render() {
     this->viewport  = ImGui::GetMainViewport();
     this->work_size = viewport->WorkSize;

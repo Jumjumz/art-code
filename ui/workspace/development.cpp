@@ -29,21 +29,12 @@ void Development::render() {
     ImGui::EndChild();
     ImGui::PopStyleVar();
 
-    // render text editor wrapper and project browser
-    /*const float console_height = 200.0f;
-    const float editor_height  = ImGui::GetContentRegionAvail().y - console_height;
-
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0, 0});
-    ImGui::BeginChild("##editor", ImVec2{0, editor_height});
-    this->text_editor.render();
-    ImGui::EndChild();
-    ImGui::PopStyleVar();
-
+    // TODO:console should be a dialog
     // render console
-    ImGui::BeginChild("##console", ImVec2{0, console_height});
+    ImGui::BeginChild("##console", ImVec2{0, 200});
     this->console.render();
     ImGui::EndChild();
-    */
+
     ImGui::End();
     ImGui::PopStyleVar();
 };

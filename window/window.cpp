@@ -1,5 +1,6 @@
 #include "window.hpp"
 
+// TODO:add win api for window
 Window::Window() {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

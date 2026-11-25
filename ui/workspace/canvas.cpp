@@ -1,6 +1,9 @@
 #include "canvas.hpp"
 #include "vk_types.hpp"
 
+// TODO:update and take the whole window, this should render the artboard
+// currently artboard is passed as a texture, canvas should be the entire texture
+// while it renders the artboard
 void Canvas::render() {
     this->viewport  = ImGui::GetMainViewport();
     this->work_size = this->viewport->WorkSize;

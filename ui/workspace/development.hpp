@@ -2,7 +2,6 @@
 
 #include "build_panel.hpp"
 #include "console.hpp"
-#include "text_editor.hpp"
 #include "work_space.hpp"
 
 class Development : public WorkSpace {
@@ -10,7 +9,6 @@ class Development : public WorkSpace {
     void render() override;
 
   private:
-    BuildPanel        build_panel;
-    TextEditorWrapper text_editor;
-    Console           console;
+    BuildPanel build_panel;
+    Console    console;
 };

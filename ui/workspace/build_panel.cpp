@@ -13,6 +13,14 @@
 
 namespace fs = std::filesystem;
 
+using NavMenuItems = const std::vector<std::tuple<std::string, std::string>>;
+
+// TODO:update this, decide if to implement this keyboard shortcuts in glfw and win api
+struct NavBuildItems {
+    static inline const NavMenuItems PANEL = {
+        {"Includes", "Ctrl+i"}, {"Debug", "Ctrl+d"}, {"Build", "Ctrl+b"}, {"Run", "Ctrl+r"}};
+};
+
 // TODO:update UI and move to nav panel
 void BuildPanel::render() {
     const auto& panel_size = ImGui::GetContentRegionAvail();
