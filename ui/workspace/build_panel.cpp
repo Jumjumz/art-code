@@ -17,8 +17,7 @@ using NavMenuItems = const std::vector<std::tuple<std::string, std::string>>;
 
 // TODO:update this, decide if to implement this keyboard shortcuts in glfw and win api
 struct NavBuildItems {
-    static inline const NavMenuItems PANEL = {
-        {"Includes", "Ctrl+i"}, {"Debug", "Ctrl+d"}, {"Build", "Ctrl+b"}, {"Run", "Ctrl+r"}};
+    static inline const NavMenuItems PANEL = {{"Build", "Ctrl+b"}, {"Run", "Ctrl+r"}};
 };
 
 // TODO:update UI and move to nav panel
@@ -31,11 +30,12 @@ void BuildPanel::render() {
     for (const auto& [action, shortcut] : NavBuildItems::PANEL) {
         ImGui::SetCursorPosY((panel_size.y - height) / 2.0f);
         if (ImGui::Button(action.c_str(), ImVec2{width, height})) {
-            if (action == "Includes") {
+            // NOTE:commented as I might reimplement includes
+            /*if (action == "Includes") {
                 // auto add .cpp files in proj dir to solution file
                 show_adding_includes = true;
                 add_includes();
-            }
+            }*/
 
             if (action == "Build")
                 compile();
@@ -67,7 +67,7 @@ void BuildPanel::compile() {
     this->project_compiled = true;
 };
 
-void BuildPanel::add_includes() const {
+/*void BuildPanel::add_includes() const {
     const auto& solution_file = ProjectPath::get_solution_file();
 
     nlohmann::json js;
@@ -96,7 +96,7 @@ void BuildPanel::add_includes() const {
 
     std::ofstream write(solution_file);
     write << js.dump(4);
-};
+};*/
 
 std::string BuildPanel::executable_files() const {
     // read solution file
