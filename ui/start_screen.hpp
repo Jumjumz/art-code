@@ -22,14 +22,15 @@ class StartScreen {
     virtual bool dimensions_acquired() const { return this->has_dimensions; };
 
   protected:
-    ImGuiViewport* viewport  = nullptr;
-    ImVec2         work_size = {10.0f, 10.0f};
-    ImVec2         work_pos  = {10.0f, 10.0f};
+    ImGuiViewport* viewport = nullptr;
 
-    glm::vec3 artboard_size  = {100.0f, 100.0f, 72.0f};
-    bool      has_dimensions = false;
+    ImVec2 work_size = {10.0f, 10.0f};
+    ImVec2 work_pos  = {10.0f, 10.0f};
 
-    bool open_selected = false; // for open button
+    glm::vec3 artboard_size = {100.0f, 100.0f, 72.0f};
+
+    bool has_dimensions = false;
+    bool open_selected  = false; // for open button
 
     Build build;
 

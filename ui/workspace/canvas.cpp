@@ -9,9 +9,9 @@ void Canvas::render() {
     this->work_size = this->viewport->WorkSize;
     this->work_pos  = this->viewport->WorkPos;
 
-    // takes 60% of the window size, window size can be dynamic but canvas will always takes 60% of it
-    ImGui::SetNextWindowSize(ImVec2{this->work_size.x * 0.6f, this->work_size.y});
-    ImGui::SetNextWindowPos(ImVec2{this->work_pos.x, this->work_pos.y});
+    ImGui::SetNextWindowSize(ImVec2{this->work_size.x, this->work_size.y});
+    ImGui::SetNextWindowPos(
+        ImVec2{this->work_pos.x, 38.0f + this->work_pos.y}); // height of dev panel
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
     ImGui::Begin("##canvas-begin", nullptr,
@@ -26,8 +26,7 @@ void Canvas::render() {
     const ImVec2 size      = ImGui::GetContentRegionAvail();
     // uses global variable
     const auto& artboard = Artboard::get_artboard_size();
-    const float width    = artboard.x;
-    const float height   = artboard.y;
+    const float width = artboard.x, height = artboard.y;
 
     // canvas background
     draw_list->AddRectFilled(panel_pos, ImVec2(panel_pos.x + size.x, panel_pos.y + size.y),

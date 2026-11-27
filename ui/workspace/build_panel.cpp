@@ -25,9 +25,14 @@ void BuildPanel::render() {
     const auto& panel_size = ImGui::GetContentRegionAvail();
     const float width = 100.0f, height = 20.0f;
 
-    bool show_adding_includes = false;
-
     for (const auto& [action, shortcut] : NavBuildItems::PANEL) {
+        // center the buttons horizontally and have a gap between them
+        if (action == "Run") {
+            ImGui::SetCursorPosX(((panel_size.x + 10.0f) + width) / 2.0f);
+        } else {
+            ImGui::SetCursorPosX(((panel_size.x - 10.0f) - width) / 2.0f);
+        }
+        // center the buttons vertically
         ImGui::SetCursorPosY((panel_size.y - height) / 2.0f);
         if (ImGui::Button(action.c_str(), ImVec2{width, height})) {
             // NOTE:commented as I might reimplement includes
@@ -52,11 +57,6 @@ void BuildPanel::render() {
             }
         }
         ImGui::SameLine();
-    }
-
-    if (show_adding_includes) {
-        ImGui::Text("Adding includes...");
-        show_adding_includes = false;
     }
 };
 
@@ -112,9 +112,8 @@ std::string BuildPanel::executable_files() const {
         const auto includes = js["includes"].get<std::vector<std::string>>();
         executables         = js["sources"].get<std::vector<std::string>>();
         // append includes if not empty
-        if (!includes.empty()) {
+        if (!includes.empty())
             executables.insert(executables.end(), includes.begin(), includes.end());
-        }
     }
 
     std::string source = "";

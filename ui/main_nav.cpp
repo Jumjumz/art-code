@@ -11,7 +11,11 @@ struct NavMainItems {
          {{"New", "Ctrl+n"}, {"Open", "Ctrl+o"}, {"Save", "Ctrl+s"}, {"Save as", "Ctrl+x"}}},
         {"Edit", {{"Artboard", "Ctrl+ar"}}},
         {"Window", {{"Panel", "Ctrl+p"}}},
-        {"Help", {{"Documentation", "Ctrl+dd"}, {"About", ""}, {"Version", ""}}}};
+        {"Help",
+         {
+             {"Documentation", "Ctrl+dd"},
+             {"About", "Ctrl+ab"},
+         }}};
 };
 
 void MainNavigation::render() {

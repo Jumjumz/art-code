@@ -390,8 +390,10 @@ void CanvasRenderer::record_artcode_command(const uint32_t current_frame) {
         0, vk::Rect2D{vk::Offset2D{0, 0}, vk::Extent2D{this->vk_buffers.extent.width,
                                                        this->vk_buffers.extent.height}});
 
-    // draw in reverse order for shape instances
-    // this makes the first declared shape always be the front shape in artboard
+    // TODO:have the ability to click the shapes and display
+    // the meta data i.e positons, color, distort etc.
+    // draw in reverse order for shape instances this makes the first
+    // declared shape always be the front shape in artboard
     for (size_t i = this->push_constants.size(); i > 0; i--) {
         const auto idx = i - 1;
 
